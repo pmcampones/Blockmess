@@ -34,15 +34,12 @@ public class StatelessValidator<P extends SybilElectionProof>
     protected StatelessValidator(Properties props, String protoName, short protoId, SybilProofValidator<P> proofValidator)  {
         super(protoName, protoId);
         this.proofValidator = proofValidator;
-        //registerRequestHandler(ValidateBlockRequest.ID, this::uponValidateBlockRequest);
         this.maxBlockSize = parseInt(props.getProperty("maxBlockSize",
                 String.valueOf(MAX_BLOCK_SIZE)));
     }
 
     @Override
-    public void init(Properties properties) throws HandlerRegistrationException, IOException {
-
-    }
+    public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     @Override
     public boolean isBlockValid(LedgerBlock<BlockContent<SlimTransaction>,P> block) {

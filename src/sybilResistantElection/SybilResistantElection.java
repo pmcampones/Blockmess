@@ -10,7 +10,6 @@ import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import utils.CryptographicUtils;
 import main.Main;
 import main.ProtoPojo;
 import org.apache.commons.lang3.tuple.Pair;
@@ -18,13 +17,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.notifications.IWasElectedWithBlockNotification;
-import sybilResistantElection.difficultyComputers.MultiChainDifficultyComputer;
 import sybilResistantElection.difficultyComputers.ConcurrentDifficultyComputer;
+import sybilResistantElection.difficultyComputers.MultiChainDifficultyComputer;
+import utils.CryptographicUtils;
 import utils.IDGenerator;
 import utils.merkleTree.ConcurrentMerkleTree;
 import utils.merkleTree.ConsistentOrderMerkleTree;
 import utils.merkleTree.MerkleTree;
+import valueDispatcher.ValueDispatcher;
+import valueDispatcher.requests.DisseminateSignedBlockRequest;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -135,7 +136,7 @@ public class SybilResistantElection<E extends IndexableContent, C extends BlockC
                         placementChain.getCurrContent(), proof, self, placementChain.getChainId(),
                         placementChain.getChain().getRankFromRefs(Set.of(placementChain.getPrevBlock())),
                         blockmessRoot.getHighestSeenRank() + 1);
-        triggerNotification(new IWasElectedWithBlockNotification<>(block));
+        sendRequest(new DisseminateSignedBlockRequest<>(block), ValueDispatcher.ID);
     }
 
     private byte[] computeSolution() {

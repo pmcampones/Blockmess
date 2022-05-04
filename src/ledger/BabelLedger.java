@@ -2,12 +2,10 @@ package ledger;
 
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.txs.IndexableContent;
-import intermediateConsensus.replies.GetBlockPreviousReply;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import ledger.blocks.LedgerBlockImp;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import ledger.requests.GetBlockPreviousRequest;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -41,7 +39,6 @@ public class BabelLedger<B extends LedgerBlock<? extends BlockContent<? extends 
         super(BabelLedger.class.getSimpleName(), ID);
         this.ledger = attachToSubjectLedger(ledger);
         subscribeNotification(DeliverSignedBlockNotification.ID, (DeliverSignedBlockNotification<B> notif, short id) -> uponDeliverSignedBlockNotification(notif));
-        registerRequestHandler(GetBlockPreviousRequest.ID, (GetBlockPreviousRequest req, short source) -> uponGetBlockPreviousRequest(source));
         ProtoPojo.pojoSerializers.put(LedgerBlockImp.ID, LedgerBlockImp.serializer);
     }
 
@@ -57,10 +54,6 @@ public class BabelLedger<B extends LedgerBlock<? extends BlockContent<? extends 
         B block = notif.getBlock();
         logger.info("Ledger received block: {}", block.getBlockId());
         ledger.submitBlock(block);
-    }
-
-    private void uponGetBlockPreviousRequest(short source) {
-        sendReply(new GetBlockPreviousReply(), source);
     }
 
     @Override

@@ -40,7 +40,6 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
 
     /**
      * Maps the identifiers of objects that block in the broadcast
-     * (see {@link BlockingBroadcast})
      *  to the identifiers of the messages that encapsulated them.
      *  <p>This is used to resume the broadcast of an object after it has been successfully validated.</p>
      */
