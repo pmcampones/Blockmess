@@ -6,7 +6,7 @@ import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.BlockmessBlockImp;
-import ledger.ledgerManager.BlockmessRoot;
+import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
@@ -62,7 +62,7 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
 
     private MerkleTree randomSeed;
 
-    private final BlockmessRoot<E,C,BlockmessGPoETProof> blockmessRoot;
+    private final LedgerManager<E, C, BlockmessGPoETProof> blockmessRoot;
 
     private final BlockmessGPoETDifficultyComputer difficultyComputer;
 
@@ -70,7 +70,7 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
 
     private int nonce = 0;
 
-    public BlockmessGPoET(Properties props, KeyPair self, BlockmessRoot<E, C, BlockmessGPoETProof> blockmessRoot) throws HandlerRegistrationException {
+    public BlockmessGPoET(Properties props, KeyPair self, LedgerManager<E, C, BlockmessGPoETProof> blockmessRoot) throws HandlerRegistrationException {
         super(BlockmessGPoET.class.getSimpleName(), ID);
         this.self = self;
         this.blockmessRoot = blockmessRoot;

@@ -34,7 +34,7 @@ import static java.util.stream.Collectors.toSet;
 
 public class LedgerManager<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
         implements ParentTreeNode<E,C,P>,
-        DebugLedgerManager<E,C,P>, LedgerObserver<BlockmessBlock<C,P>>, BlockmessRoot<E,C,P> {
+        DebugLedger<BlockmessBlock<C,P>>, LedgerObserver<BlockmessBlock<C,P>>, ContentStorage<StructuredValue<E>> {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 
@@ -179,18 +179,6 @@ public class LedgerManager<E extends IndexableContent, C extends BlockContent<St
         return this;
     }
 
-    /*
-    * DO NOT USE AN ITERATOR OR ENHANCED FOR ON THE VALUES/ENTRY_SET/KEY_SET OF THIS METHOD.
-    * THE ITERATION ORDER IS CHANGED.
-    * I DON'T KNOW WHY IT HAPPENS, BUT IT HAS LEFT ME PRETTY ANGRY AND SULKY.
-    * USE INSTEAD getChainIt.
-     */
-    @Override
-    public Map<UUID, BlockmessChain<E,C,P>> getChains() {
-        return Map.copyOf(chains);
-    }
-
-    @Override
     public BlockmessChain<E,C,P> getOrigin() {
         return chains.entrySet().iterator().next().getValue();
     }
@@ -367,7 +355,6 @@ public class LedgerManager<E extends IndexableContent, C extends BlockContent<St
         return ((DebugLedger<BlockmessBlock<C,P>>) chains.values().iterator().next()).getForkBlocks(1);
     }
 
-    @Override
     public long getHighestSeenRank() {
         long maxRank = Long.MIN_VALUE;
         for (BlockmessChain<E,C,P> Chain : chains.values()) {
@@ -377,7 +364,6 @@ public class LedgerManager<E extends IndexableContent, C extends BlockContent<St
         return maxRank;
     }
 
-    @Override
     public List<BlockmessChain<E,C,P>> getAvailableChains() {
         return tryToGetAvailableChains();
     }
