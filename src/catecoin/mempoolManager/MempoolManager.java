@@ -46,9 +46,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
 
     private final ReadWriteLock utxosLock = new ReentrantReadWriteLock();
 
-    /**UTXOs and tx that have been used/issued in blocks that are yet to be finalized.**/
-    //public final Map<UUID, StorageUTXO> utxos = new ConcurrentHashMap<>();
-
     public int usedTxs = 0;
 
     /**
@@ -172,12 +169,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
     private Set<StorageUTXO> getRemovedUtxos(Set<UUID> removedIds, Map<UUID, StorageUTXO> addedUtxos) {
         Set<StorageUTXO> removedUtxos = new HashSet<>(removedIds.size());
         Collection<Optional<StorageUTXO>> storedUtxos = UTXOCollection.getUtxos(removedIds);
-        /*for (UUID id : removedIds) {
-            StorageUTXO rem = utxos.get(id);
-            if (rem == null)
-                rem = addedUtxos.get(id);
-            removedUtxos.add(rem);
-        }*/
         Iterator<Optional<StorageUTXO>> storedUtxosIt = storedUtxos.iterator();
         Iterator<UUID> removedIdsIt = removedIds.iterator();
         while (storedUtxosIt.hasNext()) {
@@ -198,14 +189,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         return invalid;
     }
 
-    public Set<StorageUTXO> getValidUtxosFromChunk(UUID chunkId) {
-        Set<UUID> invalid = getInvalidUtxosFromChunk(chunkId, new HashSet<>());
-        Set<StorageUTXO> added = getAddedUtxosFromChunk(chunkId, new HashSet<>());
-        return added.stream()
-                .filter(s -> !invalid.contains(s.getId()))
-                .collect(toSet());
-    }
-
     public Set<UUID> getInvalidUtxosFromChunk(UUID chunkId, Set<UUID> visited) {
         MempoolChunk chunk = mempool.get(chunkId);
         if (visited.contains(chunkId) || chunk == null) return Collections.emptySet();
@@ -224,10 +207,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
                 .forEach(id -> valid.addAll(getAddedUtxosFromChunk(id, visited)));
         return valid;
     }
-
-    /*public StorageUTXO getUTXOContent(UUID utxoId) {
-        return utxos.get(utxoId);
-    }*/
 
     public Lock getMempoolReadLock() {
         return mempoolLock.readLock();
