@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO" shutdownHook="disable">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%highlight{%level{length=1}[%d{HH:mm:ss,SSS}] [%t]%logger{0}:} %msg%n"/>
+        </Console>
+
+
+        <File name="MyFile" fileName="${sys:logFileName}" append="false" immediateFlush="true">
+            <!--<PatternLayout pattern="%style{%level{length=1}[%d{HH:mm:ss,SSS}] [%t]%logger{0}: %msg%n"/>-->
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </File>
+
+    </Appenders>
+
+    <Loggers>
+        <!--UNCOMMENT TO SPECIFY LOG LEVEL OF PACKAGES
+	<Logger level="info" name="protocols.apps"/>-->
+        <Logger level="error" name="main.FinalizedBlocksLog"/>
+        <Logger level="error" name="pt.unl.fct.di.novasys.babel.core"/>
+        <Logger level="error" name="broadcastProtocols"/>-->
+        <Logger level="error" name="peerSamplingProtocols"/>-->
+        <Logger level="info" name="catecoin.mempoolManager"/>
+        <Logger level="debug" name="ledger.ledgerManager.LedgerManager"/>
+        <Logger level="debug" name="ledger"/>
+        <Logger level="error" name="sybilResistantCommitteeElection.poet.gpoet.BlockmessGPoET"/>
+        <Root level="error">
+            <AppenderRef ref="Console" level="debug"/>
+            <AppenderRef ref="MyFile" level="debug"/>
+        </Root>
+    </Loggers>
+
+</Configuration>
+
