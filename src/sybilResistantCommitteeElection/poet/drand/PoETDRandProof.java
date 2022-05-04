@@ -30,18 +30,6 @@ public class PoETDRandProof extends ProtoPojoAbstract implements SybilElectionPr
         this.waitTime = waitTime;
     }
 
-    public int getRoundNumber() {
-        return drandRound;
-    }
-
-    public byte[] getRandomness() {
-        return randomness;
-    }
-
-    public int getSalt() {
-        return salt;
-    }
-
     public int getWaitTime() {
         return waitTime;
     }

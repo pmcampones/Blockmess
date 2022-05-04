@@ -104,7 +104,7 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
         switch (type) {
             case INTERACTIVE_NODE_JOIN:
                 if (val instanceof InteractiveNodeJoin)
-                    triggerNotification(new DeliverInteractiveNodeJoinNotification((InteractiveNodeJoin) val));
+                    triggerNotification(new DeliverInteractiveNodeJoinNotification());
                 break;
             case AUTOMATED_NODE_JOIN:
                 if (val instanceof AutomatedNodeJoin)

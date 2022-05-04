@@ -10,11 +10,8 @@ public class GetBlockPreviousReply extends ProtoReply {
 
     public static final short ID = IDGenerator.genId();
 
-    private final Set<UUID> previous;
-
-    public GetBlockPreviousReply(Set<UUID> previous) {
+    public GetBlockPreviousReply() {
         super(ID);
-        this.previous = previous;
     }
 
 }

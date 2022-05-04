@@ -60,7 +60,7 @@ public class BabelLedger<B extends LedgerBlock<? extends BlockContent<? extends 
     }
 
     private void uponGetBlockPreviousRequest(short source) {
-        sendReply(new GetBlockPreviousReply(ledger.getBlockR()), source);
+        sendReply(new GetBlockPreviousReply(), source);
     }
 
     @Override

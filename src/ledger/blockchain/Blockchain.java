@@ -157,11 +157,6 @@ public class Blockchain<B extends LedgerBlock<? extends BlockContent<? extends I
     }
 
     @Override
-    public PrototypicalLedger<B> clonePrototype() {
-        return new Blockchain<>(props, validator, bootstrapModule);
-    }
-
-    @Override
     public PrototypicalLedger<B> clonePrototype(UUID genesisId) {
         return new Blockchain<>(props, validator, bootstrapModule, genesisId);
     }

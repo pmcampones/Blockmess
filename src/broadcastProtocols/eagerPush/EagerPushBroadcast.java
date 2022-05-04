@@ -162,6 +162,6 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
                              Throwable throwable) {
         logger.error("Message {} to {} failed, reason: {}\n" +
                 "Notifying peer sampling that this node is unreliable.", msg, to, throwable);
-        triggerNotification(new PeerUnreachableNotification(to));
+        triggerNotification(new PeerUnreachableNotification());
     }
 }

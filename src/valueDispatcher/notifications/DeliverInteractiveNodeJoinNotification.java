@@ -8,14 +8,8 @@ public class DeliverInteractiveNodeJoinNotification extends ProtoNotification {
 
     public static final short ID = IDGenerator.genId();
 
-    private final InteractiveNodeJoin interactiveNodeJoin;
-
-    public DeliverInteractiveNodeJoinNotification(InteractiveNodeJoin interactiveNodeJoin) {
+    public DeliverInteractiveNodeJoinNotification() {
         super(ID);
-        this.interactiveNodeJoin = interactiveNodeJoin;
     }
 
-    public InteractiveNodeJoin getNodeJoin() {
-        return interactiveNodeJoin;
-    }
 }

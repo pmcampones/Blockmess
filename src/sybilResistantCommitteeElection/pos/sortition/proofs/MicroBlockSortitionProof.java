@@ -26,8 +26,6 @@ public class MicroBlockSortitionProof extends ProtoPojoAbstract implements Sorti
 
     public static final short ID = 6378;
 
-    //private final UUID associatedKeyBlock;
-
     /**
      * I know it does not make sense to have these two variables instead of the associatedKeyBlock above,
      * but the program only works with them.
@@ -44,10 +42,6 @@ public class MicroBlockSortitionProof extends ProtoPojoAbstract implements Sorti
         //this.associatedKeyBlock = associatedKeyBlock;
         mostSignificantBits = associatedKeyBlock.getMostSignificantBits();
         leastSignificantBits = associatedKeyBlock.getLeastSignificantBits();
-    }
-
-    public UUID getAssociatedKeyBlock() {
-        return new UUID(mostSignificantBits, leastSignificantBits);
     }
 
     @Override

@@ -8,15 +8,8 @@ public class PeerUnreachableNotification extends ProtoNotification {
 
     public static final short ID = IDGenerator.genId();
 
-    private final Host peer;
-
-    public PeerUnreachableNotification(Host peer) {
+    public PeerUnreachableNotification() {
         super(ID);
-        this.peer = peer;
-    }
-
-    public Host getPeer() {
-        return peer;
     }
 
 }

@@ -22,15 +22,6 @@ public class KeyBlockSortitionProof extends ProtoPojoAbstract implements LargeSo
         this.nextRoundRandomness = nextRoundRandomness;
     }
 
-    public IncompleteSortitionProof getProof() {
-        return proof;
-    }
-
-    @Override
-    public UUID getAssociatedKeyBlock() {
-        return proof.getKeyBlockId();
-    }
-
     @Override
     public int getRound() {
         return proof.getRound();

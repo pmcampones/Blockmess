@@ -190,20 +190,6 @@ public class LedgerManager<E extends IndexableContent, C extends BlockContent<St
         return Map.copyOf(chains);
     }
 
-    public Iterator<BlockmessChain<E,C,P>> getChainIt() {
-        return chains.values().iterator();
-    }
-
-    @Override
-    public int getMaxBlockSize() {
-        return ((DebugBlockmessChain<E,C,P>) chains.values().iterator().next()).getMaxBlockSize();
-    }
-
-    @Override
-    public int getNumSamples() {
-        return ((DebugBlockmessChain<E,C,P>) chains.values().iterator().next()).getNumSamples();
-    }
-
     @Override
     public BlockmessChain<E,C,P> getOrigin() {
         return chains.entrySet().iterator().next().getValue();

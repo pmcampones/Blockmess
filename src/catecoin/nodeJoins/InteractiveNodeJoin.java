@@ -24,14 +24,6 @@ public class InteractiveNodeJoin extends ProtoPojoAbstract {
         this.username = username;
     }
 
-    public PublicKey getNodeKey() {
-        return node;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
     @Override
     public ISerializer<ProtoPojo> getSerializer() {
         return serializer;

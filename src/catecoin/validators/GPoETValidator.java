@@ -29,11 +29,6 @@ public class GPoETValidator extends GenericProtocol implements BlockValidator<Le
 
     private final LedgerGPoETDifficultyComputer difficultyComputer;
 
-    public GPoETValidator(Properties props) {
-        super(GPoETValidator.class.getSimpleName(), ID);
-        difficultyComputer = new LedgerGPoETDifficultyComputer(props);
-    }
-
     public GPoETValidator(LedgerGPoETDifficultyComputer difficultyComputer) {
         super(GPoETValidator.class.getSimpleName(), ID);
         this.difficultyComputer = difficultyComputer;

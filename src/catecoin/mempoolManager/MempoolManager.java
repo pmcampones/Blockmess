@@ -143,14 +143,12 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
     private void tryToFinalizeBlocks(List<MempoolChunk> finalized) {
         Set<UUID> removedUtxoIds = extractRemovedUtxosFromBlock(finalized);
         Set<StorageUTXO> addedUtxos = extractStorageUtxosFromBlock(finalized);
-        Map<UUID, StorageUTXO> mapAddedUtxos = new HashMap<>();//addedUtxos.stream().collect(toMap(StorageUTXO::getId, s -> s));
+        Map<UUID, StorageUTXO> mapAddedUtxos = new HashMap<>();
         Set<StorageUTXO> removedUtxos = getRemovedUtxos(removedUtxoIds, mapAddedUtxos);
-        Set<UUID> usedTxs = extractUsedTxsFromBlock(finalized);
+        extractUsedTxsFromBlock(finalized);
         triggerNotification(new DeliverFinalizedBlocksContentNotification(
                 removedUtxos, addedUtxos));
         UTXOCollection.updateUtxos(addedUtxos, removedUtxoIds);
-        /*addedUtxos.forEach(utxo -> utxos.put(utxo.getId(), utxo));
-        removedUtxoIds.forEach(utxos::remove);*/
         finalized.stream().map(MempoolChunk::getId).forEach(mempool::remove);
     }
 
