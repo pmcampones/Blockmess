@@ -48,9 +48,9 @@ public class TransactionGenerator extends GenericProtocol {
         this.signer = myKeys.getPrivate();
         loadInitialUTXOs(props);
         ProtoPojo.pojoSerializers.put(SlimTransaction.ID, SlimTransaction.serializer);
-        registerRequestHandler(BalanceRequest.ID, this::uponBalanceRequest);
+        registerRequestHandler(BalanceRequest.ID, (BalanceRequest req, short source1) -> uponBalanceRequest(source1));
         registerRequestHandler(SendTransactionRequest.ID, this::uponSendTransactionRequest);
-        subscribeNotification(DeliverFinalizedBlocksContentNotification.ID, this::uponDeliverFinalizedBlocksContentNotification);
+        subscribeNotification(DeliverFinalizedBlocksContentNotification.ID, (DeliverFinalizedBlocksContentNotification notif, short source) -> uponDeliverFinalizedBlocksContentNotification(notif));
     }
 
     /**
@@ -70,7 +70,7 @@ public class TransactionGenerator extends GenericProtocol {
     @Override
     public void init(Properties properties) {}
 
-    private void uponBalanceRequest(BalanceRequest req, short source) {
+    private void uponBalanceRequest(short source) {
         sendReply(new BalanceReply(countMyCoins()), source);
     }
 
@@ -130,7 +130,7 @@ public class TransactionGenerator extends GenericProtocol {
 
     //Records the UTXOs targeted at this node.
     private void uponDeliverFinalizedBlocksContentNotification(
-            DeliverFinalizedBlocksContentNotification notif, short source) {
+            DeliverFinalizedBlocksContentNotification notif) {
         updateUtxos(notif.getRemovedUtxo(), notif.getAddedUtxos());
     }
 

@@ -118,30 +118,30 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
     }
 
     private void registerMessageHandlers() throws HandlerRegistrationException {
-        registerMessageHandler(channelId, JoinMessage.MSG_CODE, this::uponReceiveJoin);
-        registerMessageHandler(channelId, JoinReplyMessage.MSG_CODE, this::uponReceiveJoinReply);
-        registerMessageHandler(channelId, ForwardJoinMessage.MSG_CODE, this::uponReceiveForwardJoin);
-        registerMessageHandler(channelId, HelloMessage.MSG_CODE, this::uponReceiveHello);
-        registerMessageHandler(channelId, HelloReplyMessage.MSG_CODE, this::uponReceiveHelloReply);
+        registerMessageHandler(channelId, JoinMessage.MSG_CODE, (JoinMessage msg9, Host from7, short sourceProto7, int channelId10) -> uponReceiveJoin(msg9, from7));
+        registerMessageHandler(channelId, JoinReplyMessage.MSG_CODE, (JoinReplyMessage msg8, Host from6, short sourceProto6, int channelId9) -> uponReceiveJoinReply(msg8, from6));
+        registerMessageHandler(channelId, ForwardJoinMessage.MSG_CODE, (ForwardJoinMessage msg7, Host from5, short sourceProto5, int channelId8) -> uponReceiveForwardJoin(msg7, from5));
+        registerMessageHandler(channelId, HelloMessage.MSG_CODE, (HelloMessage msg6, Host from4, short sourceProto4, int channelId7) -> uponReceiveHello(msg6, from4));
+        registerMessageHandler(channelId, HelloReplyMessage.MSG_CODE, (HelloReplyMessage msg5, Host from3, short sourceProto3, int channelId6) -> uponReceiveHelloReply(msg5, from3));
         registerMessageHandler(channelId, DisconnectMessage.MSG_CODE,
-                this::uponReceiveDisconnect, this::uponDisconnectSent);
-        registerMessageHandler(channelId, ShuffleMessage.MSG_CODE, this::uponReceiveShuffle);
+                (DisconnectMessage msg4, Host from2, short sourceProto2, int channelId5) -> uponReceiveDisconnect(msg4, from2), (msg3, host1, destProto1, channelId4) -> uponDisconnectSent(msg3, host1));
+        registerMessageHandler(channelId, ShuffleMessage.MSG_CODE, (ShuffleMessage msg2, Host from1, short sourceProto1, int channelId3) -> uponReceiveShuffle(msg2, from1));
         registerMessageHandler(channelId, ShuffleReplyMessage.MSG_CODE,
-                this::uponReceiveShuffleReply, this::uponShuffleReplySent);
+                (msg, from, sourceProto, channelId1) -> uponReceiveShuffleReply(msg, from), (ShuffleReplyMessage msg1, Host host, short destProto, int channelId2) -> uponShuffleReplySent(host));
     }
 
     private void registerTimerHandlers() throws HandlerRegistrationException {
-        registerTimerHandler(ShuffleTimer.ID, this::uponShuffleTimeout);
-        registerTimerHandler(HelloTimer.ID, this::uponHelloTimeout);
-        registerTimerHandler(JoinTimer.ID, this::uponJoinTimeout);
+        registerTimerHandler(ShuffleTimer.ID, (ShuffleTimer timer2, long timerId2) -> uponShuffleTimeout());
+        registerTimerHandler(HelloTimer.ID, (HelloTimer timer1, long timerId1) -> uponHelloTimeout());
+        registerTimerHandler(JoinTimer.ID, (JoinTimer timer, long timerId) -> uponJoinTimeout(timer));
     }
 
     private void registerChannelEvents() throws HandlerRegistrationException {
-        registerChannelEventHandler(channelId, OutConnectionDown.EVENT_ID, this::uponOutConnectionDown);
-        registerChannelEventHandler(channelId, OutConnectionFailed.EVENT_ID, this::uponOutConnectionFailed);
-        registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
-        registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
-        registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, this::uponInConnectionDown);
+        registerChannelEventHandler(channelId, OutConnectionDown.EVENT_ID, (OutConnectionDown event4, int channelId5) -> uponOutConnectionDown(event4));
+        registerChannelEventHandler(channelId, OutConnectionFailed.EVENT_ID, (OutConnectionFailed event3, int channelId4) -> uponOutConnectionFailed(event3));
+        registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, (OutConnectionUp event2, int channelId3) -> uponOutConnectionUp(event2));
+        registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, (InConnectionUp event1, int channelId2) -> uponInConnectionUp(event1));
+        registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, (InConnectionDown event, int channelId1) -> uponInConnectionDown(event));
     }
 
     /*--------------------------------- Messages ---------------------------------------- */
@@ -155,7 +155,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponReceiveJoin(JoinMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponReceiveJoin(JoinMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         addHostToActiveAndReplyToJoin(from);
         for(Host peer : active.getPeers()) {
@@ -166,7 +166,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponReceiveJoinReply(JoinReplyMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponReceiveJoinReply(JoinReplyMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         if(!active.containsPeer(from)) {
             passive.removePeer(from);
@@ -179,7 +179,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponReceiveForwardJoin(ForwardJoinMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponReceiveForwardJoin(ForwardJoinMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         Host newHost = msg.getNewHost();
         if(msg.getTtl() == 0 || active.getPeers().size() == 1) {
@@ -201,7 +201,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponReceiveHello(HelloMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponReceiveHello(HelloMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         openConnection(from);
 
@@ -240,7 +240,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponReceiveHelloReply(HelloReplyMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponReceiveHelloReply(HelloReplyMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         pending.remove(from);
         logger.trace("Removed from {} pending{}", from, pending);
@@ -263,7 +263,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    protected void uponReceiveDisconnect(DisconnectMessage msg, Host from, short sourceProto, int channelId) {
+    protected void uponReceiveDisconnect(DisconnectMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         if(active.containsPeer(from)) {
             active.removePeer(from);
@@ -280,12 +280,12 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponDisconnectSent(DisconnectMessage msg, Host host, short destProto, int channelId) {
+    private void uponDisconnectSent(DisconnectMessage msg, Host host) {
         logger.trace("Sent {} to {}", msg, host);
         closeConnection(host);
     }
 
-    private void uponReceiveShuffle(ShuffleMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponReceiveShuffle(ShuffleMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         openConnection(from);
         msg.decrementTtl();
@@ -312,14 +312,14 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
             activeShuffles.remove(msg.getSeqnum());
     }
 
-    private void uponShuffleReplySent(ShuffleReplyMessage msg, Host host, short destProto, int channelId) {
+    private void uponShuffleReplySent(Host host) {
         if(!active.containsPeer(host) && !pending.contains(host)) {
             logger.trace("Disconnecting from {} after shuffleReply", host);
             closeConnection(host);
         }
     }
 
-    private void uponReceiveShuffleReply(ShuffleReplyMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponReceiveShuffleReply(ShuffleReplyMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         Host[] sent = activeShuffles.remove(msg.getSeqnum());
         List<Host> sample = msg.getSample();
@@ -339,7 +339,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
 
     /*--------------------------------- Timers ---------------------------------------- */
 
-    private void uponShuffleTimeout(ShuffleTimer timer, long timerId) {
+    private void uponShuffleTimeout() {
         if(!active.fullWithPending(pending)){
             setupTimer(new HelloTimer(), timeout);
         }
@@ -357,7 +357,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponHelloTimeout(HelloTimer timer, long timerId) {
+    private void uponHelloTimeout() {
         if(!active.fullWithPending(pending)){
             Host h = passive.dropRandom();
             if(h != null && pending.add(h)) {
@@ -371,7 +371,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         }
     }
 
-    private void uponJoinTimeout(JoinTimer timer, long timerId) {
+    private void uponJoinTimeout(JoinTimer timer) {
         if(active.isEmpty()) {
             Host contact = timer.getContact();
             openConnection(contact);
@@ -404,7 +404,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
 
     /* --------------------------------- Channel Events ---------------------------- */
 
-    private void uponOutConnectionDown(OutConnectionDown event, int channelId) {
+    private void uponOutConnectionDown(OutConnectionDown event) {
         logger.debug("Host {} is down, active{}, cause: {}", event.getNode(), active, event.getCause());
         if(active.removePeer(event.getNode())) {
             triggerNotification(new NeighbourDownNotification(event.getNode()));
@@ -415,7 +415,7 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
             pending.remove(event.getNode());
     }
 
-    private void uponOutConnectionFailed(OutConnectionFailed event, int channelId) {
+    private void uponOutConnectionFailed(OutConnectionFailed event) {
         logger.trace("Connection to host {} failed, cause: {}", event.getNode(), event.getCause());
         if(active.removePeer(event.getNode())) {
             triggerNotification(new NeighbourDownNotification(event.getNode()));
@@ -426,15 +426,15 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
             pending.remove(event.getNode());
     }
 
-    private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
+    private void uponOutConnectionUp(OutConnectionUp event) {
         logger.trace("Host (out) {} is up", event.getNode());
     }
 
-    private void uponInConnectionUp(InConnectionUp event, int channelId) {
+    private void uponInConnectionUp(InConnectionUp event) {
         logger.trace("Host (in) {} is up", event.getNode());
     }
 
-    private void uponInConnectionDown(InConnectionDown event, int channelId) {
+    private void uponInConnectionDown(InConnectionDown event) {
         logger.trace("Connection from host {} is down, active {}, cause: {}", event.getNode(), active, event.getCause());
     }
 

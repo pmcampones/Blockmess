@@ -130,7 +130,7 @@
     <build>
         <sourceDirectory>src</sourceDirectory>
 
-        <testSourceDirectory>src/test</testSourceDirectory>
+        <testSourceDirectory>tests</testSourceDirectory>
 
         <plugins>
             <plugin>

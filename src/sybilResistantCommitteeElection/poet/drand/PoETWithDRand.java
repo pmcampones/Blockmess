@@ -66,9 +66,9 @@ public class PoETWithDRand<C extends BlockContent<? extends IndexableContent>> e
 
         ProtoPojo.pojoSerializers.put(PoETDRandProof.ID, PoETDRandProof.serializer);
 
-        registerTimerHandler(InitializationPeriodTimer.ID, this::uponInitializationPeriodTimer);
+        registerTimerHandler(InitializationPeriodTimer.ID, (InitializationPeriodTimer timer, long id) -> uponInitializationPeriodTimer());
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                this::uponDeliverNonFinalizedBlockNotification);
+                (DeliverNonFinalizedBlockNotification<LedgerBlock<C, PoETDRandProof>> notif, short source) -> uponDeliverNonFinalizedBlockNotification(notif));
     }
 
     @Override
@@ -78,7 +78,7 @@ public class PoETWithDRand<C extends BlockContent<? extends IndexableContent>> e
         setupTimer(new InitializationPeriodTimer(), initializationTime);
     }
 
-    private void uponInitializationPeriodTimer(InitializationPeriodTimer timer, long id) {
+    private void uponInitializationPeriodTimer() {
         waiter.start();
     }
 
@@ -136,7 +136,7 @@ public class PoETWithDRand<C extends BlockContent<? extends IndexableContent>> e
     }
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<C, PoETDRandProof>> notif, short source) {
+            DeliverNonFinalizedBlockNotification<LedgerBlock<C, PoETDRandProof>> notif) {
         logger.debug("Received non finalized block {}", notif.getNonFinalizedBlock().getBlockId());
         currentBlock.ifPresent(curr -> {
             LedgerBlock<C, PoETDRandProof> delivered = notif.getNonFinalizedBlock();

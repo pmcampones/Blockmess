@@ -82,9 +82,9 @@ public class GPoET<E extends IndexableContent, C extends BlockContent<E>> extend
         this.randomSeed = new ConcurrentMerkleTree(computeRandomSeed());
 
         ProtoPojo.pojoSerializers.put(GPoETProof.ID, GPoETProof.serializer);
-        registerTimerHandler(InitializationPeriodTimer.ID, this::uponInitializationPeriodTimer);
+        registerTimerHandler(InitializationPeriodTimer.ID, (InitializationPeriodTimer timer, long id) -> uponInitializationPeriodTimer());
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                this::uponDeliverNonFinalizedBlockNotification);
+                (DeliverNonFinalizedBlockNotification<LedgerBlock<C, PoETDRandProof>> notif, short source) -> uponDeliverNonFinalizedBlockNotification(notif));
     }
 
     private MerkleTree computeRandomSeed() throws IOException {
@@ -102,7 +102,7 @@ public class GPoET<E extends IndexableContent, C extends BlockContent<E>> extend
         setupTimer(new InitializationPeriodTimer(), initializationTime);
     }
 
-    private void uponInitializationPeriodTimer(InitializationPeriodTimer timer, long id) {
+    private void uponInitializationPeriodTimer() {
         electionThread.start();
     }
 
@@ -152,7 +152,7 @@ public class GPoET<E extends IndexableContent, C extends BlockContent<E>> extend
     }
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<C, PoETDRandProof>> notif, short source) {
+            DeliverNonFinalizedBlockNotification<LedgerBlock<C, PoETDRandProof>> notif) {
         logger.debug("Received non finalized block {}", notif.getNonFinalizedBlock().getBlockId());
         try {
             receiveUpdate();

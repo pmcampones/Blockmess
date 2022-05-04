@@ -151,18 +151,18 @@ public class PoSAlgorandSortitionWithDRand<C extends BlockContent<? extends Inde
 
     private void registerTimerHandlers() throws HandlerRegistrationException {
         registerTimerHandler(WaitForInitialRoundTimer.ID,
-                this::uponWaitInitialRoundTimer);
+                (WaitForInitialRoundTimer timer3, long timerId3) -> uponWaitInitialRoundTimer());
         registerTimerHandler(WaitForNextElectionRoundTimer.ID,
-                this::uponWaitForNextElectionRoundTimer);
+                (WaitForNextElectionRoundTimer timer2, long timerId2) -> uponWaitForNextElectionRoundTimer());
         registerTimerHandler(ExchangeProofPeriodTimer.ID,
-                this::uponExchangeProofPeriodTimer);
+                (ExchangeProofPeriodTimer timer1, long timerId1) -> uponExchangeProofPeriodTimer());
         registerTimerHandler(BetweenBlockProposalsTimer.ID,
-                this::uponBetweenBlocksProposalTimer);
+                (BetweenBlockProposalsTimer timer, long timerId) -> uponBetweenBlocksProposalTimer());
     }
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(DeliverSortitionProofNotification.ID,
-                this::uponDeliverSortitionProofNotification);
+                (DeliverSortitionProofNotification notif, short source) -> uponDeliverSortitionProofNotification(notif));
     }
 
     @Override
@@ -170,7 +170,7 @@ public class PoSAlgorandSortitionWithDRand<C extends BlockContent<? extends Inde
         reachInitialRound();
     }
 
-    private void uponWaitInitialRoundTimer(WaitForInitialRoundTimer timer, long timerId) {
+    private void uponWaitInitialRoundTimer() {
         reachInitialRound();
     }
 
@@ -197,7 +197,7 @@ public class PoSAlgorandSortitionWithDRand<C extends BlockContent<? extends Inde
         }
     }
 
-    private void uponWaitForNextElectionRoundTimer(WaitForNextElectionRoundTimer timer, long timerId) {
+    private void uponWaitForNextElectionRoundTimer() {
         waitUntilNextRound();
     }
 
@@ -301,7 +301,7 @@ public class PoSAlgorandSortitionWithDRand<C extends BlockContent<? extends Inde
         return false;
     }
 
-    private void uponDeliverSortitionProofNotification(DeliverSortitionProofNotification notif, short source) {
+    private void uponDeliverSortitionProofNotification(DeliverSortitionProofNotification notif) {
         InElectionSortitionProof electionProof = notif.getProof();
         PublicKey proposer = electionProof.getProposer();
         IncompleteSortitionProof proof = electionProof.getProof();
@@ -349,7 +349,7 @@ public class PoSAlgorandSortitionWithDRand<C extends BlockContent<? extends Inde
         return currentRound.isEmpty() || newProof.hasPriorityOver(currentRound.get().getProof());
     }
 
-    private void uponExchangeProofPeriodTimer(ExchangeProofPeriodTimer timer, long timerId) {
+    private void uponExchangeProofPeriodTimer() {
         try {
             tryToStartProposingBlocks();
         } catch (Exception e) {
@@ -375,7 +375,7 @@ public class PoSAlgorandSortitionWithDRand<C extends BlockContent<? extends Inde
         });
     }
 
-    private void uponBetweenBlocksProposalTimer(BetweenBlockProposalsTimer timer, long timerId) {
+    private void uponBetweenBlocksProposalTimer() {
         proposeMicroBlock();
     }
 

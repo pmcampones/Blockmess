@@ -73,7 +73,7 @@ public class AutomatedClient extends GenericProtocol {
                 String.valueOf(NODE_ANNOUNCEMENT_PERIOD)));
         this.automatedOutputLogFile = generateLogFile(props);
         registerTimers();
-        registerReplyHandler(BalanceReply.ID, this::uponBalanceReply);
+        registerReplyHandler(BalanceReply.ID, (BalanceReply reply, short source) -> uponBalanceReply(reply));
         subscribeNotifications();
         registerPojosSerializers();
     }
@@ -89,15 +89,15 @@ public class AutomatedClient extends GenericProtocol {
     }
 
     private void registerTimers() throws HandlerRegistrationException {
-        registerTimerHandler(GenerateTransactionTimer.ID, this::uponGenerateTransactionTimer);
-        registerTimerHandler(AnnounceNodeTimer.ID, this::uponAnnounceNodeTimer);
+        registerTimerHandler(GenerateTransactionTimer.ID, (GenerateTransactionTimer timer1, long id1) -> uponGenerateTransactionTimer());
+        registerTimerHandler(AnnounceNodeTimer.ID, (AnnounceNodeTimer timer, long id) -> uponAnnounceNodeTimer());
     }
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(DeliverAutomatedNodeJoinNotification.ID,
-                this::uponDeliverAutomatedNodeJoinNotification);
+                (DeliverAutomatedNodeJoinNotification notif1, short source1) -> uponDeliverAutomatedNodeJoinNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
-                this::uponDeliverFinalizedBlockNotification);
+                (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
     }
 
     private void registerPojosSerializers() {
@@ -118,17 +118,17 @@ public class AutomatedClient extends GenericProtocol {
         }
     }
 
-    private void uponGenerateTransactionTimer(GenerateTransactionTimer timer, long id) {
+    private void uponGenerateTransactionTimer() {
         if (canSendTransactions)
             sendRequest(new BalanceRequest(), TransactionGenerator.ID);
     }
 
-    private void uponAnnounceNodeTimer(AnnounceNodeTimer timer, long id) {
+    private void uponAnnounceNodeTimer() {
         AutomatedNodeJoin nodeJoin = new AutomatedNodeJoin(self);
         sendRequest(new DisseminateAutomatedNodeJoinRequest(nodeJoin), ValueDispatcher.ID);
     }
 
-    private void uponBalanceReply(BalanceReply reply, short source) {
+    private void uponBalanceReply(BalanceReply reply) {
         int nodeBalance = reply.getBalance();
         if (nodeBalance > 1) {
             sendTransaction(nodeBalance);
@@ -162,14 +162,14 @@ public class AutomatedClient extends GenericProtocol {
         return Optional.of(nodesList.get(randomIndex));
     }
 
-    private void uponDeliverAutomatedNodeJoinNotification(DeliverAutomatedNodeJoinNotification notif, short source) {
+    private void uponDeliverAutomatedNodeJoinNotification(DeliverAutomatedNodeJoinNotification notif) {
         AutomatedNodeJoin nodeJoin = notif.getAutomatedNodeJoin();
         PublicKey nodeKey = nodeJoin.getKey();
         if (!nodeKey.equals(self))
             nodes.add(nodeKey);
     }
 
-    private void uponDeliverFinalizedBlockNotification(DeliverFinalizedBlockIdentifiersNotification notif, short source) {
+    private void uponDeliverFinalizedBlockNotification(DeliverFinalizedBlockIdentifiersNotification notif) {
         try {
             tryToLogFinalizedBlocks(notif.getFinalizedBlocksIds());
         } catch (IOException e) {

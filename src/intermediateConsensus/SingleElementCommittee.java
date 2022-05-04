@@ -34,30 +34,29 @@ public class SingleElementCommittee<P extends SybilElectionProof,
         super(SingleElementCommittee.class.getSimpleName(), ID);
         this.ledger = ledger;
         subscribeNotification(IWasElectedWithoutBlockNotification.ID,
-                this::uponIWasElectedWithoutBlockNotification);
+                (IWasElectedWithoutBlockNotification<P> notif1, short source1) -> uponIWasElectedWithoutBlockNotification());
         subscribeNotification(IWasElectedWithBlockNotification.ID,
-                this::uponIWasElectedWithBlockNotification);
-        registerReplyHandler(BlockContentReply.ID, this::uponBlockContentReply);
+                (IWasElectedWithBlockNotification<B> notif, short source) -> uponIWasElectedWithBlockNotification(notif));
+        registerReplyHandler(BlockContentReply.ID, (BlockContentReply<B> reply, short source) -> uponBlockContentReply(reply));
     }
 
     @Override
     public void init(Properties properties) {}
 
-    private void uponIWasElectedWithoutBlockNotification(
-            IWasElectedWithoutBlockNotification<P> notif, short source) {
+    private void uponIWasElectedWithoutBlockNotification() {
         Set<UUID> previous = ledger.getBlockR();
         logger.info("Requesting block following: '{}'", previous.toString());
         /*sendRequest(new BlockContentRequest<P>(previous, notif.proof),
                 DefaultBlockConstructor.ID);*/
     }   //TODO Trocar por um pedido sincrono
 
-    private void uponBlockContentReply(BlockContentReply<B> reply, short source) {
+    private void uponBlockContentReply(BlockContentReply<B> reply) {
         B block = reply.getBlockProposal();
         logger.info("Received content for block {}", block.getBlockId());
         sendRequest(new DisseminateSignedBlockRequest<>(block), ValueDispatcher.ID);
     }
 
-    private void uponIWasElectedWithBlockNotification(IWasElectedWithBlockNotification<B> notif, short source) {
+    private void uponIWasElectedWithBlockNotification(IWasElectedWithBlockNotification<B> notif) {
         B block = notif.getBlockProposal();
         logger.info("Received content for block {}", block.getBlockId());
         sendRequest(new DisseminateSignedBlockRequest<>(block), ValueDispatcher.ID);

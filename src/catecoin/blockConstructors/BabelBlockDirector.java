@@ -34,8 +34,8 @@ public class BabelBlockDirector<E extends IndexableContent, C extends BlockConte
             throws HandlerRegistrationException {
         super(BabelBlockDirector.class.getSimpleName(), IDGenerator.genId());
         this.inner = inner;
-        subscribeNotification(DeliverIndexableContentNotification.ID, this::uponDeliverTransactionNotification);
-        subscribeNotification(DeliverFinalizedBlocksContentNotification.ID, this::uponDeliverFinalizedBlocksContentNotification);
+        subscribeNotification(DeliverIndexableContentNotification.ID, (DeliverIndexableContentNotification<E> notif1, short source1) -> uponDeliverTransactionNotification(notif1));
+        subscribeNotification(DeliverFinalizedBlocksContentNotification.ID, (DeliverFinalizedBlocksContentNotification notif, short source) -> uponDeliverFinalizedBlocksContentNotification(notif));
         registerRequestHandler(BlockContentRequest.ID, this::uponBlockContentRequest);
     }
 
@@ -108,7 +108,7 @@ public class BabelBlockDirector<E extends IndexableContent, C extends BlockConte
         inner.setChainThroughputReduction(reduction);
     }
 
-    private void uponDeliverTransactionNotification(DeliverIndexableContentNotification<E> notif, short source) {
+    private void uponDeliverTransactionNotification(DeliverIndexableContentNotification<E> notif) {
         E content = notif.getContent();
         boolean isValid = content.hasValidSemantics();
         if (isValid) {
@@ -127,7 +127,7 @@ public class BabelBlockDirector<E extends IndexableContent, C extends BlockConte
     }
 
     private void uponDeliverFinalizedBlocksContentNotification(
-            DeliverFinalizedBlocksContentNotification notif, short source) {
+            DeliverFinalizedBlocksContentNotification notif) {
         deleteContent(notif.getUsedTxs());
     }
 

@@ -40,8 +40,8 @@ public class BabelLedger<B extends LedgerBlock<? extends BlockContent<? extends 
     public BabelLedger(Ledger<B> ledger) throws HandlerRegistrationException {
         super(BabelLedger.class.getSimpleName(), ID);
         this.ledger = attachToSubjectLedger(ledger);
-        subscribeNotification(DeliverSignedBlockNotification.ID, this::uponDeliverSignedBlockNotification);
-        registerRequestHandler(GetBlockPreviousRequest.ID, this::uponGetBlockPreviousRequest);
+        subscribeNotification(DeliverSignedBlockNotification.ID, (DeliverSignedBlockNotification<B> notif, short id) -> uponDeliverSignedBlockNotification(notif));
+        registerRequestHandler(GetBlockPreviousRequest.ID, (GetBlockPreviousRequest req, short source) -> uponGetBlockPreviousRequest(source));
         ProtoPojo.pojoSerializers.put(LedgerBlockImp.ID, LedgerBlockImp.serializer);
     }
 
@@ -53,13 +53,13 @@ public class BabelLedger<B extends LedgerBlock<? extends BlockContent<? extends 
     @Override
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
-    private void uponDeliverSignedBlockNotification (DeliverSignedBlockNotification<B> notif, short id) {
+    private void uponDeliverSignedBlockNotification (DeliverSignedBlockNotification<B> notif) {
         B block = notif.getBlock();
         logger.info("Ledger received block: {}", block.getBlockId());
         ledger.submitBlock(block);
     }
 
-    private void uponGetBlockPreviousRequest(GetBlockPreviousRequest req, short source) {
+    private void uponGetBlockPreviousRequest(short source) {
         sendReply(new GetBlockPreviousReply(ledger.getBlockR()), source);
     }
 

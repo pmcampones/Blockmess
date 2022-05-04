@@ -101,18 +101,18 @@ public class InteractiveClient extends GenericProtocol {
         registerReplyHandlers();
         subscribeNotifications();
         registerPojosSerializers();
-        registerTimerHandler(AnnounceNodeTimer.ID, this::uponAnnounceNodeTimer);
+        registerTimerHandler(AnnounceNodeTimer.ID, (AnnounceNodeTimer timer, long id) -> uponAnnounceNodeTimer());
     }
 
     private void registerReplyHandlers() throws HandlerRegistrationException {
         registerReplyHandler(BalanceReply.ID, this::uponBalanceReply);
-        registerReplyHandler(SendTransactionReply.ID, this::uponSendTransactionReply);
+        registerReplyHandler(SendTransactionReply.ID, (SendTransactionReply reply, short source) -> uponSendTransactionReply(reply));
     }
 
     private void subscribeNotifications() throws HandlerRegistrationException {
-        subscribeNotification(DeliverFinalizedBlocksContentNotification.ID, this::uponNewApplicationContentNotification);
-        subscribeNotification(DeliverInteractiveNodeJoinNotification.ID, this::uponDeliverNodeJoinNotification);
-        subscribeNotification(DeliverChatMessageNotification.ID, this::uponDeliverChatMessageNotification);
+        subscribeNotification(DeliverFinalizedBlocksContentNotification.ID, (DeliverFinalizedBlocksContentNotification notif1, short source1) -> uponNewApplicationContentNotification(notif1));
+        subscribeNotification(DeliverInteractiveNodeJoinNotification.ID, (DeliverInteractiveNodeJoinNotification notif1, short source1) -> uponDeliverNodeJoinNotification(notif1));
+        subscribeNotification(DeliverChatMessageNotification.ID, (DeliverChatMessageNotification notif, short source) -> uponDeliverChatMessageNotification(notif));
     }
 
     private void registerPojosSerializers() {
@@ -131,7 +131,7 @@ public class InteractiveClient extends GenericProtocol {
         new Thread(this::execute).start();
     }
 
-    private void uponAnnounceNodeTimer(AnnounceNodeTimer timer, long id) {
+    private void uponAnnounceNodeTimer() {
         announceMyself();
     }
 
@@ -235,7 +235,7 @@ public class InteractiveClient extends GenericProtocol {
         sendRequest(new SendTransactionRequest(accounts.get(destination), amount), TransactionGenerator.ID);
     }
 
-    private void uponSendTransactionReply(SendTransactionReply reply, short source) {
+    private void uponSendTransactionReply(SendTransactionReply reply) {
         String stub = reply.wasTheTransactionSuccessfullySent()
                 ? "Successfully submitted " : "Failed to submit ";
         PublicKey txDest = reply.getTransactionDestination();
@@ -263,7 +263,7 @@ public class InteractiveClient extends GenericProtocol {
         sendRequest(new DisseminateChatMessageRequest(new ChatMessage(message)), ValueDispatcher.ID);
     }
 
-    private void uponDeliverNodeJoinNotification(DeliverInteractiveNodeJoinNotification notif, short source) {
+    private void uponDeliverNodeJoinNotification(DeliverInteractiveNodeJoinNotification notif) {
         try {
             InteractiveNodeJoin interactiveNodeJoin = notif.getNodeJoin();
             PublicKey nodeKey = interactiveNodeJoin.getNodeKey();
@@ -281,13 +281,13 @@ public class InteractiveClient extends GenericProtocol {
         }
     }
 
-    private void uponNewApplicationContentNotification(DeliverFinalizedBlocksContentNotification notif, short source) {
+    private void uponNewApplicationContentNotification(DeliverFinalizedBlocksContentNotification notif) {
         notif.getAddedUtxos().parallelStream()
                 .filter(utxo -> utxo.getUTXOOwner().equals(self))
                 .forEach(u -> System.out.printf("Received %d coins.\n", u.getAmount()));
     }
 
-    private void uponDeliverChatMessageNotification(DeliverChatMessageNotification notif, short source) {
+    private void uponDeliverChatMessageNotification(DeliverChatMessageNotification notif) {
         System.out.println(notif.getChatMessage().getMessage());
     }
 

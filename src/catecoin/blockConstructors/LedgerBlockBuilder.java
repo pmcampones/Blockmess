@@ -29,7 +29,7 @@ public class LedgerBlockBuilder<C extends BlockContent<? extends IndexableConten
     @Override
     public LedgerBlock<C, P> buildBlock(C blockContent, P proof, List<UUID> prevRefs) throws IOException,
             NoSuchAlgorithmException, SignatureException, InvalidKeyException {
-        int inherentWeight = weightComputer.computeBlockWeight(proof);
+        int inherentWeight = weightComputer.computeBlockWeight();
         return new LedgerBlockImp<>(inherentWeight, prevRefs, blockContent, proof, self);
     }
 }

@@ -95,9 +95,9 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                this::uponDeliverNonFinalizedBlockNotification);
+                (DeliverNonFinalizedBlockNotification<BlockmessBlock<C, BlockmessGPoETProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
-                this::uponDeliverFinalizedBlockNotification);
+                (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification());
     }
 
     @Override
@@ -179,7 +179,7 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
     }
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<BlockmessBlock<C, BlockmessGPoETProof>> notif, short source) {
+            DeliverNonFinalizedBlockNotification<BlockmessBlock<C, BlockmessGPoETProof>> notif) {
         try {
             lock.lock();
             updateMetablockContent(notif);
@@ -201,8 +201,7 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
         replaceChainIfNecessary(updatedChain);
     }
 
-    private void uponDeliverFinalizedBlockNotification(
-            DeliverFinalizedBlockIdentifiersNotification notif, short source) {
+    private void uponDeliverFinalizedBlockNotification() {
         List<BlockmessChain<E,C,BlockmessGPoETProof>> chains = blockmessRoot.getAvailableChains();
         try {
             lock.lock();

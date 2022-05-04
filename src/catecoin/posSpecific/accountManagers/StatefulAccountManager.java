@@ -37,7 +37,7 @@ public class StatefulAccountManager<P extends SybilElectionProof> extends Generi
         super(StatefulAccountManager.class.getSimpleName(), ID);
         this.mempoolManager = mempoolManager;
         subscribeNotification(DeliverFinalizedBlocksContentNotification.ID,
-                this::uponDeliverFinalizedBlocksContentNotification);
+                (DeliverFinalizedBlocksContentNotification notif, short source) -> uponDeliverFinalizedBlocksContentNotification(notif));
         numberCoins = parseInt(props.getProperty("numberCoins",
                 String.valueOf(MempoolManager.NUMBER_COINS)));
         //bootstrapAccounts();
@@ -91,8 +91,7 @@ public class StatefulAccountManager<P extends SybilElectionProof> extends Generi
         return accountUtxos.values().stream().mapToInt(StorageUTXO::getAmount).sum();
     }
 
-    private void uponDeliverFinalizedBlocksContentNotification(DeliverFinalizedBlocksContentNotification notif,
-                                                               short source) {
+    private void uponDeliverFinalizedBlocksContentNotification(DeliverFinalizedBlocksContentNotification notif) {
         updateBalances(notif.getAddedUtxos(), notif.getRemovedUtxo());
     }
 

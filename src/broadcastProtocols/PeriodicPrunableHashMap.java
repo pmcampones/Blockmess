@@ -72,7 +72,7 @@ public class PeriodicPrunableHashMap<K, V> extends GenericProtocol implements Ma
         buckets = new ConcurrentHashMap[numBuckets];
         for (int i = 0; i < numBuckets; i++)
             buckets[i] = new ConcurrentHashMap<>(capacity);
-        registerTimerHandler(PruneTimer.ID, this::uponTimer);
+        registerTimerHandler(PruneTimer.ID, (PruneTimer t, long tId) -> uponTimer());
         setupPeriodicTimer(new PruneTimer(), period, period);
     }
 
@@ -82,7 +82,7 @@ public class PeriodicPrunableHashMap<K, V> extends GenericProtocol implements Ma
     /**
      * Deletes the items in the oldest bucket and advances the index of the current bucket items are added
      */
-    private void uponTimer(PruneTimer t, long tId) {
+    private void uponTimer() {
         buckets[(currentBucket + buckets.length - 1) % buckets.length].clear();
         currentBucket = (currentBucket + 1) % buckets.length;
         logger.debug("CurrentElems: {}", Arrays.stream(buckets).mapToInt(Map::size).sum());

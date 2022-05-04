@@ -66,9 +66,9 @@ public class ConstantWeightLedgerKeyBlockManager<C extends BlockContent<Indexabl
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(DeliverFinalizedBlocksContentNotification.ID,
-                this::uponDeliverFinalizedBlocksContentNotification);
+                (DeliverFinalizedBlocksContentNotification notif, short source) -> uponDeliverFinalizedBlocksContentNotification(notif));
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                this::uponDeliverNonFinalizedBlockNotification);
+                (DeliverNonFinalizedBlockNotification<LedgerBlock<C, LargeSortitionProof>> notif, short source) -> uponDeliverNonFinalizedBlockNotification(notif));
     }
 
     @Override
@@ -104,7 +104,7 @@ public class ConstantWeightLedgerKeyBlockManager<C extends BlockContent<Indexabl
     }
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<C, LargeSortitionProof>> notif, short source) {
+            DeliverNonFinalizedBlockNotification<LedgerBlock<C, LargeSortitionProof>> notif) {
         LedgerBlock<C, LargeSortitionProof> block = notif.getNonFinalizedBlock();
         if (isKeyBlock(block)) {
             PublicKey proposer = block.getProposer();
@@ -127,7 +127,7 @@ public class ConstantWeightLedgerKeyBlockManager<C extends BlockContent<Indexabl
     }
 
     private void uponDeliverFinalizedBlocksContentNotification(
-            DeliverFinalizedBlocksContentNotification notif, short source) {
+            DeliverFinalizedBlocksContentNotification notif) {
         notif.getRemovedUtxo()
                 .stream()
                 .map(StorageUTXO::getId)

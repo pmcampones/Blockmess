@@ -66,8 +66,8 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         this.recordModule = recordModule;
         loadInitialUtxos(props);
         bootstrapDL(props, bootstrapModule);
-        subscribeNotification(DeliverNonFinalizedBlockNotification.ID, this::uponDeliverNonFinalizedBlockNotification);
-        subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID, this::uponDeliverFinalizedBlockNotification);
+        subscribeNotification(DeliverNonFinalizedBlockNotification.ID, (DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+        subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID, (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(SimpleBlockContentList.ID, SimpleBlockContentList.serializer);
     }
 
@@ -99,14 +99,14 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif, short source) {
+            DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif) {
         LedgerBlock<BlockContent<E>, P> block = notif.getNonFinalizedBlock();
         logger.debug("Received non finalized block with id {}", block.getBlockId());
         MempoolChunk chunk = mempoolChunkCreator.createChunk(block, notif.getCumulativeWeight());
         mempool.put(chunk.getId(), chunk);
     }
 
-    private void uponDeliverFinalizedBlockNotification(DeliverFinalizedBlockIdentifiersNotification notif, short source) {
+    private void uponDeliverFinalizedBlockNotification(DeliverFinalizedBlockIdentifiersNotification notif) {
         notif.getDiscardedBlockIds().forEach(mempool::remove);
         finalize(notif.getFinalizedBlocksIds());
     }

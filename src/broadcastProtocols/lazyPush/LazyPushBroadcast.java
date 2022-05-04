@@ -101,8 +101,8 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
         this.delayedValueTimer = parseLong(props.getProperty("delayedValueTimer",
                 String.valueOf(DELAYED_VALUE_TIMER)));
         channelId = createTCPChannel(props);
-        registerRequestHandler(LazyBroadcastRequest.ID, this::uponBroadcastRequest);
-        registerTimerHandler(DelayedResponsesTimer.ID, this::uponDelayedResponseTimer);
+        registerRequestHandler(LazyBroadcastRequest.ID, (LazyBroadcastRequest request, short sourceProto) -> uponBroadcastRequest(request));
+        registerTimerHandler(DelayedResponsesTimer.ID, (DelayedResponsesTimer t, long timerId) -> uponDelayedResponseTimer());
         subscribeNotifications();
         registerMessageConfigs();
         registerRecoveryMechanism(props);
@@ -127,9 +127,9 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(AnswerMessageValidationNotification.ID,
-                this::uponAnswerMessageValidationNotification);
-        subscribeNotification(NeighbourUpNotification.ID, this::uponNeighbourUpNotification);
-        subscribeNotification(NeighbourDownNotification.ID, this::uponNeighbourDownNotification);
+                (AnswerMessageValidationNotification notif2, short source2) -> uponAnswerMessageValidationNotification(notif2));
+        subscribeNotification(NeighbourUpNotification.ID, (NeighbourUpNotification notif1, short source1) -> uponNeighbourUpNotification(notif1));
+        subscribeNotification(NeighbourDownNotification.ID, (NeighbourDownNotification notif, short source) -> uponNeighbourDownNotification(notif));
     }
 
     private void registerMessageConfigs() throws HandlerRegistrationException {
@@ -145,11 +145,11 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
 
     private void registerMessageHandlers() throws HandlerRegistrationException {
         registerMessageHandler(channelId, LazyValMessage.ID,
-                this::uponLazyValMessage, this::uponMsgFail);
+                (LazyValMessage msg2, Host from2, short sourceProto2, int channelId3) -> uponLazyValMessage(msg2, from2), (msg3, to, destProto, throwable, channelId4) -> uponMsgFail(msg3, to, throwable));
         registerMessageHandler(channelId, ValIdentifierMessage.ID,
-                this::uponValIdentifierMessage, this::uponMsgFail);
+                (ValIdentifierMessage msg1, Host from1, short sourceProto1, int channelId2) -> uponValIdentifierMessage(msg1, from1), (msg2, to, destProto, throwable, channelId3) -> uponMsgFail(msg2, to, throwable));
         registerMessageHandler(channelId, RequestValMessage.ID,
-                this::uponRequestValMessage, this::uponMsgFail);
+                (RequestValMessage msg, Host from, short sourceProto, int channelId1) -> uponRequestValMessage(msg, from, channelId1), (msg1, to, destProto, throwable, channelId2) -> uponMsgFail(msg1, to, throwable));
     }
 
     private void registerRecoveryMechanism(Properties props)
@@ -194,14 +194,14 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
     @Override
     public void init(Properties props) {}
 
-    private void uponBroadcastRequest(LazyBroadcastRequest request, short sourceProto) {
+    private void uponBroadcastRequest(LazyBroadcastRequest request) {
         logger.info("Broadcast request to {} of value: {}", self, request.getVal());
         LazyValMessage message = new LazyValMessage(UUID.randomUUID(), request.getVal());
-        uponLazyValMessage(message, self, getProtoId(), channelId);
+        uponLazyValMessage(message, self);
     }
 
-    private void uponMsgFail(ProtoMessage msg, Host to, short destProto,
-                             Throwable throwable, int channelId) {
+    private void uponMsgFail(ProtoMessage msg, Host to,
+                             Throwable throwable) {
         logger.error("Message {} to {} failed, reason: {}\n" +
                 "Notifying peer sampling that this node is unreliable.", msg, to, throwable);
         triggerNotification(new PeerUnreachableNotification(to));
@@ -213,7 +213,7 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
      * and notifies all its peers of the message's identifier
      */
     private void uponLazyValMessage(
-            LazyValMessage msg, Host from, short sourceProto, int channelId) {
+            LazyValMessage msg, Host from) {
         UUID mid = msg.getMid();
         if (!messageBuffer.containsKey(mid)) {
             logger.info("Received message: {}\n From {}",
@@ -242,7 +242,7 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
     }
 
     private void uponAnswerMessageValidationNotification(
-            AnswerMessageValidationNotification notif, short source) {
+            AnswerMessageValidationNotification notif) {
         UUID mid = mapBlockingIdToMid.get(notif.getBlockingMessageID());
         if (mid != null) {
             logger.debug("Continuing the dissemination of message {}.", mid);
@@ -261,7 +261,7 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
      * <p>As the owner of the message may fail and others also have the requested value,
      * all peers that sent the identifier are recorded.</p>
      */
-    private void uponValIdentifierMessage(ValIdentifierMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponValIdentifierMessage(ValIdentifierMessage msg, Host from) {
         uponValIdentifier(msg.getIdOfTheContentMessage(), from);
     }
 
@@ -282,7 +282,7 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
     /**
      *A peer requests a value this node holds, simply sent it.
      */
-    private void uponRequestValMessage(RequestValMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponRequestValMessage(RequestValMessage msg, Host from, int channelId) {
         UUID mid = msg.getMissingMessageId();
         logger.debug("Peer {} requested value of identifier {}", from, mid);
         LazyValMessage valM = messageBuffer.get(mid);
@@ -295,7 +295,7 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
     /**
      * If a request for a value is taking too long, we ask other peers for the value
      */
-    private void uponDelayedResponseTimer(DelayedResponsesTimer t, long timerId) {
+    private void uponDelayedResponseTimer() {
         Collection<UUID> delayedResponses = waitingForContent.entrySet().stream()
                 .filter(e -> System.currentTimeMillis() - e.getValue() < delayedValueTimer)
                 .map(Map.Entry::getKey).collect(Collectors.toUnmodifiableSet());
@@ -307,7 +307,7 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
         }
     }
 
-    private void uponNeighbourUpNotification(NeighbourUpNotification notif, short source) {
+    private void uponNeighbourUpNotification(NeighbourUpNotification notif) {
         Host peerOg = notif.getNeighbour();
         Host peerModified = new Host(peerOg.getAddress(), peerOg.getPort() + PORT_OFFSET);
         logger.debug("Opening connection to node: {}", peerModified);
@@ -315,7 +315,7 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
         peers.add(peerModified);
     }
 
-    private void uponNeighbourDownNotification(NeighbourDownNotification notif, short source) {
+    private void uponNeighbourDownNotification(NeighbourDownNotification notif) {
         Host peerOg = notif.getNeighbour();
         Host peerModified = new Host(peerOg.getAddress(), peerOg.getPort() + PORT_OFFSET);
         logger.debug("Closing connection with node: {}", peerModified);

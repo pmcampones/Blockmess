@@ -42,23 +42,22 @@ public class RepeatedTransactionsLog extends GenericProtocol {
         Files.createFile(txRepetitionOutputFile);
         Files.writeString(txRepetitionOutputFile, "", APPEND);
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                this::uponDeliverNonFinalizedBlockNotification);
+                (DeliverNonFinalizedBlockNotification<BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
-                this::uponDeliverFinalizedBlockIdentifiers);
+                (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockIdentifiers(notif));
     }
 
     @Override
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof>> notif,
-            short source) {
+            DeliverNonFinalizedBlockNotification<BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof>> notif) {
         BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> block = notif.getNonFinalizedBlock();
         nonFinalizedBlocks.put(block.getBlockId(), block);
     }
 
     private void uponDeliverFinalizedBlockIdentifiers(
-            DeliverFinalizedBlockIdentifiersNotification notif, short source) {
+            DeliverFinalizedBlockIdentifiersNotification notif) {
         notif.getDiscardedBlockIds().forEach(nonFinalizedBlocks::remove);
         List<UUID> txs = notif.getFinalizedBlocksIds().stream()
                 .map(nonFinalizedBlocks::get)

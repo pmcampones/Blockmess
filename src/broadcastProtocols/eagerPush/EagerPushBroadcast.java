@@ -57,7 +57,7 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
         this.membership = membership;
         this.messageBuffer = messageBuffer;
         subscribeNotification(AnswerMessageValidationNotification.ID,
-                this::uponAnswerMessageValidationNotification);
+                (AnswerMessageValidationNotification notif, short source) -> uponAnswerMessageValidationNotification(notif));
         registerRequestHandler(EagerBroadcastRequest.ID, this::uponBroadcastRequest);
         registerMessageConfigs();
     }
@@ -74,7 +74,7 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
     }
 
     private void registerMessageHandlers(int cId) throws HandlerRegistrationException {
-        registerMessageHandler(cId, EagerValMessage.ID, this::uponEagerValMessage, this::uponMsgFail);
+        registerMessageHandler(cId, EagerValMessage.ID, (EagerValMessage msg1, Host from, short sourceProto, int channelId1) -> uponEagerValMessage(msg1), (msg, to, destProto, throwable, channelId) -> uponMsgFail(msg, to, throwable));
     }
 
     @Override
@@ -120,10 +120,10 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
     private void uponBroadcastRequest(EagerBroadcastRequest req, short source) {
         ProtoPojo val = req.getVal();
         EagerValMessage msg = new EagerValMessage(UUID.randomUUID(), val);
-        uponEagerValMessage(msg, self, source, membership.getChannelID());
+        uponEagerValMessage(msg);
     }
 
-    private void uponEagerValMessage(EagerValMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponEagerValMessage(EagerValMessage msg) {
         if (!messageBuffer.containsKey(msg.getMid())) {
             messageBuffer.put(msg.getMid(), msg);
             if (msg.isBlocking()) {
@@ -147,7 +147,7 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
         }
     }
 
-    private void uponAnswerMessageValidationNotification(AnswerMessageValidationNotification notif, short source) {
+    private void uponAnswerMessageValidationNotification(AnswerMessageValidationNotification notif) {
         EagerValMessage msg = mapBlockingIdToMid.get(notif.getBlockingMessageID());
         if (msg != null) {
             logger.debug("Continuing the dissemination of message {}.", msg.getMid());
@@ -161,8 +161,8 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
         logger.debug("Sent message with value {} to peers {}", msg.getVal(), peers);
     }
 
-    private void uponMsgFail(ProtoMessage msg, Host to, short destProto,
-                             Throwable throwable, int channelId) {
+    private void uponMsgFail(ProtoMessage msg, Host to,
+                             Throwable throwable) {
         logger.error("Message {} to {} failed, reason: {}\n" +
                 "Notifying peer sampling that this node is unreliable.", msg, to, throwable);
         triggerNotification(new PeerUnreachableNotification(to));

@@ -50,22 +50,21 @@ public class StateRecoveryBroadcastModule {
     public List<Triple<Short, MessageInHandler<ProtoMessage>, MessageFailedHandler<ProtoMessage>>> getMessageHandlers() {
         return List.of(
                 Triple.of(RequestRecoveryContentMessage.ID,
-                        this::uponRequestRecoveryContentMessage,
-                        this::uponFailureSendingRequestRecoveryContentMessage),
+                        (msg3, from1, source3, channel3) -> uponRequestRecoveryContentMessage(msg3, from1),
+                        (msg, to, source, throwable, channel) -> uponFailureSendingRequestRecoveryContentMessage(to)),
                 Triple.of(ReplyRecoveryContentMessage.ID,
-                        this::uponReplyRecoveryContentMessage,
-                        this::uponFailureSendingReplyRecoveryContentMessage)
+                        (msg2, from, source2, channel2) -> uponReplyRecoveryContentMessage(msg2, from),
+                        (msg1, to1, source1, throwable1, channel1) -> uponFailureSendingReplyRecoveryContentMessage(to1, throwable1))
         );
     }
 
     public List<Pair<Short, NotificationHandler<? extends ProtoNotification>>>  getNotificationSubscriptions() {
         return List.of(
-            Pair.of(RequireStateRecoveryNotification.ID, this::uponRequireStateRecoveryNotification)
+            Pair.of(RequireStateRecoveryNotification.ID, (notif, source) -> uponRequireStateRecoveryNotification())
         );
     }
 
-    private void uponRequestRecoveryContentMessage(ProtoMessage msg, Host from,
-                                                   short source, int channel) {
+    private void uponRequestRecoveryContentMessage(ProtoMessage msg, Host from) {
         if (msg instanceof RequestRecoveryContentMessage) {
             answerRequestRecoveryContent((RequestRecoveryContentMessage) msg, from);
             logger.debug("Answering state recovery content to node: {}", from);
@@ -86,8 +85,7 @@ public class StateRecoveryBroadcastModule {
         broadcastProtocol.sendMessageToPeer(replyMsg, requester);
     }
 
-    private void uponReplyRecoveryContentMessage(ProtoMessage msg, Host from,
-                                                 short source, int channel) {
+    private void uponReplyRecoveryContentMessage(ProtoMessage msg, Host from) {
         if (msg instanceof ReplyRecoveryContentMessage) {
             ReplyRecoveryContentMessage replyMsg = (ReplyRecoveryContentMessage) msg;
             logger.info("Delivering {} received state recovery messages from {}.",
@@ -99,20 +97,17 @@ public class StateRecoveryBroadcastModule {
         }
     }
 
-    private void uponFailureSendingReplyRecoveryContentMessage(ProtoMessage msg, Host to,
-                                                               short source, Throwable throwable,
-                                                               int channel) {
+    private void uponFailureSendingReplyRecoveryContentMessage(Host to,
+                                                               Throwable throwable) {
         logger.error("Attempted to send state recovery content to {}, but failed because: {}",
                 to, throwable.getMessage());
     }
 
-    private void uponFailureSendingRequestRecoveryContentMessage (ProtoMessage msg, Host to,
-                                                                  short source, Throwable throwable,
-                                                                  int channel) {
+    private void uponFailureSendingRequestRecoveryContentMessage (Host to) {
         sendRequestRecoveryMessage(Set.of(to));
     }
 
-    private void uponRequireStateRecoveryNotification(ProtoNotification notif, short source) {
+    private void uponRequireStateRecoveryNotification() {
         sendRequestRecoveryMessage(emptySet());
     }
 

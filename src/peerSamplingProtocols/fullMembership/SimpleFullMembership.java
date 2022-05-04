@@ -49,16 +49,16 @@ public class SimpleFullMembership extends GenericProtocol implements PeerSamplin
 
     private void channelConfigurations() throws HandlerRegistrationException {
         registerMessageSerializer(channelId, SampleMessage.ID, SampleMessage.serializer);
-        registerMessageHandler(channelId, SampleMessage.ID, this::uponSample, this::uponMsgFail);
+        registerMessageHandler(channelId, SampleMessage.ID, (SampleMessage msg1, Host from, short sourceProto, int channelId2) -> uponSample(msg1, from), (msg, host, destProto, throwable, channelId1) -> uponMsgFail(msg, host, throwable));
         registerChannelEvents();
     }
 
     private void registerChannelEvents() throws HandlerRegistrationException {
-        registerChannelEventHandler(channelId, OutConnectionDown.EVENT_ID, this::uponOutConnectionDown);
-        registerChannelEventHandler(channelId, OutConnectionFailed.EVENT_ID, this::uponOutConnectionFailed);
-        registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, this::uponOutConnectionUp);
-        registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, this::uponInConnectionUp);
-        registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, this::uponInConnectionDown);
+        registerChannelEventHandler(channelId, OutConnectionDown.EVENT_ID, (OutConnectionDown event3, int channelId4) -> uponOutConnectionDown(event3));
+        registerChannelEventHandler(channelId, OutConnectionFailed.EVENT_ID, (OutConnectionFailed<ProtoMessage> event2, int channelId3) -> uponOutConnectionFailed(event2));
+        registerChannelEventHandler(channelId, OutConnectionUp.EVENT_ID, (OutConnectionUp event2, int channelId3) -> uponOutConnectionUp(event2));
+        registerChannelEventHandler(channelId, InConnectionUp.EVENT_ID, (InConnectionUp event1, int channelId2) -> uponInConnectionUp(event1));
+        registerChannelEventHandler(channelId, InConnectionDown.EVENT_ID, (InConnectionDown event, int channelId1) -> uponInConnectionDown(event));
     }
 
     @Override
@@ -85,13 +85,13 @@ public class SimpleFullMembership extends GenericProtocol implements PeerSamplin
     }
 
     private void configureSampling(Properties props) throws HandlerRegistrationException {
-        registerTimerHandler(SampleTimer.ID, this::uponSampleTimer);
+        registerTimerHandler(SampleTimer.ID, (SampleTimer timer, long timerId) -> uponSampleTimer());
         int sampleTime = Integer.parseInt(props.getProperty("sample_time", "2000")); //2 seconds
         setupPeriodicTimer(new SampleTimer(), sampleTime, sampleTime);
     }
 
     /*--------------------------------- Messages ---------------------------------------- */
-    private void uponSample(SampleMessage msg, Host from, short sourceProto, int channelId) {
+    private void uponSample(SampleMessage msg, Host from) {
         logger.debug("Received {} from {}", msg, from);
         for (Host h : msg.sample) {
             if (!h.equals(self) && !membership.contains(h) && !pending.contains(h)) {
@@ -101,14 +101,14 @@ public class SimpleFullMembership extends GenericProtocol implements PeerSamplin
         }
     }
 
-    private void uponMsgFail(ProtoMessage msg, Host host, short destProto,
-                             Throwable throwable, int channelId) {
+    private void uponMsgFail(ProtoMessage msg, Host host,
+                             Throwable throwable) {
         //If a message fails to be sent, for whatever reason, log the message and the reason
         logger.error("Message {} to {} failed, reason: {}", msg, host, throwable);
     }
 
     /*--------------------------------- Timers ---------------------------------------- */
-    private void uponSampleTimer(SampleTimer timer, long timerId) {
+    private void uponSampleTimer() {
         //When the SampleTimer is triggered, get a random peer in the membership and send a sample
         logger.debug("Sample Time: membership{}", membership);
         if (membership.size() > 0) {
@@ -138,7 +138,7 @@ public class SimpleFullMembership extends GenericProtocol implements PeerSamplin
 
     //If a connection is successfully established, this event is triggered. In this protocol, we want to add the
     //respective peer to the membership, and inform the Dissemination protocol via a notification.
-    private void uponOutConnectionUp(OutConnectionUp event, int channelId) {
+    private void uponOutConnectionUp(OutConnectionUp event) {
         Host peer = event.getNode();
         logger.debug("Connection to {} is up", peer);
         pending.remove(peer);
@@ -147,7 +147,7 @@ public class SimpleFullMembership extends GenericProtocol implements PeerSamplin
 
     //If an established connection is disconnected, remove the peer from the membership and inform the Dissemination
     //protocol. Alternatively, we could do smarter things like retrying the connection X times.
-    private void uponOutConnectionDown(OutConnectionDown event, int channelId) {
+    private void uponOutConnectionDown(OutConnectionDown event) {
         Host peer = event.getNode();
         logger.debug("Connection to {} is down cause {}", peer, event.getCause());
         membership.remove(event.getNode());
@@ -156,7 +156,7 @@ public class SimpleFullMembership extends GenericProtocol implements PeerSamplin
     //If a connection fails to be established, this event is triggered. In this protocol, we simply remove from the
     //pending set. Note that this event is only triggered while attempting a connection, not after connection.
     //Thus the peer will be in the pending set, and not in the membership (unless something is very wrong with our code)
-    private void uponOutConnectionFailed(OutConnectionFailed<ProtoMessage> event, int channelId) {
+    private void uponOutConnectionFailed(OutConnectionFailed<ProtoMessage> event) {
         logger.debug("Connection to {} failed cause: {}", event.getNode(), event.getCause());
         pending.remove(event.getNode());
     }
@@ -164,12 +164,12 @@ public class SimpleFullMembership extends GenericProtocol implements PeerSamplin
     //If someone established a connection to me, this event is triggered. In this protocol we do nothing with this event.
     //If we want to add the peer to the membership, we will establish our own outgoing connection.
     // (not the smartest protocol, but its simple)
-    private void uponInConnectionUp(InConnectionUp event, int channelId) {
+    private void uponInConnectionUp(InConnectionUp event) {
         logger.trace("Connection from {} is up", event.getNode());
     }
 
     //A connection someone established to me is disconnected.
-    private void uponInConnectionDown(InConnectionDown event, int channelId) {
+    private void uponInConnectionDown(InConnectionDown event) {
         logger.trace("Connection from {} is down, cause: {}", event.getNode(), event.getCause());
     }
 

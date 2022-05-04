@@ -31,7 +31,7 @@ public class ChatApplication extends GenericProtocol {
 
     public ChatApplication(Properties props) throws HandlerRegistrationException, IOException {
         super(ChatApplication.class.getSimpleName(), IDGenerator.genId());
-        subscribeNotification(DeliverChatMessageNotification.ID, this::uponDeliverChatMessageNotification);
+        subscribeNotification(DeliverChatMessageNotification.ID, (DeliverChatMessageNotification notif, short source) -> uponDeliverChatMessageNotification(notif));
         ProtoPojo.pojoSerializers.put(ChatMessage.ID, ChatMessage.serializer);
 
         this.chatOutputLogFile = props.getProperty("chatOutputLogFile", CHAT_OUTPUT_LOG_FILE);
@@ -61,7 +61,7 @@ public class ChatApplication extends GenericProtocol {
         }).start();
     }
 
-    private void uponDeliverChatMessageNotification(DeliverChatMessageNotification notif, short source) {
+    private void uponDeliverChatMessageNotification(DeliverChatMessageNotification notif) {
         ChatMessage chatMessage = notif.getChatMessage();
         String messageContent = chatMessage.getMessage();
         logger.info("Received chat message with content: {}", messageContent);
