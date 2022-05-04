@@ -1,6 +1,6 @@
 package catecoin.validators;
 
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.security.PublicKey;
 

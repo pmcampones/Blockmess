@@ -1,16 +1,15 @@
-package sybilResistantCommitteeElection.poet;
+package sybilResistantElection;
 
 import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import main.CryptographicUtils;
-import sybilResistantCommitteeElection.poet.gpoet.BlockmessGPoETProof;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-public class GPoETChainSeed<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>> {
+public class ChainSeed<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>> {
 
     private final UUID ChainId;
 
@@ -20,9 +19,9 @@ public class GPoETChainSeed<E extends IndexableContent, C extends BlockContent<S
 
     private final byte[] ChainSeed;
 
-    private final BlockmessChain<E,C, BlockmessGPoETProof> Chain;
+    private final BlockmessChain<E,C, SybilResistantElectionProof> Chain;
 
-    public GPoETChainSeed(UUID ChainId, UUID prevBlock, C currContent, BlockmessChain<E,C, BlockmessGPoETProof> Chain) {
+    public ChainSeed(UUID ChainId, UUID prevBlock, C currContent, BlockmessChain<E,C, SybilResistantElectionProof> Chain) {
         this.ChainId = ChainId;
         this.prevBlock = prevBlock;
         this.currContent = currContent;
@@ -61,7 +60,7 @@ public class GPoETChainSeed<E extends IndexableContent, C extends BlockContent<S
         return ChainSeed;
     }
 
-    public BlockmessChain<E,C, BlockmessGPoETProof> getChain() {
+    public BlockmessChain<E,C, SybilResistantElectionProof> getChain() {
         return Chain;
     }
 

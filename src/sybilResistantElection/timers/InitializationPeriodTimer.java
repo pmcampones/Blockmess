@@ -1,4 +1,4 @@
-package sybilResistantCommitteeElection.poet.timers;
+package sybilResistantElection.timers;
 
 import pt.unl.fct.di.novasys.babel.generic.ProtoTimer;
 import utils.IDGenerator;

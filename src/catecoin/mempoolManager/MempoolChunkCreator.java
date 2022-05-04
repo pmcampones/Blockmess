@@ -4,7 +4,7 @@ import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 public interface MempoolChunkCreator<E extends IndexableContent, P extends SybilElectionProof> {
 

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toMap;
-import static sybilResistantCommitteeElection.poet.gpoet.BlockmessGPoET.INITIALIZATION_TIME;
+import static sybilResistantElection.SybilResistantElection.INITIALIZATION_TIME;
 
 public abstract class AbstractContentStorage<E extends IndexableContent>
         implements PrototypicalContentStorage<E> {

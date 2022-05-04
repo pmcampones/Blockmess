@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
 

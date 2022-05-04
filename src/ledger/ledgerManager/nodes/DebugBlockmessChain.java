@@ -5,7 +5,7 @@ import ledger.DebugLedger;
 import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.util.List;
 

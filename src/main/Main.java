@@ -34,8 +34,8 @@ import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import pt.unl.fct.di.novasys.babel.exceptions.ProtocolAlreadyExistsException;
 import pt.unl.fct.di.novasys.network.data.Host;
-import sybilResistantCommitteeElection.poet.gpoet.BlockmessGPoET;
-import sybilResistantCommitteeElection.poet.gpoet.BlockmessGPoETProof;
+import sybilResistantElection.SybilResistantElection;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.InterfaceToIp;
 import valueDispatcher.ValueDispatcher;
 
@@ -134,32 +134,32 @@ public class Main {
     }
 
     @NotNull
-    private static MempoolManager<StructuredValue<SlimTransaction>, BlockmessGPoETProof> setUpMempoolManager(Properties props)
+    private static MempoolManager<StructuredValue<SlimTransaction>, SybilResistantElectionProof> setUpMempoolManager(Properties props)
             throws Exception {
         var bootstrapMod = new MinimalistBootstrapModule();
         var recordMod = new MinimalistRecordModule(props);
-        MinimalistChunkCreator<BlockmessGPoETProof> innerChunkCreator = new MinimalistChunkCreator<>();
+        MinimalistChunkCreator<SybilResistantElectionProof> innerChunkCreator = new MinimalistChunkCreator<>();
         var wrapperChunkCreator = new StructuredValueChunkCreator<>(innerChunkCreator);
         return new MempoolManager<>(props, wrapperChunkCreator,recordMod,bootstrapMod);
     }
 
-    private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> ledgerManager) throws Exception {
+    private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) throws Exception {
         KeyPair myKeys = CryptographicUtils.getNodeKeys(props);
-        protocols.add(new BlockmessGPoET<>(props, myKeys, ledgerManager));
+        protocols.add(new SybilResistantElection<>(props, myKeys, ledgerManager));
     }
 
     @NotNull
-    private static LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> setUpLedgerManager(
+    private static LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> setUpLedgerManager(
             Properties props, List<GenericProtocol> protocols)
             throws PrototypeHasNotBeenDefinedException, HandlerRegistrationException {
-        LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> ledgerManager =
+        LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager =
                 new LedgerManager<>(props);
         var babelLedger = new BabelLedger<>(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
     }
 
-    private static void setUpContentStoragePrototype(Properties props, MempoolManager<StructuredValue<SlimTransaction>, BlockmessGPoETProof> mempoolManager) throws PrototypeAlreadyDefinedException {
+    private static void setUpContentStoragePrototype(Properties props, MempoolManager<StructuredValue<SlimTransaction>, SybilResistantElectionProof> mempoolManager) throws PrototypeAlreadyDefinedException {
         PrototypicalContentStorage<StructuredValue<SlimTransaction>> contentStorage =
                 new ContextAwareContentStorage<>(props, mempoolManager);
         ContentStoragePrototype.setPrototype(contentStorage);
@@ -172,7 +172,7 @@ public class Main {
         LedgerPrototype.setPrototype(protoLedger);
     }
 
-    private static void bootstrapContent(Properties props, LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> ledgerManager) {
+    private static void bootstrapContent(Properties props, LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) {
         var txsLoader = new StructuredValuesTxLoader(ledgerManager);
         if (props.getProperty("allowCommonTransactionsAmongChains", "F").equals("F")) {
             loadTxsForBlockmess(props, txsLoader);
@@ -182,7 +182,7 @@ public class Main {
         }
     }
 
-    private static void recordMetricsBlockmess(Properties props, List<GenericProtocol> protocols, LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> ledgerManager) throws IOException, HandlerRegistrationException {
+    private static void recordMetricsBlockmess(Properties props, List<GenericProtocol> protocols, LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) throws IOException, HandlerRegistrationException {
         if (props.getProperty("recordUnfinalized", "T").equals("T"))
             ledgerManager.attachObserver(new UnfinalizedBlocksLog(props));
         if (props.getProperty("recordFinalized", "T").equals("T"))
@@ -197,11 +197,11 @@ public class Main {
         ProtoPojo.pojoSerializers.put(BlockmessBlockImp.ID, BlockmessBlockImp.serializer);
         ProtoPojo.pojoSerializers.put(SimpleBlockContentList.ID, SimpleBlockContentList.serializer);
         ProtoPojo.pojoSerializers.put(SlimTransaction.ID, SlimTransaction.serializer);
-        ProtoPojo.pojoSerializers.put(BlockmessGPoETProof.ID, BlockmessGPoETProof.serializer);
+        ProtoPojo.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
         ProtoPojo.pojoSerializers.put(StructuredValue.ID, StructuredValue.serializer);
     }
 
-    private static boolean areAllTxsDistinctAmongChains(LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> ledgerManager) {
+    private static boolean areAllTxsDistinctAmongChains(LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) {
         List<UUID> allTxsIds = ledgerManager.getAvailableChains().stream()
                 .map(ContentStorage::getStoredContent)
                 .flatMap(Collection::stream)
@@ -247,7 +247,7 @@ public class Main {
 
     private static void loadTxsCommon(
             Properties props, LedgerManager<SlimTransaction,
-            BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> ledgerManager) {
+            BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) {
         int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
         var txs = new FakeTxsGenerator(null).generateFakeTxs(numTxs);
         var structuredValues = txs.stream()

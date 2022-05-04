@@ -12,7 +12,7 @@ import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import main.CryptographicUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

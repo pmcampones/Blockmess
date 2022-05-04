@@ -9,7 +9,7 @@ import main.CryptographicUtils;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.io.IOException;
 import java.security.*;

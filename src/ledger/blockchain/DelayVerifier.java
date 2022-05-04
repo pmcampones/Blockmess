@@ -3,10 +3,8 @@ package ledger.blockchain;
 import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.util.LinkedList;
 import java.util.List;

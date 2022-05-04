@@ -3,7 +3,7 @@ package catecoin.validators;
 import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 /**
  * Represents an application component that verifies the validity of blocks.

@@ -1,10 +1,10 @@
-package sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers;
+package sybilResistantElection.difficultyComputers;
 
 import java.util.Properties;
 
 import static java.lang.Integer.parseInt;
 
-public class LedgerGPoETDifficultyComputer implements GPoETDifficultyComputer {
+public class BaseDifficultyComputer implements DifficultyComputer {
 
     public static final String EXPECTED_NUM_NODES = "4";
 
@@ -14,7 +14,7 @@ public class LedgerGPoETDifficultyComputer implements GPoETDifficultyComputer {
 
     protected final int numLeadingZeros;
 
-    public LedgerGPoETDifficultyComputer(Properties props) {
+    public BaseDifficultyComputer(Properties props) {
         int expectedNumNodes = parseInt(props.getProperty("expectedNumNodes", EXPECTED_NUM_NODES));
         int timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
         int expectedTimeBetweenBlocks = parseInt(props
@@ -22,7 +22,7 @@ public class LedgerGPoETDifficultyComputer implements GPoETDifficultyComputer {
         numLeadingZeros = computeDifficulty(expectedNumNodes, timeBetweenQueries, expectedTimeBetweenBlocks);
     }
 
-    LedgerGPoETDifficultyComputer(double probNodeFindingSolutionInRound) {
+    BaseDifficultyComputer(double probNodeFindingSolutionInRound) {
         this.numLeadingZeros = computeNumLeadingZeros(probNodeFindingSolutionInRound);
     }
 

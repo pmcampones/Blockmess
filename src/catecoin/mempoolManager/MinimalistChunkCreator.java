@@ -6,7 +6,7 @@ import catecoin.txs.SlimTransaction;
 import catecoin.utxos.StorageUTXO;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.util.Set;
 import java.util.UUID;

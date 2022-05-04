@@ -3,7 +3,7 @@ package ledger.blocks;
 import broadcastProtocols.BlockingBroadcast;
 import catecoin.blocks.ValidatorSignature;
 import main.ProtoPojo;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.security.PublicKey;
 import java.util.List;

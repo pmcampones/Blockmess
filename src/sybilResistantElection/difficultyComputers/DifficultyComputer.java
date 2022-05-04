@@ -1,6 +1,6 @@
-package sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers;
+package sybilResistantElection.difficultyComputers;
 
-public interface GPoETDifficultyComputer {
+public interface DifficultyComputer {
 
     int getSolutionLeadingZeros(byte[] solution);
 

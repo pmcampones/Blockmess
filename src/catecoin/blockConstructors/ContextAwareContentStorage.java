@@ -2,7 +2,7 @@ package catecoin.blockConstructors;
 
 import catecoin.mempoolManager.MempoolManager;
 import catecoin.txs.IndexableContent;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.io.IOException;
 import java.util.*;

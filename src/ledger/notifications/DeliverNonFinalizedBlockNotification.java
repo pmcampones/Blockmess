@@ -4,7 +4,7 @@ import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 import utils.IDGenerator;
 
 public class DeliverNonFinalizedBlockNotification<B extends LedgerBlock<

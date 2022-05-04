@@ -3,7 +3,7 @@ package ledger;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import main.ProtoPojo;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.util.List;
 import java.util.Set;

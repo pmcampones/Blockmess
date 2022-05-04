@@ -6,7 +6,7 @@ import io.netty.buffer.ByteBuf;
 import main.CryptographicUtils;
 import main.ProtoPojo;
 import pt.unl.fct.di.novasys.network.ISerializer;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.io.IOException;
 import java.security.*;

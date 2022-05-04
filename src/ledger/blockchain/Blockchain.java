@@ -11,7 +11,7 @@ import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.util.*;
 import java.util.concurrent.*;

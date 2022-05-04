@@ -4,7 +4,7 @@ import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import pt.unl.fct.di.novasys.babel.generic.ProtoReply;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 import utils.IDGenerator;
 
 public class BlockContentReply<B extends LedgerBlock<? extends BlockContent<? extends IndexableContent>, ? extends SybilElectionProof>>

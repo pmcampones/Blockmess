@@ -1,4 +1,4 @@
-package sybilResistantCommitteeElection.poet.gpoet;
+package sybilResistantElection;
 
 import catecoin.blocks.SimpleBlockContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
@@ -18,10 +18,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantCommitteeElection.notifications.IWasElectedWithBlockNotification;
-import sybilResistantCommitteeElection.poet.GPoETChainSeed;
-import sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers.BlockmessGPoETDifficultyComputer;
-import sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers.ConcurrentBlockmessGPoETDifficultyComputer;
+import sybilResistantElection.notifications.IWasElectedWithBlockNotification;
+import sybilResistantElection.difficultyComputers.MultiChainDifficultyComputer;
+import sybilResistantElection.difficultyComputers.ConcurrentDifficultyComputer;
 import utils.IDGenerator;
 import utils.merkleTree.ConcurrentMerkleTree;
 import utils.merkleTree.ConsistentOrderMerkleTree;
@@ -41,12 +40,12 @@ import java.util.stream.Stream;
 
 import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toList;
-import static sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers.LedgerGPoETDifficultyComputer.TIME_BETWEEN_QUERIES;
+import static sybilResistantElection.difficultyComputers.BaseDifficultyComputer.TIME_BETWEEN_QUERIES;
 
-public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>>
+public class SybilResistantElection<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>>
         extends GenericProtocol {
 
-    private static final Logger logger = LogManager.getLogger(BlockmessGPoET.class);
+    private static final Logger logger = LogManager.getLogger(SybilResistantElection.class);
 
     public static final short ID = IDGenerator.genId();
 
@@ -58,44 +57,44 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
 
     private final KeyPair self;
 
-    private LinkedHashMap<UUID, GPoETChainSeed<E,C>> chainSeeds = new LinkedHashMap<>();
+    private LinkedHashMap<UUID, ChainSeed<E,C>> chainSeeds = new LinkedHashMap<>();
 
     private MerkleTree randomSeed;
 
-    private final LedgerManager<E, C, BlockmessGPoETProof> blockmessRoot;
+    private final LedgerManager<E, C, SybilResistantElectionProof> blockmessRoot;
 
-    private final BlockmessGPoETDifficultyComputer difficultyComputer;
+    private final MultiChainDifficultyComputer difficultyComputer;
 
     private final ReentrantLock lock = new ReentrantLock();
 
     private int nonce = 0;
 
-    public BlockmessGPoET(Properties props, KeyPair self, LedgerManager<E, C, BlockmessGPoETProof> blockmessRoot) throws HandlerRegistrationException {
-        super(BlockmessGPoET.class.getSimpleName(), ID);
+    public SybilResistantElection(Properties props, KeyPair self, LedgerManager<E, C, SybilResistantElectionProof> blockmessRoot) throws HandlerRegistrationException {
+        super(SybilResistantElection.class.getSimpleName(), ID);
         this.self = self;
         this.blockmessRoot = blockmessRoot;
         this.timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
         this.initializationTime = parseInt(props.getProperty("initializationTime",
                 String.valueOf(INITIALIZATION_TIME)));
-        this.difficultyComputer = new ConcurrentBlockmessGPoETDifficultyComputer(props,
+        this.difficultyComputer = new ConcurrentDifficultyComputer(props,
                 blockmessRoot.getAvailableChains().size());
         this.chainSeeds = replaceChainSeeds(blockmessRoot.getAvailableChains());
         this.randomSeed = computeRandomSeed();
-        ProtoPojo.pojoSerializers.put(BlockmessGPoETProof.ID, BlockmessGPoETProof.serializer);
+        ProtoPojo.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
         subscribeNotifications();
     }
 
     private MerkleTree computeRandomSeed() {
         List<byte[]> randomSeedElements = Stream.concat(
                 Stream.of(self.getPublic().getEncoded()),
-                chainSeeds.values().stream().map(GPoETChainSeed::getChainSeed)
+                chainSeeds.values().stream().map(ChainSeed::getChainSeed)
         ).collect(toList());
         return new ConcurrentMerkleTree(new ConsistentOrderMerkleTree(randomSeedElements));
     }
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<BlockmessBlock<C, BlockmessGPoETProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<BlockmessBlock<C, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification());
     }
@@ -128,10 +127,10 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
     private void tryToProposeBlock(byte[] solution) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
         logger.info("Found valid solution with nonce {}, with {} leading zeros",
                 nonce, difficultyComputer.getSolutionLeadingZeros(solution));
-        GPoETChainSeed<E,C> placementChain = multiplexChain(solution);
+        ChainSeed<E,C> placementChain = multiplexChain(solution);
         List<Pair<UUID, byte[]>> chainSeeds = computeChainSeedsList();
-        BlockmessGPoETProof proof = new BlockmessGPoETProof(chainSeeds, nonce);
-        BlockmessBlock<C, BlockmessGPoETProof> block =
+        SybilResistantElectionProof proof = new SybilResistantElectionProof(chainSeeds, nonce);
+        BlockmessBlock<C, SybilResistantElectionProof> block =
                 new BlockmessBlockImp<>(1, List.of(placementChain.getPrevBlock()),
                         placementChain.getCurrContent(), proof, self, placementChain.getChainId(),
                         placementChain.getChain().getRankFromRefs(Set.of(placementChain.getPrevBlock())),
@@ -155,14 +154,14 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
                 .collect(toList());
     }
 
-    private GPoETChainSeed<E,C> multiplexChain(byte[] solution) {
+    private ChainSeed<E,C> multiplexChain(byte[] solution) {
         long lastInteger = Integer.toUnsignedLong(getLastInteger(solution));
         int numChains = chainSeeds.size();
         long maxUnsignedInteger = 1L << Integer.SIZE;
         long ChainInterval = maxUnsignedInteger / numChains;
         long accum = 0;
-        GPoETChainSeed<E,C> currProof;
-        Iterator<GPoETChainSeed<E,C>> it = chainSeeds.values().iterator();
+        ChainSeed<E,C> currProof;
+        Iterator<ChainSeed<E,C>> it = chainSeeds.values().iterator();
         do {
             currProof = it.next();
             accum += ChainInterval;
@@ -179,7 +178,7 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
     }
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<BlockmessBlock<C, BlockmessGPoETProof>> notif) {
+            DeliverNonFinalizedBlockNotification<BlockmessBlock<C, SybilResistantElectionProof>> notif) {
         try {
             lock.lock();
             updateMetablockContent(notif);
@@ -188,21 +187,21 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
         }
     }
 
-    private void updateMetablockContent(DeliverNonFinalizedBlockNotification<BlockmessBlock<C, BlockmessGPoETProof>> notif) {
+    private void updateMetablockContent(DeliverNonFinalizedBlockNotification<BlockmessBlock<C, SybilResistantElectionProof>> notif) {
         try {
             Thread.sleep(100);  //Enough time for the mempool manager to process the block.
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        List<BlockmessChain<E,C,BlockmessGPoETProof>> chains = blockmessRoot.getAvailableChains();
+        List<BlockmessChain<E,C, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
         if (wereChainsChanged(chains))
             reactToChangeInNumberOfChains(chains);
-        BlockmessBlock<C,BlockmessGPoETProof> updatedChain = notif.getNonFinalizedBlock();
+        BlockmessBlock<C, SybilResistantElectionProof> updatedChain = notif.getNonFinalizedBlock();
         replaceChainIfNecessary(updatedChain);
     }
 
     private void uponDeliverFinalizedBlockNotification() {
-        List<BlockmessChain<E,C,BlockmessGPoETProof>> chains = blockmessRoot.getAvailableChains();
+        List<BlockmessChain<E,C, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
         try {
             lock.lock();
             if (wereChainsChanged(chains))
@@ -212,7 +211,7 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
         }
     }
 
-    private void reactToChangeInNumberOfChains(List<BlockmessChain<E, C, BlockmessGPoETProof>> chains) {
+    private void reactToChangeInNumberOfChains(List<BlockmessChain<E, C, SybilResistantElectionProof>> chains) {
         difficultyComputer.setNumChains(chains.size());
         chainSeeds = replaceChainSeeds(chains);
         randomSeed = computeRandomSeed();
@@ -220,15 +219,15 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
                 chainSeeds.size(), difficultyComputer.getNumLeadingZeros());
     }
 
-    private boolean wereChainsChanged(List<BlockmessChain<E,C,BlockmessGPoETProof>> updatedChains) {
+    private boolean wereChainsChanged(List<BlockmessChain<E,C, SybilResistantElectionProof>> updatedChains) {
         return !(updatedChains.size() == chainSeeds.size()
                 && updatedChains.stream()
                 .map(BlockmessChain::getChainId)
                 .allMatch(chainSeeds::containsKey));
     }
 
-    private LinkedHashMap<UUID, GPoETChainSeed<E,C>> replaceChainSeeds(
-            List<BlockmessChain<E,C,BlockmessGPoETProof>> updatedChains) {
+    private LinkedHashMap<UUID, ChainSeed<E,C>> replaceChainSeeds(
+            List<BlockmessChain<E,C, SybilResistantElectionProof>> updatedChains) {
         try {
             return tryToReplaceChainSeeds(updatedChains);
         } catch (IOException e) {
@@ -237,27 +236,27 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
         return chainSeeds;
     }
 
-    private LinkedHashMap<UUID, GPoETChainSeed<E,C>> tryToReplaceChainSeeds(
-            List<BlockmessChain<E,C,BlockmessGPoETProof>> updatedChains) throws IOException {
-        LinkedHashMap<UUID, GPoETChainSeed<E,C>> replacement = new LinkedHashMap<>(updatedChains.size());
+    private LinkedHashMap<UUID, ChainSeed<E,C>> tryToReplaceChainSeeds(
+            List<BlockmessChain<E,C, SybilResistantElectionProof>> updatedChains) throws IOException {
+        LinkedHashMap<UUID, ChainSeed<E,C>> replacement = new LinkedHashMap<>(updatedChains.size());
         for (var chain : updatedChains) {
-            GPoETChainSeed<E,C> oldSeed = chainSeeds.get(chain.getChainId());
-            GPoETChainSeed<E,C> replacementSeed = oldSeed == null ?
+            ChainSeed<E,C> oldSeed = chainSeeds.get(chain.getChainId());
+            ChainSeed<E,C> replacementSeed = oldSeed == null ?
                     computeChainRandomSeed(chain) : oldSeed;
             replacement.put(replacementSeed.getChainId(), replacementSeed);
         }
         return replacement;
     }
 
-    private GPoETChainSeed<E,C> computeChainRandomSeed(BlockmessChain<E,C,BlockmessGPoETProof> chain)
+    private ChainSeed<E,C> computeChainRandomSeed(BlockmessChain<E,C, SybilResistantElectionProof> chain)
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
         List<StructuredValue<E>> contentLst = chain.generateBlockContentList(prevBlocks, getAproximateProofSize());
         C content = (C) new SimpleBlockContentList<>(contentLst);
-        return new GPoETChainSeed<>(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
+        return new ChainSeed<>(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
     }
 
-    private void replaceChainIfNecessary(BlockmessBlock<C, BlockmessGPoETProof> newBlock) {
+    private void replaceChainIfNecessary(BlockmessBlock<C, SybilResistantElectionProof> newBlock) {
         try {
             tryToReplaceChainIfNecessary(newBlock);
         } catch (IOException e) {
@@ -265,9 +264,9 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
         }
     }
 
-    private void tryToReplaceChainIfNecessary(BlockmessBlock<C, BlockmessGPoETProof> newBlock)
+    private void tryToReplaceChainIfNecessary(BlockmessBlock<C, SybilResistantElectionProof> newBlock)
             throws IOException {
-        GPoETChainSeed<E,C> oldSeed = chainSeeds.get(newBlock.getDestinationChain());
+        ChainSeed<E,C> oldSeed = chainSeeds.get(newBlock.getDestinationChain());
         if (oldSeed != null) {
             Set<UUID> newPrevs = oldSeed.getChain().getBlockR();
             if (!newPrevs.contains(oldSeed.getPrevBlock()))
@@ -275,13 +274,13 @@ public class BlockmessGPoET<E extends IndexableContent, C extends BlockContent<S
         }
     }
 
-    private void replaceChain(GPoETChainSeed<E, C> oldSeed, Set<UUID> newPrevs) throws IOException {
+    private void replaceChain(ChainSeed<E, C> oldSeed, Set<UUID> newPrevs) throws IOException {
         UUID newPrev = newPrevs.iterator().next();
-        BlockmessChain<E,C,BlockmessGPoETProof> chain = oldSeed.getChain();
+        BlockmessChain<E,C, SybilResistantElectionProof> chain = oldSeed.getChain();
         List<StructuredValue<E>> contentLst = chain.generateBlockContentList(newPrevs, getAproximateProofSize());
         C newContent = (C) new SimpleBlockContentList<>(contentLst);
-        GPoETChainSeed<E,C> newChainSeed =
-                new GPoETChainSeed<>(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
+        ChainSeed<E,C> newChainSeed =
+                new ChainSeed<>(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
         chainSeeds.replace(oldSeed.getChainId(), newChainSeed);
         randomSeed.replaceLeaf(oldSeed.getChainSeed(), newChainSeed.getChainSeed());
     }

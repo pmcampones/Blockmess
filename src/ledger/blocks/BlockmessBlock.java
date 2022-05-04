@@ -1,6 +1,6 @@
 package ledger.blocks;
 
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.util.UUID;
 

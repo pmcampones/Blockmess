@@ -1,10 +1,7 @@
-package sybilResistantCommitteeElection;
+package sybilResistantElection;
 
 import ledger.blocks.SizeAccountable;
 import main.ProtoPojo;
-
-import java.io.IOException;
-import java.security.PublicKey;
 
 /**
  * Proof specific of the Sybil Resistant Committee Election that differs from application to application.

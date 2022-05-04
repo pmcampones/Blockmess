@@ -1,17 +1,17 @@
-package sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers;
+package sybilResistantElection.difficultyComputers;
 
 import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ConcurrentBlockmessGPoETDifficultyComputer implements BlockmessGPoETDifficultyComputer {
+public class ConcurrentDifficultyComputer implements MultiChainDifficultyComputer {
 
-    private final BlockmessGPoETDifficultyComputer inner;
+    private final MultiChainDifficultyComputer inner;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public ConcurrentBlockmessGPoETDifficultyComputer(Properties props, int numChains) {
-        this.inner = new BlockmessGPoETDifficultyComputerImp(props, numChains);
+    public ConcurrentDifficultyComputer(Properties props, int numChains) {
+        this.inner = new MultiChainDifficultyComputerImp(props, numChains);
     }
 
     @Override

@@ -3,7 +3,7 @@ package ledger.ledgerManager.nodes;
 import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.ledgerManager.StructuredValue;
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 
 import java.util.List;
 import java.util.Set;

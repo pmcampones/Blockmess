@@ -1,18 +1,17 @@
-package sybilResistantCommitteeElection.poet.gpoet;
+package sybilResistantElection;
 
 import io.netty.buffer.ByteBuf;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.network.ISerializer;
-import sybilResistantCommitteeElection.SybilElectionProof;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class BlockmessGPoETProof extends ProtoPojoAbstract implements SybilElectionProof {
+public class SybilResistantElectionProof extends ProtoPojoAbstract implements SybilElectionProof {
 
     public static final short ID = 7265;
 
@@ -20,7 +19,7 @@ public class BlockmessGPoETProof extends ProtoPojoAbstract implements SybilElect
 
     private final int nonce;
 
-    public BlockmessGPoETProof(List<Pair<UUID, byte[]>> ChainSeeds, int nonce) {
+    public SybilResistantElectionProof(List<Pair<UUID, byte[]>> ChainSeeds, int nonce) {
         super(ID);
         this.ChainSeeds = ChainSeeds;
         this.nonce = nonce;
@@ -52,7 +51,7 @@ public class BlockmessGPoETProof extends ProtoPojoAbstract implements SybilElect
 
         @Override
         public void serialize(ProtoPojo protoPojo, ByteBuf out) {
-            BlockmessGPoETProof proof = (BlockmessGPoETProof) protoPojo;
+            SybilResistantElectionProof proof = (SybilResistantElectionProof) protoPojo;
             serializeChainSeeds(proof.ChainSeeds, out);
             out.writeInt(proof.nonce);
         }
@@ -73,7 +72,7 @@ public class BlockmessGPoETProof extends ProtoPojoAbstract implements SybilElect
         public ProtoPojo deserialize(ByteBuf in) {
             List<Pair<UUID, byte[]>> ChainSeeds = deserializeChainSeeds(in);
             int nonce = in.readInt();
-            return new BlockmessGPoETProof(ChainSeeds, nonce);
+            return new SybilResistantElectionProof(ChainSeeds, nonce);
         }
 
         private List<Pair<UUID, byte[]>> deserializeChainSeeds(ByteBuf in) {

@@ -1,26 +1,26 @@
-package sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers;
+package sybilResistantElection.difficultyComputers;
 
 import java.util.Properties;
 
 import static java.lang.Integer.parseInt;
-import static sybilResistantCommitteeElection.poet.gpoet.gpoetDifficultyComputers.LedgerGPoETDifficultyComputer.*;
+import static sybilResistantElection.difficultyComputers.BaseDifficultyComputer.*;
 
-public class BlockmessGPoETDifficultyComputerImp implements BlockmessGPoETDifficultyComputer {
+public class MultiChainDifficultyComputerImp implements MultiChainDifficultyComputer {
 
     private final double probNodeFindingSolutionInRound;
 
     private int numChains = 1;
 
-    private GPoETDifficultyComputer inner;
+    private DifficultyComputer inner;
 
-    public BlockmessGPoETDifficultyComputerImp(Properties props, int numChains) {
+    public MultiChainDifficultyComputerImp(Properties props, int numChains) {
         int expectedNumNodes = parseInt(props.getProperty("expectedNumNodes", EXPECTED_NUM_NODES));
         int timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
         int expectedTimeBetweenBlocks = parseInt(props.getProperty("expectedTimeBetweenBlocks",
                 EXPECTED_TIME_BETWEEN_BLOCKS));
-        probNodeFindingSolutionInRound = LedgerGPoETDifficultyComputer.getProbNodeFindingSolutionInRound(expectedNumNodes,
+        probNodeFindingSolutionInRound = BaseDifficultyComputer.getProbNodeFindingSolutionInRound(expectedNumNodes,
                 timeBetweenQueries, expectedTimeBetweenBlocks);
-        inner = new LedgerGPoETDifficultyComputer(numChains * probNodeFindingSolutionInRound);
+        inner = new BaseDifficultyComputer(numChains * probNodeFindingSolutionInRound);
     }
 
     @Override
@@ -42,7 +42,7 @@ public class BlockmessGPoETDifficultyComputerImp implements BlockmessGPoETDiffic
     public void setNumChains(int Chains) {
         if (numChains != Chains) {
             numChains = Chains;
-            inner = new LedgerGPoETDifficultyComputer(
+            inner = new BaseDifficultyComputer(
                     Chains * probNodeFindingSolutionInRound);
         }
     }

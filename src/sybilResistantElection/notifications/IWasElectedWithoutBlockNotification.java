@@ -1,6 +1,6 @@
-package sybilResistantCommitteeElection.notifications;
+package sybilResistantElection.notifications;
 
-import sybilResistantCommitteeElection.SybilElectionProof;
+import sybilResistantElection.SybilElectionProof;
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import utils.IDGenerator;
 
