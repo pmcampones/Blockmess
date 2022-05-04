@@ -5,7 +5,7 @@ import ledger.ledgerManager.StructuredValue;
 
 import java.util.Collection;
 
-public class StructuredValuesTxLoader implements TxsLoader<StructuredValue<SlimTransaction>> {
+public class StructuredValuesTxLoader {
 
     private final ContentStorage<StructuredValue<SlimTransaction>> contentStorage;
 
@@ -13,7 +13,6 @@ public class StructuredValuesTxLoader implements TxsLoader<StructuredValue<SlimT
         this.contentStorage = contentStorage;
     }
 
-    @Override
     public void loadTxs(Collection<StructuredValue<SlimTransaction>> txs) {
         contentStorage.submitContent(txs);
     }

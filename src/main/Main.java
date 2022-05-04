@@ -251,16 +251,16 @@ public class Main {
             Properties props, LedgerManager<SlimTransaction,
             BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) {
         int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
-        var txs = new FakeTxsGenerator(null).generateFakeTxs(numTxs);
+        var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
         var structuredValues = txs.stream()
                 .map(StructuredValueSlimTransactionWrapper::wrapTx)
                 .collect(Collectors.toList());
         ledgerManager.getAvailableChains().forEach(b -> b.submitContentDirectly(structuredValues));
     }
 
-    private static void loadTxsForBlockmess(Properties props, TxsLoader<StructuredValue<SlimTransaction>> txsLoader) {
+    private static void loadTxsForBlockmess(Properties props, StructuredValuesTxLoader txsLoader) {
         int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
-        var txs = new FakeTxsGenerator(null).generateFakeTxs(numTxs);
+        var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
         var structuredValues = txs.stream()
                 .map(StructuredValueSlimTransactionWrapper::wrapTx)
                 .collect(Collectors.toList());

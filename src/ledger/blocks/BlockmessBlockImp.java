@@ -1,7 +1,7 @@
 package ledger.blocks;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
-import catecoin.blocks.ValidatorSignature;
+import catecoin.blocks.ValidatorSignatureImp;
 import io.netty.buffer.ByteBuf;
 import utils.CryptographicUtils;
 import main.ProtoPojo;
@@ -37,7 +37,7 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
     }
 
     private BlockmessBlockImp(int inherentWeight, List<UUID> prevRefs, C blockContent,
-                              P proof, List<ValidatorSignature> validatorSignatures, UUID destinationChain,
+                              P proof, List<ValidatorSignatureImp> validatorSignatures, UUID destinationChain,
                               long currentRank, long nextRank)
             throws IOException {
         UUID blockId = computeBlockId(inherentWeight, prevRefs, blockContent, proof, destinationChain);
@@ -109,12 +109,12 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
     }
 
     @Override
-    public List<ValidatorSignature> getSignatures() {
+    public List<ValidatorSignatureImp> getSignatures() {
         return ledgerBlock.getSignatures();
     }
 
     @Override
-    public void addValidatorSignature(ValidatorSignature validatorSignature) {
+    public void addValidatorSignature(ValidatorSignatureImp validatorSignature) {
         ledgerBlock.addValidatorSignature(validatorSignature);
     }
 
@@ -173,9 +173,9 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
             pojo.getSerializer().serialize(pojo, out);
         }
 
-        private void serializeValidatorSignatures(List<ValidatorSignature> validatorSignatures, ByteBuf out) {
+        private void serializeValidatorSignatures(List<ValidatorSignatureImp> validatorSignatures, ByteBuf out) {
             out.writeShort(validatorSignatures.size());
-            for (ValidatorSignature validatorSignature : validatorSignatures) {
+            for (ValidatorSignatureImp validatorSignature : validatorSignatures) {
                 byte[] validator = validatorSignature.getValidatorKey().getEncoded();
                 out.writeShort(validator.length);
                 out.writeBytes(validator);
@@ -203,7 +203,7 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
             List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
             BlockContent blockContent = (BlockContent) deserializePojo(in);
             SybilElectionProof proof = (SybilElectionProof) deserializePojo(in);
-            List<ValidatorSignature> validatorSignatures = LedgerBlockImp.deserializeValidatorSignatures(in);
+            List<ValidatorSignatureImp> validatorSignatures = LedgerBlockImp.deserializeValidatorSignatures(in);
             UUID destinationChain = deserializeDestinationChain(in);
             long currentRank = in.readLong();
             long nextRank = in.readLong();

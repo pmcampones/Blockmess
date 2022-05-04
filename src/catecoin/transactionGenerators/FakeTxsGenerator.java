@@ -1,47 +1,14 @@
 package catecoin.transactionGenerators;
 
-import catecoin.txs.SerializableTransaction;
 import catecoin.txs.SlimTransaction;
-import com.google.gson.Gson;
 import utils.CryptographicUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.security.*;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class FakeTxsGenerator {
-
-    private final KeyPair self;
-
-    public FakeTxsGenerator(KeyPair self) {
-        this.self = self;
-    }
-
-    public void storeTxs(List<PublicKey> destinations, int numTxs, String filepath) throws IOException {
-        Collection<SlimTransaction> txs = generateFakeTxs(destinations, numTxs);
-        Collection<SerializableTransaction> serializableTxs = getSerializableTransactions(txs);
-        String txsJson = new Gson().toJson(serializableTxs);
-        Path path = Path.of(filepath);
-        if (Files.notExists(path))
-            Files.createFile(path);
-        Files.writeString(path, txsJson);
-    }
-
-    public Collection<SlimTransaction> generateFakeTxs(List<PublicKey> destinations, int numTxs) {
-        List<PublicKey> randomAccessDestinations = destinations instanceof RandomAccess ?
-                destinations : new ArrayList<>(destinations);
-        return IntStream.range(0, numTxs)
-                .map(i -> i % randomAccessDestinations.size())
-                .parallel()
-                .mapToObj(randomAccessDestinations::get)
-                .map(this::generateTransaction)
-                .collect(Collectors.toSet());
-    }
 
     public Collection<SlimTransaction> generateFakeTxs(int numTxs) {
         try {
@@ -63,16 +30,6 @@ public class FakeTxsGenerator {
         return txs;
     }
 
-    private SlimTransaction generateTransaction(PublicKey destination) {
-        try {
-            return tryToGenerateTransaction(destination);
-        } catch (IOException | SignatureException | InvalidKeyException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
-        return null;
-    }
-
     private SlimTransaction generateTransaction(PublicKey destination, KeyPair origin) {
         try {
             return tryToGenerateTransaction(destination, origin);
@@ -81,11 +38,6 @@ public class FakeTxsGenerator {
             System.exit(1);
         }
         return null;
-    }
-
-    private SlimTransaction tryToGenerateTransaction(PublicKey destination)
-            throws IOException, SignatureException, InvalidKeyException {
-        return tryToGenerateTransaction(destination, self);
     }
 
     @NotNull
@@ -103,12 +55,6 @@ public class FakeTxsGenerator {
         );
         return new SlimTransaction(origin.getPublic(), destination, input,
                 destinationAmount, originAmount, origin.getPrivate());
-    }
-
-    private Collection<SerializableTransaction> getSerializableTransactions(Collection<SlimTransaction> txs) {
-        return txs.stream()
-                .map(tx -> new SerializableTransaction())
-                .collect(Collectors.toSet());
     }
 
 }

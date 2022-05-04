@@ -1,6 +1,5 @@
 package main;
 
-import broadcastProtocols.BlockingBroadcast;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;

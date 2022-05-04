@@ -1,6 +1,5 @@
 package broadcastProtocols.eagerPush;
 
-import broadcastProtocols.BlockingBroadcast;
 import broadcastProtocols.BroadcastProtocol;
 import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;

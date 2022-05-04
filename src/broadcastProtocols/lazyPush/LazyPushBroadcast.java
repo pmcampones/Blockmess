@@ -1,6 +1,5 @@
 package broadcastProtocols.lazyPush;
 
-import broadcastProtocols.BlockingBroadcast;
 import broadcastProtocols.BroadcastProtocol;
 import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.StateRecoveryBroadcastModule;
