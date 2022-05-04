@@ -41,13 +41,13 @@ public class GPoETValidator extends GenericProtocol implements BlockValidator<Le
     public boolean isBlockValid(LedgerBlock<BlockContent<SlimTransaction>, GPoETProof> block) {
         boolean isValid = isProofValid(block.getSybilElectionProof(), block.getPrevRefs(), block.getBlockContent(), block.getProposer())
                 && block.getBlockContent().hasValidSemantics();
-        notifyBlockValidity(isValid, block);
+        notifyBlockValidity(block);
         return isValid;
     }
 
-    private void notifyBlockValidity(boolean isValid, LedgerBlock<BlockContent<SlimTransaction>, GPoETProof> block) {
+    private void notifyBlockValidity(LedgerBlock<BlockContent<SlimTransaction>, GPoETProof> block) {
         try {
-            triggerNotification(new AnswerMessageValidationNotification(isValid, block.getBlockingID()));
+            triggerNotification(new AnswerMessageValidationNotification(block.getBlockingID()));
         } catch (InnerValueIsNotBlockingBroadcast e) {
             e.printStackTrace();
         }

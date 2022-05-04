@@ -130,28 +130,6 @@ public class SlimTransaction extends ProtoPojoAbstract implements IndexableConte
                 (SlimUTXO.SERIALIZED_SIZE - 2 * Long.BYTES) * (destinationFields.size() + originFields.size());
     }
 
-    /**
-     * This constructor should not be used by the application (as it would imply sharing a private key).
-     * It is merely used in tests to emulate the Adversary's behaviour when forging {@link SlimUTXO}s.
-     * With this constructor its possible to add repeated outputs and still produce a valid signature.
-     */
-    public SlimTransaction(PublicKey origin, PublicKey destination, PrivateKey originSigner,
-                           List<UUID> inputs, List<SlimUTXOIndependentFields> destinationFields,
-                           List<SlimUTXOIndependentFields> originFields)
-            throws IOException, SignatureException, InvalidKeyException {
-        super(ID);
-        this.origin = origin;
-        this.destination = destination;
-        this.inputs = inputs;
-        this.outputsDestination = computeOutputsFields(destinationFields, destination);
-        this.outputsOrigin = computeOutputsFields(originFields, origin);
-        this.hashVal = obtainTxByteFields();
-        this.txId = CryptographicUtils.generateUUIDFromBytes(hashVal);
-        this.serializedSize = hashVal.length +
-                (SlimUTXO.SERIALIZED_SIZE - 2 * Long.BYTES) * (destinationFields.size() + originFields.size());
-        this.originSignature = CryptographicUtils.getFieldsSignature(hashVal, originSigner);
-    }
-
     private List<SlimUTXO> computeOutputsFields(List<SlimUTXOIndependentFields> fields, PublicKey destination)
             throws IOException {
         List<SlimUTXO> outputs = new ArrayList<>(fields.size());

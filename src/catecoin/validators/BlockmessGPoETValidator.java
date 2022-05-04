@@ -43,13 +43,13 @@ public class BlockmessGPoETValidator extends GenericProtocol
     public boolean isBlockValid(BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> block) {
         boolean isValid = isProofValid(block)
                 && block.getBlockContent().hasValidSemantics();
-        notifyBlockValidity(isValid, block);
+        notifyBlockValidity(block);
         return isValid;
     }
 
-    private void notifyBlockValidity(boolean isValid, BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> block) {
+    private void notifyBlockValidity(BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, BlockmessGPoETProof> block) {
         try {
-            triggerNotification(new AnswerMessageValidationNotification(isValid, block.getBlockingID()));
+            triggerNotification(new AnswerMessageValidationNotification(block.getBlockingID()));
         } catch (InnerValueIsNotBlockingBroadcast e) {
             e.printStackTrace();
         }

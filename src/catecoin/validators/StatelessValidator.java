@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import sybilResistantCommitteeElection.SybilElectionProof;
-import utils.IDGenerator;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -27,8 +26,6 @@ public class StatelessValidator<P extends SybilElectionProof>
         extends GenericProtocol implements BlockValidator<LedgerBlock<BlockContent<SlimTransaction>, P>> {
 
     private static final Logger logger = LogManager.getLogger(StatelessValidator.class);
-
-    public static final short ID = IDGenerator.genId();
 
     protected final SybilProofValidator<P> proofValidator;
 
@@ -66,7 +63,7 @@ public class StatelessValidator<P extends SybilElectionProof>
     private void tryToNotifyOfBlockValidity(LedgerBlock<BlockContent<SlimTransaction>,P> block, boolean isValid)
             throws InnerValueIsNotBlockingBroadcast {
         UUID blockingId = block.getBlockId();
-        triggerNotification(new AnswerMessageValidationNotification(isValid, blockingId));
+        triggerNotification(new AnswerMessageValidationNotification(blockingId));
         logger.debug("Notified the broadcast protocol that the block submited {} has validity: {}",
                 blockingId, isValid);
     }

@@ -107,7 +107,7 @@ public class FakeTxsGenerator {
 
     private Collection<SerializableTransaction> getSerializableTransactions(Collection<SlimTransaction> txs) {
         return txs.stream()
-                .map(SerializableTransaction::new)
+                .map(tx -> new SerializableTransaction())
                 .collect(Collectors.toSet());
     }
 
