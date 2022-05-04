@@ -10,7 +10,7 @@ import catecoin.notifications.AnswerMessageValidationNotification;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import peerSamplingProtocols.PeerSamplingProtocol;
+import peerSamplingProtocols.hyparview.HyparView;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
@@ -35,7 +35,7 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
     /**
      * Underlying peer sampling protocol.
      */
-    private final PeerSamplingProtocol membership;
+    private final HyparView membership;
 
     private final Map<UUID, EagerValMessage> messageBuffer;
 
@@ -47,7 +47,7 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
      */
     private final Map<UUID, EagerValMessage> mapBlockingIdToMid = new ConcurrentHashMap<>();
 
-    public EagerPushBroadcast(PeerSamplingProtocol membership,
+    public EagerPushBroadcast(HyparView membership,
                               PeriodicPrunableHashMap<UUID, EagerValMessage> messageBuffer)
             throws HandlerRegistrationException {
         super(EagerPushBroadcast.class.getSimpleName(), ID);

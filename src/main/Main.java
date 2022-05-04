@@ -26,7 +26,6 @@ import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import peerSamplingProtocols.PeerSamplingProtocol;
 import peerSamplingProtocols.hyparview.HyparView;
 import peerSamplingProtocols.hyparview.channels.MultiLoggerChannelInitializer;
 import pt.unl.fct.di.novasys.babel.core.Babel;
@@ -220,7 +219,7 @@ public class Main {
 
     private static List<GenericProtocol> addNetworkProtocols(Properties props, Host myself) throws Exception {
         List<GenericProtocol> protocols = new LinkedList<>();
-        PeerSamplingProtocol peerSamplingProtocol = new HyparView(props, myself);;
+        HyparView peerSamplingProtocol = new HyparView(props, myself);;
         protocols.add((GenericProtocol) peerSamplingProtocol);
         protocols.addAll(addBroadcastProtocols(props, myself, peerSamplingProtocol));
         protocols.add(new ValueDispatcher<>());
@@ -228,7 +227,7 @@ public class Main {
     }
 
     private static List<GenericProtocol> addBroadcastProtocols(Properties props, Host myself,
-                                                               PeerSamplingProtocol peerSamplingProtocol)
+                                                               HyparView peerSamplingProtocol)
             throws HandlerRegistrationException, IOException {
         List<GenericProtocol> protocols = new LinkedList<>();
         PeriodicPrunableHashMap<UUID, LazyValMessage> lazyPrunableHashMap =

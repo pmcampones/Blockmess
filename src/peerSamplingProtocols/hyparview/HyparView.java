@@ -2,7 +2,6 @@ package peerSamplingProtocols.hyparview;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import peerSamplingProtocols.PeerSamplingProtocol;
 import peerSamplingProtocols.hyparview.messages.*;
 import peerSamplingProtocols.hyparview.notifications.NeighbourDownNotification;
 import peerSamplingProtocols.hyparview.notifications.NeighbourUpNotification;
@@ -23,7 +22,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 
-public class HyparView extends GenericProtocol implements PeerSamplingProtocol  {
+public class HyparView extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(HyparView.class);
 
@@ -468,12 +467,10 @@ public class HyparView extends GenericProtocol implements PeerSamplingProtocol  
         return new Host(InetAddress.getByName(hostElems[0]), Short.parseShort(hostElems[1]));
     }
 
-    @Override
     public Set<Host> getPeers() {
         return Set.copyOf(active.getPeers());
     }
 
-    @Override
     public int getChannelID() {
         return channelId;
     }
