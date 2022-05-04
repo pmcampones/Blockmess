@@ -3,11 +3,11 @@ package ledger.blocks;
 import catecoin.blocks.ValidatorSignatureImp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import utils.CryptographicUtils;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import sybilResistantElection.SybilElectionProof;
+import utils.CryptographicUtils;
 
 import java.io.IOException;
 import java.security.*;
@@ -31,23 +31,6 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
     private final P proof;
 
     private final List<ValidatorSignatureImp> validatorSignatures;
-
-    /**
-     * This constructor is meant to be used by the block proposer to either disseminate the block
-     * if this DL uses a single validator per block; or to be send the block to other validators
-     * if the DL is using a BFT-committee to validate blocks.
-     */
-    public LedgerBlockImp(int inherentWeight, List<UUID> prevRefs, C blockContent,
-                          P proof, KeyPair proposer) throws IOException,
-            NoSuchAlgorithmException, SignatureException, InvalidKeyException {
-        super(ID);
-        this.inherentWeight = inherentWeight;
-        this.prevRefs = prevRefs;
-        this.blockContent = blockContent;
-        this.proof = proof;
-        this.blockId = computeBlockId();
-        this.validatorSignatures = genValidatorSignaturesFromProposer(blockId, proposer);
-    }
 
     /**
      * This constructor is meant to be used by nodes receiving the Block and called during the deserialization.

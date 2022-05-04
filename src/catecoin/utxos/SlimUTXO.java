@@ -95,10 +95,6 @@ public class SlimUTXO implements Serializable {
         return amount;
     }
 
-    public SlimUTXOIndependentFields getIndependentFields() {
-        return new SlimUTXOIndependentFields(nonce, amount);
-    }
-
     @Override
     public boolean equals(Object other) {
         return other instanceof SlimUTXO && outputId.equals(((SlimUTXO) other).outputId);

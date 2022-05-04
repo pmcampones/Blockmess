@@ -1,9 +1,5 @@
 package sybilResistantElection.difficultyComputers;
 
-import java.util.Properties;
-
-import static java.lang.Integer.parseInt;
-
 public class BaseDifficultyComputer implements DifficultyComputer {
 
     public static final String EXPECTED_NUM_NODES = "4";
@@ -13,14 +9,6 @@ public class BaseDifficultyComputer implements DifficultyComputer {
     public static final String EXPECTED_TIME_BETWEEN_BLOCKS = "60000";
 
     protected final int numLeadingZeros;
-
-    public BaseDifficultyComputer(Properties props) {
-        int expectedNumNodes = parseInt(props.getProperty("expectedNumNodes", EXPECTED_NUM_NODES));
-        int timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
-        int expectedTimeBetweenBlocks = parseInt(props
-                .getProperty("expectedTimeBetweenBlocks", EXPECTED_TIME_BETWEEN_BLOCKS));
-        numLeadingZeros = computeDifficulty(expectedNumNodes, timeBetweenQueries, expectedTimeBetweenBlocks);
-    }
 
     BaseDifficultyComputer(double probNodeFindingSolutionInRound) {
         this.numLeadingZeros = computeNumLeadingZeros(probNodeFindingSolutionInRound);

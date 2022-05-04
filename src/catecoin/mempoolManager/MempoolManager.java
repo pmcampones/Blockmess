@@ -9,13 +9,13 @@ import catecoin.utxos.StorageUTXO;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import utils.CryptographicUtils;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import sybilResistantElection.SybilElectionProof;
+import utils.CryptographicUtils;
 import utils.IDGenerator;
 
 import java.io.IOException;
@@ -140,7 +140,7 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         Map<UUID, StorageUTXO> mapAddedUtxos = new HashMap<>();
         Set<StorageUTXO> removedUtxos = getRemovedUtxos(removedUtxoIds, mapAddedUtxos);
         triggerNotification(new DeliverFinalizedBlocksContentNotification(
-                removedUtxos, addedUtxos));
+        ));
         UTXOCollection.updateUtxos(addedUtxos, removedUtxoIds);
         finalized.stream().map(MempoolChunk::getId).forEach(mempool::remove);
     }

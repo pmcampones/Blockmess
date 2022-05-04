@@ -4,10 +4,10 @@ import catecoin.utxos.SlimUTXO;
 import catecoin.utxos.SlimUTXOIndependentFields;
 import catecoin.validators.ContextObliviousValidator;
 import io.netty.buffer.ByteBuf;
-import utils.CryptographicUtils;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
+import utils.CryptographicUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -181,10 +181,6 @@ public class SlimTransaction extends ProtoPojoAbstract implements IndexableConte
 
     public List<SlimUTXO> getOutputsOrigin() {
         return outputsOrigin;
-    }
-
-    public byte[] getOriginSignature() {
-        return originSignature;
     }
 
     @Override

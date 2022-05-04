@@ -15,7 +15,6 @@ import catecoin.transactionGenerators.FakeTxsGenerator;
 import catecoin.txs.SlimTransaction;
 import catecoin.txs.StructuredValueSlimTransactionWrapper;
 import catecoin.validators.BlockmessGPoETValidator;
-import com.google.gson.Gson;
 import ledger.BabelLedger;
 import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockContent;
@@ -50,9 +49,6 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.spec.InvalidKeySpecException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -213,20 +209,10 @@ public class Main {
         return allTxsIds.size() == new HashSet<>(allTxsIds).size();
     }
 
-    public static List<PublicKey> loadKeys(Properties props)
-            throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        String allKeysJson = props.getProperty("allKeys", "[]");
-        String[] keysLocation = new Gson().fromJson(allKeysJson, String[].class);
-        List<PublicKey> keys = new ArrayList<>(keysLocation.length);
-        for (String keyLocation : keysLocation)
-            keys.add(CryptographicUtils.readECDSAPublicKey(keyLocation));
-        return keys;
-    }
-
     private static List<GenericProtocol> addNetworkProtocols(Properties props, Host myself) throws Exception {
         List<GenericProtocol> protocols = new LinkedList<>();
         HyparView peerSamplingProtocol = new HyparView(props, myself);;
-        protocols.add((GenericProtocol) peerSamplingProtocol);
+        protocols.add(peerSamplingProtocol);
         protocols.addAll(addBroadcastProtocols(props, myself, peerSamplingProtocol));
         protocols.add(new ValueDispatcher<>());
         return protocols;

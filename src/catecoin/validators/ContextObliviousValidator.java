@@ -119,14 +119,6 @@ public class ContextObliviousValidator<P extends SybilElectionProof> extends Sta
                 throw new InputNotFoundException(input);
             inputUtxos.add(inputUtxo);
         }
-        /*for (UUID input : tx.getInputs()) {
-            StorageUTXO inputUtxo = mempoolManager.getUTXOContent(input);
-            if (inputUtxo == null)
-                inputUtxo = validInMempool.get(input);
-            if (invalid.contains(input) || inputUtxo == null)
-                throw new InputNotFoundException(input);
-            inputUtxos.add(inputUtxo);
-        }*/
         return inputUtxos;
     }
 
