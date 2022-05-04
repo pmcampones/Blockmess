@@ -21,8 +21,6 @@ public class FinalizedBlocksLog implements LedgerObserver {
 
     private static final Logger logger = LogManager.getLogger(FinalizedBlocksLog.class);
 
-    public static final short ID = IDGenerator.genId();
-
     private static final String FINALIZED_BLOCKS_OUTPUT_FILE = "outputLogs/finalizedBlocks";
 
     private final Path finalizedBlocksOutputFile;

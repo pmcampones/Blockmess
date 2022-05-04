@@ -55,11 +55,6 @@ public class ValidatorSignatureImp implements AdversarialValidatorSignature {
         return CryptographicUtils.computeKeySize(validator) + Short.BYTES + signedContent.length;
     }
 
-    @Override
-    public void forgeSignature(byte[] forgedSignature) {
-        this.signedContent = forgedSignature;
-    }
-
     public final static ISerializer<AdversarialValidatorSignature> serializer = new ISerializer<>() {
 
         @Override

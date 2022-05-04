@@ -37,8 +37,6 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
      */
     private final PeerSamplingProtocol membership;
 
-    private final Host self;
-
     private final Map<UUID, EagerValMessage> messageBuffer;
 
     /**
@@ -49,11 +47,10 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
      */
     private final Map<UUID, EagerValMessage> mapBlockingIdToMid = new ConcurrentHashMap<>();
 
-    public EagerPushBroadcast(Host self, PeerSamplingProtocol membership,
+    public EagerPushBroadcast(PeerSamplingProtocol membership,
                               PeriodicPrunableHashMap<UUID, EagerValMessage> messageBuffer)
             throws HandlerRegistrationException {
         super(EagerPushBroadcast.class.getSimpleName(), ID);
-        this.self = self;
         this.membership = membership;
         this.messageBuffer = messageBuffer;
         subscribeNotification(AnswerMessageValidationNotification.ID,

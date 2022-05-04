@@ -30,8 +30,6 @@ public class DelayVerifier<B extends LedgerBlock<? extends BlockContent<? extend
         return pool;
     }
 
-    private static final Logger logger = LogManager.getLogger(DelayVerifier.class.getName());
-
     private final long waitDelayReorder;
 
     private final Blockchain<B> blockchain;

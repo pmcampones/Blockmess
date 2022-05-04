@@ -8,8 +8,6 @@ import java.util.UUID;
 
 public abstract class ProtoPojoAbstract implements ProtoPojo {
 
-    private static final Logger logger = LogManager.getLogger(ProtoPojoAbstract.class);
-
     private final short id;
 
     protected ProtoPojoAbstract(short id) {

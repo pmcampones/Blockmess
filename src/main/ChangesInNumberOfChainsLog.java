@@ -12,13 +12,11 @@ import static java.nio.file.StandardOpenOption.APPEND;
 
 public class ChangesInNumberOfChainsLog {
 
-    public static final short ID = IDGenerator.genId();
-
     private static final String CHANGES_CHAINS_OUTPUT_FILE = "outputLogs/changesChains";
 
     private final Path changesChainsOutputFile;
 
-    public ChangesInNumberOfChainsLog(Properties props) throws IOException, HandlerRegistrationException {
+    public ChangesInNumberOfChainsLog(Properties props) throws IOException {
         changesChainsOutputFile = Path.of(props.getProperty("changesChainsOutputFile",
                 CHANGES_CHAINS_OUTPUT_FILE));
         Files.deleteIfExists(changesChainsOutputFile);

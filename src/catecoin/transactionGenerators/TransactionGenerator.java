@@ -85,7 +85,7 @@ public class TransactionGenerator extends GenericProtocol {
         } catch (Exception e) {
             logger.info("Could not generate transaction because of exception: '{}'", e.getMessage());
         }
-        sendReply(new SendTransactionReply(successful, txDestination, txAmount), source);
+        sendReply(new SendTransactionReply(), source);
     }
 
     //pre: !nodes.isEmpty() && myCoins > 1

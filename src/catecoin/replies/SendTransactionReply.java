@@ -11,29 +11,8 @@ public class SendTransactionReply extends ProtoReply {
 
     public static final short ID = IDGenerator.genId();
 
-    private final boolean successful;
-
-    private final PublicKey destination;
-
-    private final int amount;
-
-    public SendTransactionReply(boolean successful, PublicKey destination, int amount) {
+    public SendTransactionReply() {
         super(ID);
-        this.successful = successful;
-        this.destination = destination;
-        this.amount = amount;
-    }
-
-    public boolean wasTheTransactionSuccessfullySent() {
-        return successful;
-    }
-
-    public PublicKey getTransactionDestination() {
-        return destination;
-    }
-
-    public int getTransactionAmount() {
-        return amount;
     }
 
 }

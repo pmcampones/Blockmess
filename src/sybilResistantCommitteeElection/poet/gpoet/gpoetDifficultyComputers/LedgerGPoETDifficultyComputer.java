@@ -22,14 +22,6 @@ public class LedgerGPoETDifficultyComputer implements GPoETDifficultyComputer {
         numLeadingZeros = computeDifficulty(expectedNumNodes, timeBetweenQueries, expectedTimeBetweenBlocks);
     }
 
-    /**
-     * Constructor should be used for tests.
-     * Passing the parameters in the properties is the correct way to generate the correct number of leading zeros.
-     */
-    public LedgerGPoETDifficultyComputer(int numLeadingZeros) {
-        this.numLeadingZeros = numLeadingZeros;
-    }
-
     LedgerGPoETDifficultyComputer(double probNodeFindingSolutionInRound) {
         this.numLeadingZeros = computeNumLeadingZeros(probNodeFindingSolutionInRound);
     }

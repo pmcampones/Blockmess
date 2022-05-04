@@ -21,11 +21,6 @@ public class TxLoaderImp implements TxsLoader<SlimTransaction> {
         this.contentStorage = contentStorage;
     }
 
-    @Override
-    public Collection<SlimTransaction> loadFromFile(String filePath) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
-        return loadSlimTxsFromFile(filePath);
-    }
-
     public static Collection<SlimTransaction> loadSlimTxsFromFile(String filePath) throws IOException, NoSuchAlgorithmException, InvalidKeySpecException {
         String txsContent = Files.readString(Path.of(filePath));
         SerializableTransaction[] stxs = new Gson().fromJson(txsContent, SerializableTransaction[].class);

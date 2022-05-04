@@ -19,9 +19,6 @@ public interface BlockDirector<E extends IndexableContent, C extends BlockConten
     B createBlockProposal(Set<UUID> previousStates, P proof)
             throws IOException, SignatureException, NoSuchAlgorithmException, InvalidKeyException;
 
-    B createBoundBlockProposal(Set<UUID> previousStates, P proof, int maxTxs)
-            throws IOException, SignatureException, NoSuchAlgorithmException, InvalidKeyException;
-
     C createBlockContent(Set<UUID> previousStates, int usedSpace) throws IOException;
 
 }

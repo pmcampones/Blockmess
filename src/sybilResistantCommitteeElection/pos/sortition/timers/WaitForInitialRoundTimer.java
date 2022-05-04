@@ -7,8 +7,6 @@ public class WaitForInitialRoundTimer extends ProtoTimer {
 
     public static final short ID = IDGenerator.genId();
 
-    public static final long WAIT_TIME = 5 * 1000;
-
     public WaitForInitialRoundTimer() {
         super(ID);
     }

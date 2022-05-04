@@ -8,14 +8,8 @@ public class DeliverAutomatedNodeJoinNotification extends ProtoNotification {
 
     public static final short ID = IDGenerator.genId();
 
-    private final AutomatedNodeJoin automatedNodeJoin;
-
-    public DeliverAutomatedNodeJoinNotification(AutomatedNodeJoin automatedNodeJoin) {
+    public DeliverAutomatedNodeJoinNotification() {
         super(ID);
-        this.automatedNodeJoin = automatedNodeJoin;
     }
 
-    public AutomatedNodeJoin getAutomatedNodeJoin() {
-        return automatedNodeJoin;
-    }
 }

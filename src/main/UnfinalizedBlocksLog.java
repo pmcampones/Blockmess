@@ -15,8 +15,6 @@ public class UnfinalizedBlocksLog implements LedgerObserver {
 
     private static final String UNFINALIZED_BLOCKS_OUTPUT_FILE = "outputLogs/unfinalizedBlocks";
 
-    public static final short ID = IDGenerator.genId();
-
     private final Path unfinalizedBlocksOutputFile;
 
     private final Set<UUID> repeats = new HashSet<>();

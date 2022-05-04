@@ -17,7 +17,4 @@ public class GetBlockPreviousReply extends ProtoReply {
         this.previous = previous;
     }
 
-    public Set<UUID> getReferencesToPreviousBlocks() {
-        return previous;
-    }
 }

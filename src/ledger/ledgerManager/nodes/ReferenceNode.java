@@ -42,15 +42,6 @@ public class ReferenceNode<E extends IndexableContent, C extends BlockContent<St
      */
     private ParentTreeNode<E,C,P> parent;
 
-    public ReferenceNode(Properties props, UUID id, ParentTreeNode<E,C,P> parent)
-            throws PrototypeHasNotBeenDefinedException {
-        ContentStorage<StructuredValue<E>> contentStorage =
-                ContentStoragePrototype.getPrototype();
-        ComposableContentStorage<E> composableContentStorage = new ComposableContentStorageImp<>(contentStorage);
-        this.leaf = new LeafNode<>(props, id, this, 0, 1, 0, composableContentStorage);
-        this.nodeState = leaf;
-        this.parent = parent;    }
-
     public ReferenceNode(
             Properties props, UUID ChainId, ParentTreeNode<E,C,P> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage)

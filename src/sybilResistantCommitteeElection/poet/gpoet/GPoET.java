@@ -42,8 +42,6 @@ public class GPoET<E extends IndexableContent, C extends BlockContent<E>> extend
 
     private static final Logger logger = LogManager.getLogger(GPoET.class);
 
-    public static final short ID = IDGenerator.genId();
-
     public static final int INITIALIZATION_TIME = 120 * 1000;
 
     private UUID prevRef;

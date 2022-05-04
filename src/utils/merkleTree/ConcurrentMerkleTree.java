@@ -64,13 +64,4 @@ public class ConcurrentMerkleTree implements MerkleTree {
         }
     }
 
-    public void setNewMerkleTree(MerkleTree tree) {
-        try {
-            lock.writeLock().lock();
-            this.inner = tree;
-        } finally {
-            lock.writeLock().unlock();
-        }
-
-    }
 }

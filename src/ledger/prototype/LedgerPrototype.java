@@ -26,11 +26,4 @@ public class LedgerPrototype {
         return prototype.clonePrototype(id);
     }
 
-    public static PrototypicalLedger getLedgerCopy()
-            throws PrototypeHasNotBeenDefinedException {
-        if (prototype == null)
-            throw new PrototypeHasNotBeenDefinedException();
-        return prototype.clonePrototype();
-    }
-
 }

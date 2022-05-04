@@ -27,7 +27,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import peerSamplingProtocols.PeerSamplingProtocol;
-import peerSamplingProtocols.fullMembership.SimpleFullMembership;
 import peerSamplingProtocols.hyparview.HyparView;
 import peerSamplingProtocols.hyparview.channels.MultiLoggerChannelInitializer;
 import pt.unl.fct.di.novasys.babel.core.Babel;
@@ -69,8 +68,6 @@ public class Main {
 
     //Default babel configuration file (can be overridden by the "-config" launch argument)
     public static final String DEFAULT_CONF = "config/config.properties";
-
-    public static final String DEFAULT_TEST_CONF = "config/test_config.properties";
 
     public static void main(String[] args) throws Exception {
         startTime = System.currentTimeMillis();
@@ -243,7 +240,7 @@ public class Main {
                 new PeriodicPrunableHashMap<>(MESSAGE_PRUNE_PERIOD, PERIOD_BUFFER_CAPACITY);
         protocols.add(eagerPrunableHashMap);
         protocols.add(new LazyPushBroadcast(props, myself, lazyPrunableHashMap));
-        protocols.add(new EagerPushBroadcast(myself, peerSamplingProtocol,
+        protocols.add(new EagerPushBroadcast(peerSamplingProtocol,
                 eagerPrunableHashMap));
         return protocols;
     }

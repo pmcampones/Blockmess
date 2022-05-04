@@ -15,14 +15,10 @@ public class DeliverFinalizedBlocksContentNotification extends ProtoNotification
 
     private final Set<StorageUTXO> addedUtxos;
 
-    private final Set<UUID> usedTxs;
-
-    public DeliverFinalizedBlocksContentNotification(Set<StorageUTXO> removedUtxos, Set<StorageUTXO> addedUtxos,
-                                                     Set<UUID> usedTxs) {
+    public DeliverFinalizedBlocksContentNotification(Set<StorageUTXO> removedUtxos, Set<StorageUTXO> addedUtxos) {
         super(ID);
         this.removedUtxos = removedUtxos;
         this.addedUtxos = addedUtxos;
-        this.usedTxs = usedTxs;
     }
 
     public Set<StorageUTXO> getRemovedUtxo() {
@@ -33,7 +29,4 @@ public class DeliverFinalizedBlocksContentNotification extends ProtoNotification
         return addedUtxos;
     }
 
-    public Set<UUID> getUsedTxs() {
-        return usedTxs;
-    }
 }

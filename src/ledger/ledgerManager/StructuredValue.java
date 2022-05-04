@@ -56,13 +56,6 @@ public class StructuredValue<E extends IndexableContent> extends ProtoPojoAbstra
         return innerValue;
     }
 
-    private List<Byte> getMatchList(byte[] match) {
-        List<Byte> ret = new LinkedList<>();
-        for (byte b : match)
-            ret.add(b);
-        return ret;
-    }
-
     public StructuredValueMask.MaskResult matchIds() {
         return mask.matchIds(match1, match2);
     }

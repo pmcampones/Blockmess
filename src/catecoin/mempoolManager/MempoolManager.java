@@ -111,10 +111,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         finalize(notif.getFinalizedBlocksIds());
     }
 
-    public MempoolChunk buildMempoolChunk(LedgerBlock<BlockContent<E>, P> block, int cumulativeWeight) {
-        return mempoolChunkCreator.createChunk(block, cumulativeWeight);
-    }
-
     public void finalize(List<UUID> finalized) {
         List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
         recordBlocks(finalizedChunks);
@@ -151,7 +147,7 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         Set<StorageUTXO> removedUtxos = getRemovedUtxos(removedUtxoIds, mapAddedUtxos);
         Set<UUID> usedTxs = extractUsedTxsFromBlock(finalized);
         triggerNotification(new DeliverFinalizedBlocksContentNotification(
-                removedUtxos, addedUtxos, usedTxs));
+                removedUtxos, addedUtxos));
         UTXOCollection.updateUtxos(addedUtxos, removedUtxoIds);
         /*addedUtxos.forEach(utxo -> utxos.put(utxo.getId(), utxo));
         removedUtxoIds.forEach(utxos::remove);*/

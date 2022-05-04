@@ -108,7 +108,7 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
                 break;
             case AUTOMATED_NODE_JOIN:
                 if (val instanceof AutomatedNodeJoin)
-                    triggerNotification(new DeliverAutomatedNodeJoinNotification((AutomatedNodeJoin) val));
+                    triggerNotification(new DeliverAutomatedNodeJoinNotification());
                 break;
             case TRANSACTION:
                 if (val instanceof SlimTransaction)
