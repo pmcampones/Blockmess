@@ -23,6 +23,10 @@ import ledger.ledgerManager.StructuredValue;
 import ledger.prototype.LedgerPrototype;
 import ledger.prototype.PrototypeAlreadyDefinedException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
+import logsGenerators.ChangesInNumberOfChainsLog;
+import logsGenerators.FinalizedBlocksLog;
+import logsGenerators.RepeatedTransactionsLog;
+import logsGenerators.UnfinalizedBlocksLog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +39,7 @@ import pt.unl.fct.di.novasys.babel.exceptions.ProtocolAlreadyExistsException;
 import pt.unl.fct.di.novasys.network.data.Host;
 import sybilResistantElection.SybilResistantElection;
 import sybilResistantElection.SybilResistantElectionProof;
+import utils.CryptographicUtils;
 import utils.InterfaceToIp;
 import valueDispatcher.ValueDispatcher;
 

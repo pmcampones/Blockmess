@@ -3,7 +3,7 @@ package catecoin.transactionGenerators;
 import catecoin.txs.SerializableTransaction;
 import catecoin.txs.SlimTransaction;
 import com.google.gson.Gson;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

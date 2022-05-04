@@ -10,7 +10,7 @@ import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import main.Main;
 import main.ProtoPojo;
 import org.apache.commons.lang3.tuple.Pair;

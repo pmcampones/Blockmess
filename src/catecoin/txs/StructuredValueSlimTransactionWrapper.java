@@ -1,7 +1,7 @@
 package catecoin.txs;
 
 import ledger.ledgerManager.StructuredValue;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 
 public class StructuredValueSlimTransactionWrapper {
 

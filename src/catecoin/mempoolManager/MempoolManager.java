@@ -9,7 +9,7 @@ import catecoin.utxos.StorageUTXO;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

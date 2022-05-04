@@ -1,7 +1,7 @@
 package catecoin.blocks;
 
 import io.netty.buffer.ByteBuf;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.network.ISerializer;

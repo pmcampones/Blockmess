@@ -1,6 +1,6 @@
 package catecoin.utxos;
 
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -6,7 +6,7 @@ import catecoin.txs.SlimTransaction;
 import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;

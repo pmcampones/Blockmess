@@ -6,7 +6,7 @@ import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static main.CryptographicUtils.HASH_ALGORITHM;
+import static utils.CryptographicUtils.HASH_ALGORITHM;
 
 public class MerkleRoot implements ParentMerkleNode, MerkleTree {
 

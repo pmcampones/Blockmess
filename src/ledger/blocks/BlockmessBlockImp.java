@@ -3,7 +3,7 @@ package ledger.blocks;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import catecoin.blocks.ValidatorSignature;
 import io.netty.buffer.ByteBuf;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import main.ProtoPojo;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import sybilResistantElection.SybilElectionProof;

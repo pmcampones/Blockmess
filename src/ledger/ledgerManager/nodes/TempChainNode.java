@@ -10,7 +10,7 @@ import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import sybilResistantElection.SybilElectionProof;
 

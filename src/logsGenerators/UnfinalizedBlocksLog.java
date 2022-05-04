@@ -1,4 +1,4 @@
-package main;
+package logsGenerators;
 
 import ledger.LedgerObserver;
 import ledger.blocks.LedgerBlock;

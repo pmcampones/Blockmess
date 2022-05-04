@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static main.CryptographicUtils.HASH_ALGORITHM;
+import static utils.CryptographicUtils.HASH_ALGORITHM;
 
 public class InnerNode implements MerkleNode, ParentMerkleNode {
 

@@ -4,7 +4,7 @@ import catecoin.txs.IndexableContent;
 import ledger.blocks.BlockContent;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 
 import java.nio.ByteBuffer;
 import java.util.UUID;

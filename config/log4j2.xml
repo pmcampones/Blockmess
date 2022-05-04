@@ -16,7 +16,7 @@
     <Loggers>
         <!--UNCOMMENT TO SPECIFY LOG LEVEL OF PACKAGES
 	<Logger level="info" name="protocols.apps"/>-->
-        <Logger level="error" name="main.FinalizedBlocksLog"/>
+        <Logger level="error" name="logsGenerators.FinalizedBlocksLog"/>
         <Logger level="error" name="pt.unl.fct.di.novasys.babel.core"/>
         <Logger level="error" name="broadcastProtocols"/>-->
         <Logger level="error" name="peerSamplingProtocols"/>-->

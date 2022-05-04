@@ -5,7 +5,7 @@ import catecoin.blocks.ValidatorSignature;
 import catecoin.blocks.ValidatorSignatureImp;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;

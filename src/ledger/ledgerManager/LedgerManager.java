@@ -15,7 +15,7 @@ import ledger.ledgerManager.nodes.DebugBlockmessChain;
 import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
-import main.ChangesInNumberOfChainsLog;
+import logsGenerators.ChangesInNumberOfChainsLog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;

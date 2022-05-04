@@ -1,7 +1,7 @@
 package catecoin.utxos;
 
 import catecoin.txs.SlimTransaction;
-import main.CryptographicUtils;
+import utils.CryptographicUtils;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;

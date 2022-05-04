@@ -1,4 +1,4 @@
-package main;
+package logsGenerators;
 
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
