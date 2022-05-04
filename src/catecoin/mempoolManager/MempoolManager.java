@@ -139,7 +139,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         Set<StorageUTXO> addedUtxos = extractStorageUtxosFromBlock(finalized);
         Map<UUID, StorageUTXO> mapAddedUtxos = new HashMap<>();
         Set<StorageUTXO> removedUtxos = getRemovedUtxos(removedUtxoIds, mapAddedUtxos);
-        extractUsedTxsFromBlock(finalized);
         triggerNotification(new DeliverFinalizedBlocksContentNotification(
                 removedUtxos, addedUtxos));
         UTXOCollection.updateUtxos(addedUtxos, removedUtxoIds);
@@ -157,12 +156,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
                 .peek(b -> logger.info("Finalized block {}, with {} UTXOs and {} txs.",
                         b.getId(), b.getAddedUtxos().size(), b.getUsedTxs().size()))
                 .flatMap(b -> b.getAddedUtxos().stream())
-                .collect(toSet());
-    }
-
-    private Set<UUID> extractUsedTxsFromBlock(List<MempoolChunk> blocks) {
-        return blocks.stream()
-                .flatMap(b -> b.getUsedTxs().stream())
                 .collect(toSet());
     }
 
