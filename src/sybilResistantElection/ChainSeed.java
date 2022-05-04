@@ -11,7 +11,7 @@ import java.util.UUID;
 
 public class ChainSeed<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>> {
 
-    private final UUID ChainId;
+    private final UUID chainId;
 
     private final UUID prevBlock;
 
@@ -21,8 +21,8 @@ public class ChainSeed<E extends IndexableContent, C extends BlockContent<Struct
 
     private final BlockmessChain<E,C, SybilResistantElectionProof> Chain;
 
-    public ChainSeed(UUID ChainId, UUID prevBlock, C currContent, BlockmessChain<E,C, SybilResistantElectionProof> Chain) {
-        this.ChainId = ChainId;
+    public ChainSeed(UUID chainId, UUID prevBlock, C currContent, BlockmessChain<E,C, SybilResistantElectionProof> Chain) {
+        this.chainId = chainId;
         this.prevBlock = prevBlock;
         this.currContent = currContent;
         this.Chain = Chain;
@@ -30,7 +30,7 @@ public class ChainSeed<E extends IndexableContent, C extends BlockContent<Struct
     }
 
     private byte[] computeChainSeed() {
-        return computeChainSeed(ChainId, currContent, prevBlock);
+        return computeChainSeed(chainId, currContent, prevBlock);
     }
 
     public static <C extends BlockContent<? extends IndexableContent>> byte[] computeChainSeed(UUID ChainId, C currContent, UUID prevBlock) {
@@ -45,7 +45,7 @@ public class ChainSeed<E extends IndexableContent, C extends BlockContent<Struct
     }
 
     public UUID getChainId() {
-        return ChainId;
+        return chainId;
     }
 
     public UUID getPrevBlock() {

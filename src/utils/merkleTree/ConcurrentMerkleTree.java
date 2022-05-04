@@ -6,7 +6,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class ConcurrentMerkleTree implements MerkleTree {
 
-    private MerkleTree inner;
+    private final MerkleTree inner;
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
