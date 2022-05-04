@@ -5,12 +5,9 @@ import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
-import catecoin.nodeJoins.AutomatedNodeJoin;
-import catecoin.nodeJoins.InteractiveNodeJoin;
 import catecoin.notifications.DeliverIndexableContentNotification;
 import catecoin.txs.IndexableContent;
 import catecoin.txs.SlimTransaction;
-import chatApp.ChatMessage;
 import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import main.ProtoPojo;
@@ -19,7 +16,6 @@ import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import sybilResistantCommitteeElection.SybilElectionProof;
-import sybilResistantCommitteeElection.pos.sortition.proofs.InElectionSortitionProof;
 import utils.IDGenerator;
 import valueDispatcher.notifications.*;
 import valueDispatcher.pojos.DispatcherWrapper;
@@ -47,19 +43,8 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
     public static final short ID = IDGenerator.genId();
 
     private enum ValType {
-
-    /*******************************APP*************************************/
-        INTERACTIVE_NODE_JOIN,      //A node joining the system notifies its peers of its existence.
-        AUTOMATED_NODE_JOIN,        //A node joins the system for the automated client.
         TRANSACTION,                //A transaction is being broadcast
         SIGNED_BLOCK,               //A Ledger Block is being broadcast
-
-    /***********************INTERMEDIATE*CONSENSUS**************************/
-        LOWEST_COIN,
-        SORTITION_PROOF,
-
-    /********************************TESTING********************************/
-        CHAT_MESSAGE, //Message used in the testing of the Broadcast Protocols and the ValueDispatcher itself
     }
 
     public ValueDispatcher() throws HandlerRegistrationException {
@@ -70,18 +55,10 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
     }
 
     private void registerRequestHandlers() throws HandlerRegistrationException {
-        registerRequestHandler(DisseminateInteractiveNodeJoinRequest.ID,
-                this::uponDisseminateInteractiveNodeJoinRequest);
-        registerRequestHandler(DisseminateAutomatedNodeJoinRequest.ID,
-                this::uponDisseminateAutomatedNodeJoinRequest);
-        registerRequestHandler(DisseminateChatMessageRequest.ID,
-                this::uponDisseminateChatMessageRequest);
         registerRequestHandler(DisseminateSignedBlockRequest.ID,
                 this::uponDisseminateBlockRequest);
         registerRequestHandler(DisseminateTransactionRequest.ID,
                 this::uponDisseminateTransactionRequest);
-        registerRequestHandler(DisseminateSortitionProofRequest.ID,
-                this::uponDisseminateSortitionProofRequest);
     }
 
     @Override
@@ -102,14 +79,6 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
     //If the val is not of the correct instance, its assumed the message is incorrect and thus ignored.
     private void notifyUpperProtocols(ValType type, ProtoPojo val) {
         switch (type) {
-            case INTERACTIVE_NODE_JOIN:
-                if (val instanceof InteractiveNodeJoin)
-                    triggerNotification(new DeliverInteractiveNodeJoinNotification());
-                break;
-            case AUTOMATED_NODE_JOIN:
-                if (val instanceof AutomatedNodeJoin)
-                    triggerNotification(new DeliverAutomatedNodeJoinNotification());
-                break;
             case TRANSACTION:
                 if (val instanceof SlimTransaction)
                     triggerNotification(new DeliverIndexableContentNotification((SlimTransaction) val));
@@ -118,44 +87,6 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
                 if (val instanceof LedgerBlock)
                     triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock<C, P>) val));
                 break;
-            case CHAT_MESSAGE:
-                if (val instanceof ChatMessage)
-                    triggerNotification(new DeliverChatMessageNotification((ChatMessage) val));
-                break;
-            case SORTITION_PROOF:
-                if (val instanceof InElectionSortitionProof)
-                    triggerNotification(new DeliverSortitionProofNotification((InElectionSortitionProof) val));
-                break;
-        }
-    }
-
-    private void uponDisseminateInteractiveNodeJoinRequest(DisseminateInteractiveNodeJoinRequest req, short source) {
-        try {
-            logger.info("Protocol {} requested the dissemination of a {}",
-                    source, ValType.INTERACTIVE_NODE_JOIN);
-            sendEagerRequest(ValType.INTERACTIVE_NODE_JOIN, req.getInteractiveNodeJoin());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void uponDisseminateAutomatedNodeJoinRequest(DisseminateAutomatedNodeJoinRequest req, short source) {
-        try {
-            logger.info("Protocol {} requested the dissemination of a {}",
-                    source, ValType.AUTOMATED_NODE_JOIN);
-            sendEagerRequest(ValType.AUTOMATED_NODE_JOIN, req.getAutomatedNodeJoin());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void uponDisseminateChatMessageRequest(DisseminateChatMessageRequest req, short source) {
-        try {
-            logger.info("Protocol {} requested the dissemination of a {}",
-                    source, ValType.CHAT_MESSAGE);
-            sendEagerRequest(ValType.CHAT_MESSAGE, req.getChatMessage());
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
@@ -163,7 +94,7 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
         try {
             logger.info("Protocol {} requested the dissemination of a {}",
                     source, ValType.SIGNED_BLOCK);
-            sendLazyRequest(ValType.SIGNED_BLOCK, req.getBlock());
+            sendLazyRequest(req.getBlock());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -173,29 +104,19 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
         try {
             logger.info("Protocol {} requested the dissemination of a {}",
                     source, ValType.TRANSACTION);
-            sendEagerRequest(ValType.TRANSACTION, req.getTransaction());
+            sendEagerRequest(req.getTransaction());
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void uponDisseminateSortitionProofRequest(DisseminateSortitionProofRequest req, short source) {
-        try {
-            logger.info("Protocol {} requested the dissemination of a {}",
-                    source, ValType.SORTITION_PROOF);
-            sendEagerRequest(ValType.SORTITION_PROOF, req.getProof());
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendLazyRequest(ValType type, ProtoPojo val) throws IOException {
-        DispatcherWrapper wrapper = new DispatcherWrapper((short) type.ordinal(), val);
+    private void sendLazyRequest(ProtoPojo val) throws IOException {
+        DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.SIGNED_BLOCK.ordinal(), val);
         sendRequest(new LazyBroadcastRequest(wrapper), LazyPushBroadcast.ID);
     }
 
-    private void sendEagerRequest(ValType type, ProtoPojo val) throws IOException {
-        DispatcherWrapper wrapper = new DispatcherWrapper((short) type.ordinal(), val);
+    private void sendEagerRequest(ProtoPojo val) throws IOException {
+        DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.TRANSACTION.ordinal(), val);
         sendRequest(new EagerBroadcastRequest(wrapper), EagerPushBroadcast.ID);
     }
 
