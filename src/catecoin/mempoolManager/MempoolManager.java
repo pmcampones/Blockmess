@@ -55,19 +55,20 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
      * Contains the file the relative path to the file where the contents will be placed.
      * <p>This field is empty if this node is not recording the blocks.</p>
      */
-    private final RecordModule recordModule;
+    private final MinimalistRecordModule recordModule;
 
     private final MempoolChunkCreator<E,P> mempoolChunkCreator;
 
-    public MempoolManager(Properties props, MempoolChunkCreator<E,P> mempoolChunkCreator,
-                          RecordModule recordModule, BootstrapModule bootstrapModule) throws Exception {
+    public MempoolManager(Properties props, MempoolChunkCreator<E,P> mempoolChunkCreator) throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
         this.mempoolChunkCreator = mempoolChunkCreator;
-        this.recordModule = recordModule;
+        this.recordModule = new MinimalistRecordModule(props);
         loadInitialUtxos(props);
         bootstrapDL(props);
-        subscribeNotification(DeliverNonFinalizedBlockNotification.ID, (DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
-        subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID, (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
+        subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
+                (DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+        subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
+                (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(SimpleBlockContentList.ID, SimpleBlockContentList.serializer);
     }
 
@@ -90,8 +91,6 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         UTXOCollection.updateUtxos(addedUtxos, removedUtxos);
         logger.info("Successfully bootstrapped {} blocks.", chunks.size());
     }
-
-
 
     @Override
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}

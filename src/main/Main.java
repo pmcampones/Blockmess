@@ -136,11 +136,9 @@ public class Main {
     @NotNull
     private static MempoolManager<StructuredValue<SlimTransaction>, SybilResistantElectionProof> setUpMempoolManager(Properties props)
             throws Exception {
-        var bootstrapMod = new BootstrapModule();
-        var recordMod = new MinimalistRecordModule(props);
         MinimalistChunkCreator<SybilResistantElectionProof> innerChunkCreator = new MinimalistChunkCreator<>();
         var wrapperChunkCreator = new StructuredValueChunkCreator<>(innerChunkCreator);
-        return new MempoolManager<>(props, wrapperChunkCreator,recordMod,bootstrapMod);
+        return new MempoolManager<>(props, wrapperChunkCreator);
     }
 
     private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager<SlimTransaction, BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) throws Exception {
