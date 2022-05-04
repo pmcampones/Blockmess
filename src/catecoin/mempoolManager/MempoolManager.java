@@ -65,7 +65,7 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         this.mempoolChunkCreator = mempoolChunkCreator;
         this.recordModule = recordModule;
         loadInitialUtxos(props);
-        bootstrapDL(props, bootstrapModule);
+        bootstrapDL(props);
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID, (DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID, (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(SimpleBlockContentList.ID, SimpleBlockContentList.serializer);
@@ -80,20 +80,18 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         UTXOCollection.updateUtxos(utxos, Collections.emptyList());
     }
 
-    private void bootstrapDL(Properties props, BootstrapModule bootstrapModule) {
+    private void bootstrapDL(Properties props) {
         logger.info("Bootstrapping DL");
-        List<MempoolChunk> chunks = bootstrapModule.getStoredChunks(props);
+        List<MempoolChunk> chunks = BootstrapModule.getStoredChunks(props);
         List<StorageUTXO> addedUtxos = chunks.stream()
                 .flatMap(chunk -> chunk.getAddedUtxos().stream()).collect(toList());
         List<UUID> removedUtxos = chunks.stream()
                 .flatMap(chunk -> chunk.getRemovedUtxos().stream()).collect(toList());
         UTXOCollection.updateUtxos(addedUtxos, removedUtxos);
-        /*for (MempoolChunk chunk : chunks) {
-            chunk.getAddedUtxos().forEach(utxo -> utxos.put(utxo.getId(), utxo));
-            chunk.getRemovedUtxos().forEach(utxos::remove);
-        }*/
         logger.info("Successfully bootstrapped {} blocks.", chunks.size());
     }
+
+
 
     @Override
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}

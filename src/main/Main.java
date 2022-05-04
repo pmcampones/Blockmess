@@ -136,7 +136,7 @@ public class Main {
     @NotNull
     private static MempoolManager<StructuredValue<SlimTransaction>, SybilResistantElectionProof> setUpMempoolManager(Properties props)
             throws Exception {
-        var bootstrapMod = new MinimalistBootstrapModule();
+        var bootstrapMod = new BootstrapModule();
         var recordMod = new MinimalistRecordModule(props);
         MinimalistChunkCreator<SybilResistantElectionProof> innerChunkCreator = new MinimalistChunkCreator<>();
         var wrapperChunkCreator = new StructuredValueChunkCreator<>(innerChunkCreator);
@@ -167,7 +167,7 @@ public class Main {
 
     private static void setUpLedgerPrototype(Properties props) throws PrototypeAlreadyDefinedException {
         var blockValidator = new BlockmessGPoETValidator(props);
-        var protoLedger = new Blockchain<>(props, blockValidator, new MinimalistBootstrapModule());
+        var protoLedger = new Blockchain<>(props, blockValidator, new BootstrapModule());
         protoLedger.close();
         LedgerPrototype.setPrototype(protoLedger);
     }
