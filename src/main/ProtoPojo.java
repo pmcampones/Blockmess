@@ -41,7 +41,6 @@ public interface ProtoPojo extends Serializable {
 
     /**
      * Returns the identifier of the pojo that blocks the broadcast protocol.
-     * <p>A pojo blocks the broadcast protocol if it implements {@link BlockingBroadcast}.</p>
      * <p>The value returned might not be from this pojo in specific, but rather from an inner value in it.</p>
      * @return The blocking broadcast pojo identifier.
      * @throws InnerValueIsNotBlockingBroadcast This pojo, nor any of its inner values blocks the broadcast protocol.

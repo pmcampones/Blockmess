@@ -17,9 +17,10 @@ import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import sybilResistantElection.SybilElectionProof;
 import utils.IDGenerator;
-import valueDispatcher.notifications.*;
+import valueDispatcher.notifications.DeliverSignedBlockNotification;
 import valueDispatcher.pojos.DispatcherWrapper;
-import valueDispatcher.requests.*;
+import valueDispatcher.requests.DisseminateSignedBlockRequest;
+import valueDispatcher.requests.DisseminateTransactionRequest;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -87,6 +88,8 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<
                 if (val instanceof LedgerBlock)
                     triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock<C, P>) val));
                 break;
+            default:
+                logger.debug("Received unknown value type");
         }
     }
 

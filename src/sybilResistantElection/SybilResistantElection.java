@@ -52,10 +52,6 @@ public class SybilResistantElection<E extends IndexableContent, C extends BlockC
 
     public static final int INITIALIZATION_TIME = 120 * 1000;
 
-    private final int timeBetweenQueries;
-
-    private final int initializationTime;
-
     private final KeyPair self;
 
     private LinkedHashMap<UUID, ChainSeed<E,C>> chainSeeds = new LinkedHashMap<>();
@@ -74,9 +70,6 @@ public class SybilResistantElection<E extends IndexableContent, C extends BlockC
         super(SybilResistantElection.class.getSimpleName(), ID);
         this.self = self;
         this.blockmessRoot = blockmessRoot;
-        this.timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
-        this.initializationTime = parseInt(props.getProperty("initializationTime",
-                String.valueOf(INITIALIZATION_TIME)));
         this.difficultyComputer = new ConcurrentDifficultyComputer(props,
                 blockmessRoot.getAvailableChains().size());
         this.chainSeeds = replaceChainSeeds(blockmessRoot.getAvailableChains());
@@ -101,7 +94,10 @@ public class SybilResistantElection<E extends IndexableContent, C extends BlockC
     }
 
     @Override
-    public void init(Properties properties) throws HandlerRegistrationException, IOException {
+    public void init(Properties props) throws HandlerRegistrationException, IOException {
+        int timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
+        int initializationTime = parseInt(props.getProperty("initializationTime",
+                String.valueOf(INITIALIZATION_TIME)));
         long currTime = System.currentTimeMillis();
         long elapsed = currTime - Main.startTime;
         long remainder = initializationTime - elapsed;
