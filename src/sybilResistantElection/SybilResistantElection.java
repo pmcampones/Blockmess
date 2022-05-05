@@ -52,7 +52,7 @@ public class SybilResistantElection extends GenericProtocol {
 
     private final KeyPair self;
 
-    private final LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> blockmessRoot;
+    private final LedgerManager blockmessRoot;
 
     private MerkleTree randomSeed;
     private LinkedHashMap<UUID, ChainSeed> chainSeeds = new LinkedHashMap<>();
@@ -63,7 +63,7 @@ public class SybilResistantElection extends GenericProtocol {
 
     private int nonce = 0;
 
-    public SybilResistantElection(Properties props, KeyPair self, LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> blockmessRoot) throws HandlerRegistrationException {
+    public SybilResistantElection(Properties props, KeyPair self, LedgerManager blockmessRoot) throws HandlerRegistrationException {
         super(SybilResistantElection.class.getSimpleName(), ID);
         this.self = self;
         this.blockmessRoot = blockmessRoot;

@@ -132,17 +132,17 @@ public class Main {
         initializeProtocols(props, babel, protocols);
     }
 
-    private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> ledgerManager) throws Exception {
+    private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager ledgerManager) throws Exception {
         KeyPair myKeys = CryptographicUtils.getNodeKeys(props);
         protocols.add(new SybilResistantElection(props, myKeys, ledgerManager));
     }
 
     @NotNull
-    private static LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> setUpLedgerManager(
+    private static LedgerManager setUpLedgerManager(
             Properties props, List<GenericProtocol> protocols)
             throws PrototypeHasNotBeenDefinedException, HandlerRegistrationException {
-        LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> ledgerManager =
-                new LedgerManager<>(props);
+        LedgerManager ledgerManager =
+                new LedgerManager(props);
         var babelLedger = new BabelLedger<>(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
@@ -160,7 +160,7 @@ public class Main {
         LedgerPrototype.setPrototype(protoLedger);
     }
 
-    private static void bootstrapContent(Properties props, LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> ledgerManager) {
+    private static void bootstrapContent(Properties props, LedgerManager ledgerManager) {
         var txsLoader = new StructuredValuesTxLoader(ledgerManager);
         if (props.getProperty("allowCommonTransactionsAmongChains", "F").equals("F")) {
             loadTxsForBlockmess(props, txsLoader);
@@ -170,7 +170,7 @@ public class Main {
         }
     }
 
-    private static boolean areAllTxsDistinctAmongChains(LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> ledgerManager) {
+    private static boolean areAllTxsDistinctAmongChains(LedgerManager ledgerManager) {
         List<UUID> allTxsIds = ledgerManager.getAvailableChains().stream()
                 .map(ContentStorage::getStoredContent)
                 .flatMap(Collection::stream)
@@ -180,8 +180,7 @@ public class Main {
     }
 
     private static void loadTxsCommon(
-            Properties props, LedgerManager<Transaction,
-            ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> ledgerManager) {
+            Properties props, LedgerManager ledgerManager) {
         int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
         var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
         var structuredValues = txs.stream()
@@ -190,7 +189,7 @@ public class Main {
         ledgerManager.getAvailableChains().forEach(b -> b.submitContentDirectly(structuredValues));
     }
 
-    private static void recordMetricsBlockmess(Properties props, List<GenericProtocol> protocols, LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> ledgerManager) throws IOException, HandlerRegistrationException {
+    private static void recordMetricsBlockmess(Properties props, List<GenericProtocol> protocols, LedgerManager ledgerManager) throws IOException, HandlerRegistrationException {
         if (props.getProperty("recordUnfinalized", "T").equals("T"))
             ledgerManager.attachObserver(new UnfinalizedBlocksLog(props));
         if (props.getProperty("recordFinalized", "T").equals("T"))
