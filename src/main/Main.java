@@ -129,11 +129,11 @@ public class Main {
     }
 
     @NotNull
-    private static MempoolManager<StructuredValue<SlimTransaction>, SybilResistantElectionProof> setUpMempoolManager(Properties props)
+    private static MempoolManager setUpMempoolManager(Properties props)
             throws Exception {
         MinimalistChunkCreator<SybilResistantElectionProof> innerChunkCreator = new MinimalistChunkCreator<>();
         var wrapperChunkCreator = new StructuredValueChunkCreator<>(innerChunkCreator);
-        return new MempoolManager<>(props, wrapperChunkCreator);
+        return new MempoolManager(props, wrapperChunkCreator);
     }
 
     private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager<SlimTransaction, ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) throws Exception {
@@ -152,7 +152,7 @@ public class Main {
         return ledgerManager;
     }
 
-    private static void setUpContentStoragePrototype(Properties props, MempoolManager<StructuredValue<SlimTransaction>, SybilResistantElectionProof> mempoolManager) throws PrototypeAlreadyDefinedException {
+    private static void setUpContentStoragePrototype(Properties props, MempoolManager mempoolManager) throws PrototypeAlreadyDefinedException {
         PrototypicalContentStorage<StructuredValue<SlimTransaction>> contentStorage =
                 new BaseContentStorage<>(props, mempoolManager);
         ContentStoragePrototype.setPrototype(contentStorage);

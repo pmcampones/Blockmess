@@ -23,7 +23,7 @@ public class BaseContentStorage<E extends IndexableContent, P extends SybilResis
     public static final int MAX_BLOCK_SIZE = 40000;
     private static final Logger logger = LogManager.getLogger(BaseContentStorage.class.getName());
     public static long timeStart = -1;
-    private final MempoolManager<E,P> mempoolManager;
+    private final MempoolManager mempoolManager;
 
     private final Properties props;
     private final int maxBlockSize;
@@ -41,7 +41,7 @@ public class BaseContentStorage<E extends IndexableContent, P extends SybilResis
      */
     private int loadBalancing = 1;
 
-    public BaseContentStorage(Properties props, MempoolManager<E,P> mempoolManager) {
+    public BaseContentStorage(Properties props, MempoolManager mempoolManager) {
         this.maxBlockSize = parseInt(props.getProperty("maxBlockSize",
                 String.valueOf(MAX_BLOCK_SIZE)));
         this.maxSizeOffset = 1000;

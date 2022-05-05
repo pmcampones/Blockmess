@@ -4,9 +4,10 @@ import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.notifications.DeliverFinalizedBlocksContentNotification;
-import catecoin.txs.IndexableContent;
+import catecoin.txs.SlimTransaction;
 import catecoin.utxos.StorageUTXO;
 import ledger.blocks.LedgerBlock;
+import ledger.ledgerManager.StructuredValue;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
@@ -30,7 +31,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class MempoolManager<E extends IndexableContent, P extends SybilResistantElectionProof> extends GenericProtocol {
+public class MempoolManager extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(MempoolManager.class);
 
@@ -53,16 +54,16 @@ public class MempoolManager<E extends IndexableContent, P extends SybilResistant
      */
     private final MinimalistRecordModule recordModule;
 
-    private final MempoolChunkCreator<E,P> mempoolChunkCreator;
+    private final MempoolChunkCreator<StructuredValue<SlimTransaction>,SybilResistantElectionProof> mempoolChunkCreator;
 
-    public MempoolManager(Properties props, MempoolChunkCreator<E,P> mempoolChunkCreator) throws Exception {
+    public MempoolManager(Properties props, MempoolChunkCreator<StructuredValue<SlimTransaction>,SybilResistantElectionProof> mempoolChunkCreator) throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
         this.mempoolChunkCreator = mempoolChunkCreator;
         this.recordModule = new MinimalistRecordModule(props);
         loadInitialUtxos(props);
         bootstrapDL(props);
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<E>, P>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
@@ -92,8 +93,8 @@ public class MempoolManager<E extends IndexableContent, P extends SybilResistant
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<E>, P>> notif) {
-        LedgerBlock<ContentList<E>, P> block = notif.getNonFinalizedBlock();
+            DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> notif) {
+        LedgerBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block = notif.getNonFinalizedBlock();
         logger.debug("Received non finalized block with id {}", block.getBlockId());
         MempoolChunk chunk = mempoolChunkCreator.createChunk(block, notif.getCumulativeWeight());
         mempool.put(chunk.getId(), chunk);

@@ -31,9 +31,9 @@ public class ContextObliviousValidator<P extends SybilResistantElectionProof> ex
 
     public static final short ID = IDGenerator.genId();
 
-    public final MempoolManager<?,P> mempoolManager;
+    public final MempoolManager mempoolManager;
 
-    protected ContextObliviousValidator(Properties props, MempoolManager<?,P> mempoolManager, SybilProofValidator<P> proofValidator, short id) {
+    protected ContextObliviousValidator(Properties props, MempoolManager mempoolManager, SybilProofValidator<P> proofValidator, short id) {
         super(props, ContextObliviousValidator.class.getSimpleName(), id, proofValidator);
         this.mempoolManager = mempoolManager;
     }
