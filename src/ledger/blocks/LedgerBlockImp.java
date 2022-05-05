@@ -1,6 +1,6 @@
 package ledger.blocks;
 
-import catecoin.blocks.ValidatorSignatureImp;
+import catecoin.blocks.ValidatorSignature;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import main.ProtoPojo;
@@ -30,30 +30,65 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
 
     private final P proof;
 
-    private final List<ValidatorSignatureImp> validatorSignatures;
+    public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
+
+        @Override
+        public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
+            LedgerBlock<BlockContent<ProtoPojo>, SybilElectionProof> block = (LedgerBlock) protoPojo;
+            out.writeInt(block.getInherentWeight());
+            serializePrevs(block.getPrevRefs(), out);
+            serializePojo(block.getBlockContent(), out);
+            serializePojo(block.getSybilElectionProof(), out);
+            serializeValidatorSignatures(block.getSignatures(), out);
+        }
+
+        private void serializePrevs(List<UUID> prevs, ByteBuf out) {
+            out.writeShort(prevs.size());
+            for (UUID id : prevs) {
+                out.writeLong(id.getMostSignificantBits());
+                out.writeLong(id.getLeastSignificantBits());
+            }
+        }
+
+        private void serializePojo(ProtoPojo pojo, ByteBuf out) throws IOException {
+            out.writeShort(pojo.getClassId());
+            ISerializer<ProtoPojo> serializer = pojo.getSerializer();
+            serializer.serialize(pojo, out);
+        }
+
+        private void serializeValidatorSignatures(List<ValidatorSignature> validatorSignatures, ByteBuf out)
+                throws IOException {
+            out.writeShort(validatorSignatures.size());
+            ISerializer<ValidatorSignature> serializer = ValidatorSignature.serializer;
+            for (ValidatorSignature validatorSignature : validatorSignatures)
+                serializer.serialize((ValidatorSignature) validatorSignature, out);
+        }
+
+        @Override
+        public ProtoPojo deserialize(ByteBuf in) throws IOException {
+            int inherentWeight = in.readInt();
+            List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
+            BlockContent blockContent = (BlockContent) deserializeInnerPojo(in);
+            SybilElectionProof proof = (SybilElectionProof) deserializeInnerPojo(in);
+            List<ValidatorSignature> validatorSignatures = deserializeValidatorSignatures(in);
+            return new LedgerBlockImp<>(inherentWeight, prevRefs,
+                    blockContent, proof, validatorSignatures);
+        }
+
+    };
+    private final List<ValidatorSignature> validatorSignatures;
 
     /**
      * This constructor is meant to be used by nodes receiving the Block and called during the deserialization.
      */
     private LedgerBlockImp(int inherentWeight, List<UUID> prevRefs, C blockContent,
-                           P proof, List<ValidatorSignatureImp> validatorSignatures) throws IOException {
+                           P proof, List<ValidatorSignature> validatorSignatures) throws IOException {
         super(ID);
         this.inherentWeight = inherentWeight;
         this.prevRefs = prevRefs;
         this.blockContent = blockContent;
         this.proof = proof;
         this.blockId = computeBlockId();
-        this.validatorSignatures = validatorSignatures;
-    }
-
-    public LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, C blockContent,
-                           P proof, List<ValidatorSignatureImp> validatorSignatures) {
-        super(ID);
-        this.blockId = blockId;
-        this.inherentWeight = inherentWeight;
-        this.prevRefs = prevRefs;
-        this.blockContent = blockContent;
-        this.proof = proof;
         this.validatorSignatures = validatorSignatures;
     }
 
@@ -74,9 +109,9 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
         this.validatorSignatures = genValidatorSignaturesFromProposer(blockId, proposer);
     }
 
-    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, C blockContent,
-                   P proof, List<ValidatorSignatureImp> validatorSignatures, short classId) {
-        super(classId);
+    public LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, C blockContent,
+                           P proof, List<ValidatorSignature> validatorSignatures) {
+        super(ID);
         this.blockId = blockId;
         this.inherentWeight = inherentWeight;
         this.prevRefs = prevRefs;
@@ -85,10 +120,15 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
         this.validatorSignatures = validatorSignatures;
     }
 
-    private List<ValidatorSignatureImp> genValidatorSignaturesFromProposer(UUID blockId, KeyPair proposer) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
-        List<ValidatorSignatureImp> validatorSignatures = new ArrayList<>(1);
-        validatorSignatures.add(new ValidatorSignatureImp(proposer, blockId));
-        return validatorSignatures;
+    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, C blockContent,
+                   P proof, List<ValidatorSignature> validatorSignatures, short classId) {
+        super(classId);
+        this.blockId = blockId;
+        this.inherentWeight = inherentWeight;
+        this.prevRefs = prevRefs;
+        this.blockContent = blockContent;
+        this.proof = proof;
+        this.validatorSignatures = validatorSignatures;
     }
 
     private UUID computeBlockId() throws IOException {
@@ -144,14 +184,19 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
         return proof;
     }
 
-    @Override
-    public List<ValidatorSignatureImp> getSignatures() {
-        return validatorSignatures;
+    static List<ValidatorSignature> deserializeValidatorSignatures(ByteBuf in) throws IOException {
+        int numValidatorSignatures = in.readShort();
+        List<ValidatorSignature> validatorSignatures = new ArrayList<>(numValidatorSignatures);
+        ISerializer<ValidatorSignature> serializer = ValidatorSignature.serializer;
+        for (int i = 0; i < numValidatorSignatures; i++)
+            validatorSignatures.add(serializer.deserialize(in));
+        return List.copyOf(validatorSignatures);
     }
 
-    @Override
-    public void addValidatorSignature(ValidatorSignatureImp validatorSignature) {
-        validatorSignatures.add(validatorSignature);
+    private List<ValidatorSignature> genValidatorSignaturesFromProposer(UUID blockId, KeyPair proposer) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+        List<ValidatorSignature> validatorSignatures = new ArrayList<>(1);
+        validatorSignatures.add(new ValidatorSignature(proposer, blockId));
+        return validatorSignatures;
     }
 
     @Override
@@ -175,11 +220,9 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
                 + computeValidatorSignaturesSize();
     }
 
-    private int computeValidatorSignaturesSize() throws IOException {
-        int accum = 0;
-        for (ValidatorSignatureImp vs : validatorSignatures)
-            accum += vs.getSerializedSize();
-        return accum;
+    @Override
+    public List<ValidatorSignature> getSignatures() {
+        return validatorSignatures;
     }
 
     @Override
@@ -197,52 +240,10 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
         return serializer;
     }
 
-    public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
-
-        @Override
-        public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
-            LedgerBlock<BlockContent<ProtoPojo>, SybilElectionProof> block = (LedgerBlock) protoPojo;
-            out.writeInt(block.getInherentWeight());
-            serializePrevs(block.getPrevRefs(), out);
-            serializePojo(block.getBlockContent(), out);
-            serializePojo(block.getSybilElectionProof(), out);
-            serializeValidatorSignatures(block.getSignatures(), out);
-        }
-
-        private void serializePrevs(List<UUID> prevs, ByteBuf out) {
-            out.writeShort(prevs.size());
-            for (UUID id : prevs) {
-                out.writeLong(id.getMostSignificantBits());
-                out.writeLong(id.getLeastSignificantBits());
-            }
-        }
-
-        private void serializePojo(ProtoPojo pojo, ByteBuf out) throws IOException {
-            out.writeShort(pojo.getClassId());
-            ISerializer<ProtoPojo> serializer = pojo.getSerializer();
-            serializer.serialize(pojo, out);
-        }
-
-        private void serializeValidatorSignatures(List<ValidatorSignatureImp> validatorSignatures, ByteBuf out)
-                throws IOException {
-            out.writeShort(validatorSignatures.size());
-            ISerializer<ValidatorSignatureImp> serializer = ValidatorSignatureImp.serializer;
-            for (ValidatorSignatureImp validatorSignature : validatorSignatures)
-                serializer.serialize((ValidatorSignatureImp) validatorSignature, out);
-        }
-
-        @Override
-        public ProtoPojo deserialize(ByteBuf in) throws IOException {
-            int inherentWeight = in.readInt();
-            List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
-            BlockContent blockContent = (BlockContent) deserializeInnerPojo(in);
-            SybilElectionProof proof = (SybilElectionProof) deserializeInnerPojo(in);
-            List<ValidatorSignatureImp> validatorSignatures = deserializeValidatorSignatures(in);
-            return new LedgerBlockImp<>(inherentWeight, prevRefs,
-                    blockContent, proof, validatorSignatures);
-        }
-
-    };
+    @Override
+    public void addValidatorSignature(ValidatorSignature validatorSignature) {
+        validatorSignatures.add(validatorSignature);
+    }
 
     static ProtoPojo deserializeInnerPojo(ByteBuf in) throws IOException {
         short innerClass = in.readShort();
@@ -250,12 +251,10 @@ public class LedgerBlockImp<C extends BlockContent<? extends ProtoPojo>, P exten
         return serializer.deserialize(in);
     }
 
-    static List<ValidatorSignatureImp> deserializeValidatorSignatures(ByteBuf in) throws IOException {
-        int numValidatorSignatures = in.readShort();
-        List<ValidatorSignatureImp> validatorSignatures = new ArrayList<>(numValidatorSignatures);
-        ISerializer<ValidatorSignatureImp> serializer = ValidatorSignatureImp.serializer;
-        for (int i = 0; i < numValidatorSignatures; i++)
-            validatorSignatures.add(serializer.deserialize(in));
-        return List.copyOf(validatorSignatures);
+    private int computeValidatorSignaturesSize() throws IOException {
+        int accum = 0;
+        for (ValidatorSignature vs : validatorSignatures)
+            accum += vs.getSerializedSize();
+        return accum;
     }
 }

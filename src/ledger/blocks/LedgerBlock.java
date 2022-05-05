@@ -1,6 +1,6 @@
 package ledger.blocks;
 
-import catecoin.blocks.ValidatorSignatureImp;
+import catecoin.blocks.ValidatorSignature;
 import main.ProtoPojo;
 import sybilResistantElection.SybilElectionProof;
 
@@ -72,7 +72,7 @@ public interface LedgerBlock<C extends BlockContent<?>, P extends SybilElectionP
      * however, other, more lenient, approaches may allow more than <b>F</b> failures,
      * as seen in <a href=https://www.usenix.org/conference/nsdi-07/beyond-one-third-faulty-replicas-byzantine-fault-tolerant-systems>BFT2F</a></p>
      */
-    List<ValidatorSignatureImp> getSignatures();
+    List<ValidatorSignature> getSignatures();
 
     /**
      * Adds a new validator signature to the block.
@@ -81,7 +81,7 @@ public interface LedgerBlock<C extends BlockContent<?>, P extends SybilElectionP
      * @throws UnsupportedOperationException If the block arrives by deserialization it's not expected that a new
      * validator will be added, and thus the implementation <i>should</i> throw this exception.
      */
-    void addValidatorSignature(ValidatorSignatureImp validatorSignature);
+    void addValidatorSignature(ValidatorSignature validatorSignature);
 
     /**
      * Retrieves the proposer of the block.
