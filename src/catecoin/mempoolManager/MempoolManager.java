@@ -54,11 +54,11 @@ public class MempoolManager extends GenericProtocol {
      */
     private final MinimalistRecordModule recordModule;
 
-    private final MempoolChunkCreator<StructuredValue<SlimTransaction>,SybilResistantElectionProof> mempoolChunkCreator;
+    private final StructuredValueChunkCreator mempoolChunkCreator;
 
-    public MempoolManager(Properties props, MempoolChunkCreator<StructuredValue<SlimTransaction>,SybilResistantElectionProof> mempoolChunkCreator) throws Exception {
+    public MempoolManager(Properties props) throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
-        this.mempoolChunkCreator = mempoolChunkCreator;
+        this.mempoolChunkCreator = new StructuredValueChunkCreator();
         this.recordModule = new MinimalistRecordModule(props);
         loadInitialUtxos(props);
         bootstrapDL(props);
@@ -138,7 +138,6 @@ public class MempoolManager extends GenericProtocol {
         Set<UUID> removedUtxoIds = extractRemovedUtxosFromBlock(finalized);
         Set<StorageUTXO> addedUtxos = extractStorageUtxosFromBlock(finalized);
         Map<UUID, StorageUTXO> mapAddedUtxos = new HashMap<>();
-        Set<StorageUTXO> removedUtxos = getRemovedUtxos(removedUtxoIds, mapAddedUtxos);
         triggerNotification(new DeliverFinalizedBlocksContentNotification(
         ));
         UTXOCollection.updateUtxos(addedUtxos, removedUtxoIds);

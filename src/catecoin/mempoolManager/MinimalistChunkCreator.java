@@ -6,8 +6,7 @@ import catecoin.blocks.chunks.MinimalistMempoolChunk;
 import catecoin.txs.SlimTransaction;
 import catecoin.utxos.StorageUTXO;
 import ledger.blocks.LedgerBlock;
-import ledger.blocks.SizeAccountable;
-import main.ProtoPojo;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.Set;
 import java.util.UUID;
@@ -16,10 +15,9 @@ import java.util.stream.Stream;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toUnmodifiableSet;
 
-public class MinimalistChunkCreator<P extends ProtoPojo & SizeAccountable> implements MempoolChunkCreator<SlimTransaction,P> {
+public class MinimalistChunkCreator{
 
-    @Override
-    public MempoolChunk createChunk(LedgerBlock<ContentList<SlimTransaction>, P> block,
+    public MempoolChunk createChunk(LedgerBlock<ContentList<SlimTransaction>, SybilResistantElectionProof> block,
                                     int cumulativeWeight) {
         ContentList<SlimTransaction> ContentList = block.getContentList();
         Set<StorageUTXO> addedUtxos = extractAddedUtxos(ContentList);

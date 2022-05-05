@@ -6,8 +6,6 @@ import catecoin.blockConstructors.*;
 import catecoin.blocks.ContentList;
 import catecoin.mempoolManager.BootstrapModule;
 import catecoin.mempoolManager.MempoolManager;
-import catecoin.mempoolManager.MinimalistChunkCreator;
-import catecoin.mempoolManager.StructuredValueChunkCreator;
 import catecoin.transactionGenerators.FakeTxsGenerator;
 import catecoin.txs.SlimTransaction;
 import catecoin.txs.StructuredValueSlimTransactionWrapper;
@@ -116,7 +114,7 @@ public class Main {
 
     private static void launchBlockmess(Properties props, Host myself, Babel babel) throws Exception {
         var protocols = new LinkedList<>(addNetworkProtocols(props, myself));
-        var mempoolManager = setUpMempoolManager(props);
+        var mempoolManager = new MempoolManager(props);
         protocols.add(mempoolManager);
         setUpLedgerPrototype(props);
         setUpContentStoragePrototype(props, mempoolManager);
@@ -126,14 +124,6 @@ public class Main {
         recordMetricsBlockmess(props, protocols, ledgerManager);
         initializeSerializers();
         initializeProtocols(props, babel, protocols);
-    }
-
-    @NotNull
-    private static MempoolManager setUpMempoolManager(Properties props)
-            throws Exception {
-        MinimalistChunkCreator<SybilResistantElectionProof> innerChunkCreator = new MinimalistChunkCreator<>();
-        var wrapperChunkCreator = new StructuredValueChunkCreator<>(innerChunkCreator);
-        return new MempoolManager(props, wrapperChunkCreator);
     }
 
     private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager<SlimTransaction, ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> ledgerManager) throws Exception {
