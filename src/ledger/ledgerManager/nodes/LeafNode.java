@@ -37,8 +37,8 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode<E extends IndexableContent, P extends SybilResistantElectionProof>
-        implements BlockmessChain<E,P>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>> {
+public class LeafNode<E extends IndexableContent>
+        implements BlockmessChain<E,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -46,9 +46,9 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
 
     private final UUID ChainId;
 
-    private final Ledger<BlockmessBlock<ContentList<StructuredValue<E>>,P>> ledger;
+    private final Ledger<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> ledger;
 
-    private final List<LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>>> observers = new LinkedList<>();
+    private final List<LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>> observers = new LinkedList<>();
 
     private final ReadWriteLock observersLock = new ReentrantReadWriteLock();
     /**
@@ -58,15 +58,15 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
      * <p>Shouldn't need to be concurrent if the inner {@link Ledger} is a {@link ledger.blockchain.Blockchain},
      * however, in case the ledger implementation is changed, this will be kept as concurrent.</p>
      */
-    private final Map<UUID, BlockmessBlock<ContentList<StructuredValue<E>>,P>> blocks = new ConcurrentHashMap<>();
+    private final Map<UUID, BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> blocks = new ConcurrentHashMap<>();
 
     private final ComposableContentStorage<E> contentStorage;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
      */
-    private final Queue<BlockmessBlock<ContentList<StructuredValue<E>>,P>> finalizedBuffer = new ConcurrentLinkedQueue<>();
-    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
+    private final Queue<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> finalizedBuffer = new ConcurrentLinkedQueue<>();
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
 
     /** Ledger<BlockmessBlock<C,P>> ledger
      * Number of samples used to determine if the Chain should spawn new Chains or merge into its parent.
@@ -112,14 +112,14 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
     private int depth;
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage)
             throws PrototypeHasNotBeenDefinedException {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage, UUID prevBlock)
             throws PrototypeHasNotBeenDefinedException {
         this.props = props;
@@ -148,12 +148,12 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
         ledger.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> observer) {
         try {
             observersLock.writeLock().lock();
             observers.add(observer);
@@ -183,7 +183,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent) {
         this.parent = parent;
     }
 
@@ -196,7 +196,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         contentStorage.halveChainThroughput();
         Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> spawnedChainDirectors =
                 contentStorage.separateContent(mask, lft, rgt);
-        TempChainNode<E,P> encapsulating =
+        TempChainNode<E> encapsulating =
                 new TempChainNode<>(props, this, parent, originator, depth, spawnedChainDirectors);
         parent.replaceChild(encapsulating);
         this.parent = encapsulating;
@@ -204,7 +204,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>,P> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> peekFinalized() {
         return finalizedBuffer.peek();
     }
 
@@ -229,8 +229,8 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>,P> deliverChainBlock() {
-        BlockmessBlock<ContentList<StructuredValue<E>>,P> block = finalizedBuffer.poll();
+    public BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> deliverChainBlock() {
+        BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block = finalizedBuffer.poll();
         if (block != null) {
             computeBlockSizeStatistics(block);
             updateNextRank();
@@ -238,7 +238,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         return block;
     }
 
-    private void computeBlockSizeStatistics(BlockmessBlock<ContentList<StructuredValue<E>>, P> block) {
+    private void computeBlockSizeStatistics(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block) {
         if (blocksBeforeResumingMetrics > 0)
             blocksBeforeResumingMetrics--;
         else {
@@ -256,7 +256,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         }
     }
 
-    private int getContentSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
+    private int getContentSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
         try {
             return block.getContentList().getSerializedSize();
         } catch (IOException e) {
@@ -288,7 +288,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         return !finalizedBuffer.isEmpty();
     }
 
-    private int getBlockSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
+    private int getBlockSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
         try {
             return block.getSerializedSize();
         } catch (IOException e) {
@@ -297,7 +297,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         return maxBlockSize / 2;
     }
 
-    private int getProofSize(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
+    private int getProofSize(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
         try {
             return block.getSybilElectionProof().getSerializedSize();
         } catch (IOException e) {
@@ -307,12 +307,12 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
         return blockIds.stream().map(blocks::get).filter(Objects::nonNull).collect(toSet());
     }
 
     @Override
-    public Set<BlockmessChain<E,P>> getPriorityChains() {
+    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
         return emptySet();
     }
 
@@ -321,16 +321,16 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
             throws PrototypeHasNotBeenDefinedException {
         depth++;
         contentStorage.halveChainThroughput();
-        ParentTreeNode<E,ContentList<StructuredValue<E>>,P> treeRoot = parent.getTreeRoot();
-        ReferenceNode<E,P> lft = new ReferenceNode<>(props, lftId, treeRoot,
+        ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
+        ReferenceNode<E> lft = new ReferenceNode<>(props, lftId, treeRoot,
                 0, 1, depth, new ComposableContentStorageImp<>(),
                 new UUID(0,0));
-        ReferenceNode<E,P> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
+        ReferenceNode<E> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
                 0, 1, depth, new ComposableContentStorageImp<>(),
                 new UUID(0,0));
         lft.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
         rgt.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
-        PermanentChainNode<E,P> encapsulating =
+        PermanentChainNode<E> encapsulating =
                 new PermanentChainNode<>(this.parent, this, lft, rgt);
         parent.replaceChild(encapsulating);
         this.parent = encapsulating;
@@ -338,22 +338,18 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         parent.createChains(List.of(lft, rgt));
     }
 
+    private void updateNextRank() {
+        BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> nextFinalized = finalizedBuffer.peek();
+        if (nextFinalized != null && nextFinalized.getNextRank() > minNextRank)
+            minNextRank = nextFinalized.getNextRank();
+    }
+
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, P> block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block, int weight) {
         blocks.put(block.getBlockId(), block);
         logger.debug("Delivering non finalized block {} in Chain {}",
                 block.getBlockId(), ChainId);
         deliverNonFinalizedBlockToObservers(block, weight);
-    }
-
-    private void deliverNonFinalizedBlockToObservers(BlockmessBlock<ContentList<StructuredValue<E>>, P> block, int weight) {
-        try {
-            observersLock.readLock().lock();
-            for (var observer : observers)
-                observer.deliverNonFinalizedBlock(block, weight);
-        } finally {
-            observersLock.readLock().unlock();
-        }
     }
 
     @Override
@@ -400,19 +396,14 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         return minRank;
     }
 
-    @Override
-    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
-        if (finalized.isEmpty() && discarded.isEmpty()) return;
-        List<BlockmessBlock<ContentList<StructuredValue<E>>,P>> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
-        finalizedBuffer.addAll(finalizedBlocks);
-        updateNextRank();
-        contentStorage.deleteContent(getFinalizedContent(finalized));
-        finalized.forEach(blocks::remove);
-        logger.info("Delivering finalized blocks {} in Chain {}",
-                finalized, ChainId);
-        logger.debug("Observed {} blocks over the size threshold",
-                overloadedBlocksSample.stream().filter(b -> b).count());
-        deliverFinalizedBlocksToObservers(finalized, discarded);
+    private void deliverNonFinalizedBlockToObservers(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block, int weight) {
+        try {
+            observersLock.readLock().lock();
+            for (var observer : observers)
+                observer.deliverNonFinalizedBlock(block, weight);
+        } finally {
+            observersLock.readLock().unlock();
+        }
     }
 
     @Override
@@ -432,10 +423,19 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
         return nextRank.orElse(minRank);
     }
 
-    private void updateNextRank() {
-        BlockmessBlock<ContentList<StructuredValue<E>>,P> nextFinalized = finalizedBuffer.peek();
-        if (nextFinalized != null && nextFinalized.getNextRank() > minNextRank)
-            minNextRank = nextFinalized.getNextRank();
+    @Override
+    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+        if (finalized.isEmpty() && discarded.isEmpty()) return;
+        List<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
+        finalizedBuffer.addAll(finalizedBlocks);
+        updateNextRank();
+        contentStorage.deleteContent(getFinalizedContent(finalized));
+        finalized.forEach(blocks::remove);
+        logger.info("Delivering finalized blocks {} in Chain {}",
+                finalized, ChainId);
+        logger.debug("Observed {} blocks over the size threshold",
+                overloadedBlocksSample.stream().filter(b -> b).count());
+        deliverFinalizedBlocksToObservers(finalized, discarded);
     }
 
     @Override
@@ -492,7 +492,7 @@ public class LeafNode<E extends IndexableContent, P extends SybilResistantElecti
                 ).collect(toSet());
     }
 
-    private Stream<StructuredValue<E>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<ContentList<StructuredValue<E>>, P>> stream) {
+    private Stream<StructuredValue<E>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> stream) {
         return stream
                 .map(BlockmessBlock::getContentList)
                 .map(ContentList::getContentList)

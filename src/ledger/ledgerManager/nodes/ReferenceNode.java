@@ -23,27 +23,27 @@ import static org.apache.commons.collections4.SetUtils.union;
  * to directly contact the Chain.
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
-public class ReferenceNode<E extends IndexableContent, P extends SybilResistantElectionProof>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,P>, BlockmessChain<E,P> {
+public class ReferenceNode<E extends IndexableContent>
+        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, BlockmessChain<E,SybilResistantElectionProof> {
 
     /**
      * Reference to the lead node in this Chain.
      * <p>This reference reduces the chain of method calls for operations that always end up calling the leaf.</p>
      */
-    private final LeafNode<E,P> leaf;
+    private final LeafNode<E> leaf;
     /**
      * Uses the State design pattern to modify its behaviour
      * depending on whether it is a leaf node or an inner node.
      */
-    private BlockmessChain<E,P> nodeState;
+    private BlockmessChain<E,SybilResistantElectionProof> nodeState;
     /**
      * References the inner node from a parent Chain that spawned this.
      * <p>It could also be a reference to the LedgerManager itself.</p>
      */
-    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage)
             throws PrototypeHasNotBeenDefinedException {
         this.leaf = new LeafNode<>(props, ChainId, this, minRank, minNextRank, depth, contentStorage);
@@ -52,7 +52,7 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage, UUID prevBlock)
             throws PrototypeHasNotBeenDefinedException {
         this.leaf = new LeafNode<>(props, ChainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
@@ -81,12 +81,12 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
         leaf.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> observer) {
         leaf.attachObserver(observer);
     }
 
@@ -110,7 +110,7 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
         leaf.close();
     }
     @Override
-    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent) {
         this.parent = parent;
     }
 
@@ -125,7 +125,7 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, P> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> peekFinalized() {
         return leaf.peekFinalized();
     }
 
@@ -133,7 +133,7 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
      *  Must not send directly to the leaf node
      */
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, P> deliverChainBlock() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> deliverChainBlock() {
         return nodeState.deliverChainBlock();
     }
 
@@ -158,7 +158,7 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
         return leaf.getBlocks(blockIds);
     }
 
@@ -173,7 +173,7 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public Set<BlockmessChain<E,P>> getPriorityChains() {
+    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
         return union(Set.of(this), nodeState.getPriorityChains());
     }
 
@@ -204,7 +204,7 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,P> newChild) {
+    public void replaceChild(BlockmessChain<E,SybilResistantElectionProof> newChild) {
         this.nodeState = newChild;
     }
 
@@ -214,12 +214,12 @@ public class ReferenceNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,P>> createdChains) {
+    public void createChains(List<BlockmessChain<E,SybilResistantElectionProof>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,ContentList<StructuredValue<E>>,P> getTreeRoot() {
+    public ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> getTreeRoot() {
         return parent;
     }
 

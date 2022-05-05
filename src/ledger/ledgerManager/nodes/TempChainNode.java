@@ -29,8 +29,8 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode<E extends IndexableContent, P extends SybilResistantElectionProof>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,P>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>>, BlockmessChain<E,P> {
+public class TempChainNode<E extends IndexableContent>
+        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>, BlockmessChain<E,SybilResistantElectionProof> {
 
     private final Properties props;
 
@@ -38,11 +38,11 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
      * Maps the identifier of the Chain root block to the Chains that are originated.
      * <p>Eventually, one and only one of the root blocks in this DS will originate a valid Chain.</p>
      */
-    private final Map<UUID, Pair<ReferenceNode<E,P>, ReferenceNode<E,P>>> tentativeChains = new HashMap<>();
+    private final Map<UUID, Pair<ReferenceNode<E>, ReferenceNode<E>>> tentativeChains = new HashMap<>();
 
-    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
 
-    private BlockmessChain<E,P> inner;
+    private BlockmessChain<E,SybilResistantElectionProof> inner;
 
     private final int finalizedWeight;
 
@@ -57,7 +57,7 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
             ComposableContentStorage<E>> contentStoragePair;
 
     public TempChainNode(
-            Properties props, BlockmessChain<E,P> inner, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
+            Properties props, BlockmessChain<E,SybilResistantElectionProof> inner, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
             UUID ChainOriginatorBlockId, int ChainDepth,
             Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> contentStoragePair)
             throws PrototypeHasNotBeenDefinedException {
@@ -74,27 +74,27 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
 
     private void fillChainMap(UUID ChainOriginatorBlockId) throws PrototypeHasNotBeenDefinedException {
         Set<UUID> rootIds = inner.getFollowing(ChainOriginatorBlockId, finalizedWeight + 3);
-        Set<BlockmessBlock<ContentList<StructuredValue<E>>,P>> roots = inner.getBlocks(rootIds);
-        for (BlockmessBlock<ContentList<StructuredValue<E>>,P> root : roots)
+        Set<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> roots = inner.getBlocks(rootIds);
+        for (BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> root : roots)
             tentativeChains.put(root.getBlockId(), computeChains(root));
         parent.createChains(getTentative());
     }
 
-    private List<BlockmessChain<E,P>> getTentative() {
+    private List<BlockmessChain<E,SybilResistantElectionProof>> getTentative() {
         return tentativeChains.values().stream()
                 .map(pair -> List.of(pair.getLeft(), pair.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
     }
 
-    private Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> computeChains(BlockmessBlock<ContentList<StructuredValue<E>>,P> root)
+    private Pair<ReferenceNode<E>, ReferenceNode<E>> computeChains(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> root)
             throws PrototypeHasNotBeenDefinedException {
-        ParentTreeNode<E,ContentList<StructuredValue<E>>,P> treeRoot = parent.getTreeRoot();
+        ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
         UUID lftId = computeChainId(root.getBlockId(), "lft".getBytes());
-        ReferenceNode<E,P> lft = new ReferenceNode<>(props, lftId, treeRoot,
+        ReferenceNode<E> lft = new ReferenceNode<>(props, lftId, treeRoot,
                 root.getNextRank(), root.getNextRank(), ChainDepth, contentStoragePair.getLeft(), root.getBlockId());
         UUID rgtId = computeChainId(root.getBlockId(), "rgt".getBytes());
-        ReferenceNode<E,P> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
+        ReferenceNode<E> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
                 root.getNextRank(), root.getNextRank(), ChainDepth, contentStoragePair.getRight(), root.getBlockId());
         return Pair.of(lft, rgt);
     }
@@ -113,12 +113,12 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>, P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block) {
         inner.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> observer) {
         inner.attachObserver(observer);
     }
 
@@ -148,7 +148,7 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent) {
         this.parent = parent;
     }
 
@@ -165,7 +165,7 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
         inner.resetSamples();
         inner.lowerLeafDepth();
         inner.doubleChainThroughput();
-        List<BlockmessChain<E,P>> toMerge =  tentativeChains.values().stream()
+        List<BlockmessChain<E,SybilResistantElectionProof>> toMerge =  tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
@@ -189,14 +189,14 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, P> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> peekFinalized() {
         return inner.peekFinalized();
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, P> deliverChainBlock() {
-        BlockmessBlock<ContentList<StructuredValue<E>>,P> delivered = inner.deliverChainBlock();
-        Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> confirmedChains =
+    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> deliverChainBlock() {
+        BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> delivered = inner.deliverChainBlock();
+        Pair<ReferenceNode<E>, ReferenceNode<E>> confirmedChains =
                 tentativeChains.get(delivered.getBlockId());
         if (confirmedChains != null) {
             replaceThisNode(confirmedChains);
@@ -205,7 +205,7 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
         return delivered;
     }
 
-    private Set<UUID> computeDiscardedChainsIds(Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> confirmed) {
+    private Set<UUID> computeDiscardedChainsIds(Pair<ReferenceNode<E>, ReferenceNode<E>> confirmed) {
         Set<UUID> confirmedIds = Set.of(confirmed.getLeft().getChainId(), confirmed.getRight().getChainId());
         return tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
@@ -242,7 +242,7 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
         return inner.getBlocks(blockIds);
     }
 
@@ -257,7 +257,7 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public Set<BlockmessChain<E,P>> getPriorityChains() {
+    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
         var priorityChainsOpt = getPreferableTemp();
         if (priorityChainsOpt.isEmpty())
             return inner.getPriorityChains();
@@ -293,7 +293,7 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
         return 2 + inner.countReferencedPermanent();
     }
 
-    private Optional<Pair<ReferenceNode<E,P>, ReferenceNode<E,P>>> getPreferableTemp() {
+    private Optional<Pair<ReferenceNode<E>, ReferenceNode<E>>> getPreferableTemp() {
         var eligible = tentativeChains.entrySet().stream()
                 .filter(e -> this.isInLongestChain(e.getKey()))
                 .map(Map.Entry::getValue)
@@ -303,8 +303,8 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
         return Optional.of(eligible.get(0));
     }
 
-    private void replaceThisNode(Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> correctChains) {
-        PermanentChainNode<E,P> replacement = new PermanentChainNode<>(this.parent, this.inner,
+    private void replaceThisNode(Pair<ReferenceNode<E>, ReferenceNode<E>> correctChains) {
+        PermanentChainNode<E> replacement = new PermanentChainNode<>(this.parent, this.inner,
                 correctChains.getLeft(), correctChains.getRight());
         this.parent.replaceChild(replacement);
         this.inner.replaceParent(replacement);
@@ -316,22 +316,22 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,P> newChild) {
+    public void replaceChild(BlockmessChain<E,SybilResistantElectionProof> newChild) {
         this.inner = newChild;
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,P>> createdChains) {
+    public void createChains(List<BlockmessChain<E,SybilResistantElectionProof>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,ContentList<StructuredValue<E>>,P> getTreeRoot() {
+    public ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> getTreeRoot() {
         return parent.getTreeRoot();
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, P> block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block, int weight) {
         if (weight == rootWeight + finalizedWeight + 3)
             tryToInsertNewChainRoot(block);
     }
@@ -342,9 +342,9 @@ public class TempChainNode<E extends IndexableContent, P extends SybilResistantE
         // ledger manager has linearized the blocks.
     }
 
-    private void tryToInsertNewChainRoot(BlockmessBlock<ContentList<StructuredValue<E>>,P> root) {
+    private void tryToInsertNewChainRoot(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> root) {
         try {
-            Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> createdChains = computeChains(root);
+            Pair<ReferenceNode<E>, ReferenceNode<E>> createdChains = computeChains(root);
             tentativeChains.put(root.getBlockId(), createdChains);
             parent.createChains(List.of(createdChains.getLeft(), createdChains.getRight()));
         } catch (PrototypeHasNotBeenDefinedException e) {

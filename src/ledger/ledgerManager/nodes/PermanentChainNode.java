@@ -28,15 +28,15 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>The lower the InnerNode in the Chain's hierarchy,
  * the later were the referenced Chains spawned.</p>
  */
-public class PermanentChainNode<E extends IndexableContent, P extends SybilResistantElectionProof>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,P>, BlockmessChain<E,P>{
+public class PermanentChainNode<E extends IndexableContent>
+        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, BlockmessChain<E,SybilResistantElectionProof>{
 
-    private final ReferenceNode<E,P> lft, rgt;
-    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
-    private BlockmessChain<E,P> inner;
+    private final ReferenceNode<E> lft, rgt;
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
+    private BlockmessChain<E,SybilResistantElectionProof> inner;
 
-    public PermanentChainNode(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent, BlockmessChain<E,P> inner,
-                               ReferenceNode<E,P> lft, ReferenceNode<E,P> rgt) {
+    public PermanentChainNode(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent, BlockmessChain<E,SybilResistantElectionProof> inner,
+                               ReferenceNode<E> lft, ReferenceNode<E> rgt) {
         this.parent = parent;
         this.inner = inner;
         this.lft = lft;
@@ -54,12 +54,12 @@ public class PermanentChainNode<E extends IndexableContent, P extends SybilResis
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
         inner.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> observer) {
         inner.attachObserver(observer);
     }
 
@@ -84,7 +84,7 @@ public class PermanentChainNode<E extends IndexableContent, P extends SybilResis
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent) {
         this.parent = parent;
     }
 
@@ -99,12 +99,12 @@ public class PermanentChainNode<E extends IndexableContent, P extends SybilResis
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, P> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> peekFinalized() {
         return inner.peekFinalized();
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, P> deliverChainBlock() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> deliverChainBlock() {
         return inner.deliverChainBlock();
     }
 
@@ -133,7 +133,7 @@ public class PermanentChainNode<E extends IndexableContent, P extends SybilResis
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
         return inner.getBlocks(blockIds);
     }
 
@@ -148,7 +148,7 @@ public class PermanentChainNode<E extends IndexableContent, P extends SybilResis
     }
 
     @Override
-    public Set<BlockmessChain<E,P>> getPriorityChains() {
+    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
         return union(inner.getPriorityChains(), union(lft.getPriorityChains(), rgt.getPriorityChains()));
     }
 
@@ -179,7 +179,7 @@ public class PermanentChainNode<E extends IndexableContent, P extends SybilResis
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,P> newChild) {
+    public void replaceChild(BlockmessChain<E,SybilResistantElectionProof> newChild) {
         inner = newChild;
     }
 
@@ -189,12 +189,12 @@ public class PermanentChainNode<E extends IndexableContent, P extends SybilResis
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,P>> createdChains) {
+    public void createChains(List<BlockmessChain<E,SybilResistantElectionProof>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,ContentList<StructuredValue<E>>,P> getTreeRoot() {
+    public ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> getTreeRoot() {
         return parent.getTreeRoot();
     }
 
