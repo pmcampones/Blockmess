@@ -10,10 +10,8 @@ import java.util.Properties;
 
 public class InterfaceToIp {
     public static String getIpOfInterface(String interfaceName) throws SocketException {
-        NetworkInterface.networkInterfaces().map(NetworkInterface::getName).forEach(System.out::println);
         NetworkInterface networkInterface = NetworkInterface.getByName(interfaceName);
         Enumeration<InetAddress> inetAddress = networkInterface.getInetAddresses();
-        System.out.println(networkInterface);
         InetAddress currentAddress;
         while (inetAddress.hasMoreElements()) {
             currentAddress = inetAddress.nextElement();
@@ -28,7 +26,6 @@ public class InterfaceToIp {
         String interfaceName;
         if ((interfaceName = props.getProperty("interface")) != null) {
             String ip = InterfaceToIp.getIpOfInterface(interfaceName);
-	    System.out.println(ip);
             if(ip != null)
                 props.setProperty("address", ip);
             else {
