@@ -159,7 +159,7 @@ public class Main {
 
     private static void setUpContentStoragePrototype(Properties props, MempoolManager<StructuredValue<SlimTransaction>, SybilResistantElectionProof> mempoolManager) throws PrototypeAlreadyDefinedException {
         PrototypicalContentStorage<StructuredValue<SlimTransaction>> contentStorage =
-                new ContextAwareContentStorage<>(props, mempoolManager);
+                new BaseContentStorage<>(props, mempoolManager);
         ContentStoragePrototype.setPrototype(contentStorage);
     }
 

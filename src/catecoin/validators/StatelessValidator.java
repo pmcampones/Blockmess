@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.util.UUID;
 
-import static catecoin.blockConstructors.AbstractContentStorage.MAX_BLOCK_SIZE;
+import static catecoin.blockConstructors.BaseContentStorage.MAX_BLOCK_SIZE;
 import static java.lang.Integer.parseInt;
 
 /**

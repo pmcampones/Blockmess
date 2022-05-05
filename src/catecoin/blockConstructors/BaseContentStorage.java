@@ -5,6 +5,7 @@ import catecoin.txs.IndexableContent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import sybilResistantElection.SybilElectionProof;
 
 import java.io.IOException;
 import java.util.*;
@@ -15,40 +16,32 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toMap;
 import static sybilResistantElection.SybilResistantElection.INITIALIZATION_TIME;
 
-public abstract class AbstractContentStorage<E extends IndexableContent>
+public class BaseContentStorage<E extends IndexableContent, P extends SybilElectionProof>
         implements PrototypicalContentStorage<E> {
 
-    private static final Logger logger = LogManager.getLogger(AbstractContentStorage.class.getName());
-
     public static final int MAX_THRESHOLD_THROUGHPUT = Integer.MAX_VALUE;
-
     public static final int MAX_BLOCK_SIZE = 40000;
-
+    private static final Logger logger = LogManager.getLogger(BaseContentStorage.class.getName());
     public static long timeStart = -1;
+    private final MempoolManager<E,P> mempoolManager;
 
+    private final Properties props;
     private final int maxBlockSize;
-
     private final int maxSizeOffset;
-
     /**
      * Maximum throughput allowed in number of txs per second.
      * Used to throttle load in the application for the experimental evaluation.
      */
     private final int maxThresholdThroughput;
-
+    private final Map<UUID, E> contentMap;
+    private final boolean useRandomTransactionAllocation;
     /**
      * Factor by which the load is lowered in this particular chain.
      * Used to emulate the load a chain would have based on the number of Chaining that has ocurred.
      */
     private int loadBalancing = 1;
 
-    private final Map<UUID, E> contentMap;
-
-    private final MempoolManager<E,?> mempoolManager;
-
-    private final boolean useRandomTransactionAllocation;
-
-    public AbstractContentStorage(Properties props, MempoolManager<E,?> mempoolManager) {
+    public BaseContentStorage(Properties props, MempoolManager<E,P> mempoolManager) {
         this.maxBlockSize = parseInt(props.getProperty("maxBlockSize",
                 String.valueOf(MAX_BLOCK_SIZE)));
         this.maxSizeOffset = 1000;
@@ -56,31 +49,44 @@ public abstract class AbstractContentStorage<E extends IndexableContent>
                 String.valueOf(MAX_THRESHOLD_THROUGHPUT)));
         this.useRandomTransactionAllocation = props.getProperty("useRandomTransactionAllocation", "F")
                 .equalsIgnoreCase("T");
-        if (useRandomTransactionAllocation)
-            contentMap = Collections.synchronizedMap(new TreeMap<>());
-        else
-            contentMap = new ConcurrentHashMap<>();
+        contentMap = useRandomTransactionAllocation ? Collections.synchronizedMap(new TreeMap<>()) : new ConcurrentHashMap<>();
         int initializationTime = parseInt(props.getProperty("initializationTime",
                 String.valueOf(INITIALIZATION_TIME)));
         if (timeStart == -1)
             timeStart = System.currentTimeMillis() + initializationTime;
         this.mempoolManager = mempoolManager;
+        this.props = props;
     }
 
     @Override
-    public abstract List<E> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException;
+    public List<E> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException {
+        Set<UUID> used = findUsedTransactions(states);
+        return getContentList(usedSpace, used);
+    }
 
     @Override
-    public abstract List<E> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException;
+    public List<E> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException {
+        Set<UUID> used = findUsedTransactions(states);
+        return getContentWithinBounds(usedSpace, used, maxTxs);
+    }
+
+    private Set<UUID> findUsedTransactions(Collection<UUID> states) {
+        Set<UUID> used = new HashSet<>();
+        Set<UUID> visited = new HashSet<>();
+        for (UUID state : states)
+            used.addAll(mempoolManager.getInvalidTxsFromChunk(state, visited));
+        return used;
+    }
+
+    @Override
+    public PrototypicalContentStorage<E> clonePrototype() {
+        return new BaseContentStorage<>(props, mempoolManager);
+    }
 
     protected List<E> getContentList(int usedSpace, Set<UUID> used) throws IOException {
         return this.useRandomTransactionAllocation
                 ? getContentRandomOrder(usedSpace, used)
                 : getContentDeterministicOrder(usedSpace, used);
-    }
-
-    protected List<E> getContentWithinBounds(int usedSpace, Set<UUID> used, int maxTxs) throws IOException {
-        return getContentDeterministicOrderBound(usedSpace, used, maxTxs);
     }
 
     private List<E> getContentDeterministicOrder(int usedSpace, Set<UUID> used) throws IOException {
@@ -146,6 +152,10 @@ public abstract class AbstractContentStorage<E extends IndexableContent>
         for (int i = start; i < end && ogIt.hasNext(); i++)
             sublist.add(ogIt.next());
         return sublist;
+    }
+
+    protected List<E> getContentWithinBounds(int usedSpace, Set<UUID> used, int maxTxs) throws IOException {
+        return getContentDeterministicOrderBound(usedSpace, used, maxTxs);
     }
 
     @Override
