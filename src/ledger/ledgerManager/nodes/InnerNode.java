@@ -1,9 +1,9 @@
 package ledger.ledgerManager.nodes;
 
 import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.ledgerManager.StructuredValue;
 import sybilResistantElection.SybilResistantElectionProof;
 
-public interface InnerNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
-        extends BlockmessChain, ParentTreeNode<E,C,P> {}
+public interface InnerNode
+        extends BlockmessChain, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> {}

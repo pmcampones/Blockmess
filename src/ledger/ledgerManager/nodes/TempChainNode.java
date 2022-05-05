@@ -30,7 +30,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
 public class TempChainNode
-        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain {
+        implements InnerNode, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain {
 
     private final Properties props;
 

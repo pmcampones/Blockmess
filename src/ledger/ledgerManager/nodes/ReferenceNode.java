@@ -24,7 +24,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
 public class ReferenceNode
-        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, BlockmessChain{
+        implements InnerNode, BlockmessChain{
 
     /**
      * Reference to the lead node in this Chain.

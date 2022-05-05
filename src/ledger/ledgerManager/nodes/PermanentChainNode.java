@@ -29,7 +29,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * the later were the referenced Chains spawned.</p>
  */
 public class PermanentChainNode
-        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, BlockmessChain{
+        implements InnerNode, BlockmessChain{
 
     private final ReferenceNode lft, rgt;
     private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
