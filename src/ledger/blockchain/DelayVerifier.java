@@ -4,7 +4,7 @@ import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.blocks.LedgerBlock;
 import org.jetbrains.annotations.NotNull;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-public class DelayVerifier<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilElectionProof>> extends Thread implements AutoCloseable {
+public class DelayVerifier<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilResistantElectionProof>> extends Thread implements AutoCloseable {
 
     //Tasks are simple, so the pool should be small.
     private static final int POOL_SIZE = 1;

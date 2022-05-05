@@ -11,7 +11,7 @@ import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.IDGenerator;
 
 import java.io.IOException;
@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.toMap;
  * Validates received blocks without accounting for their placement in relation with others.
  * <p>Useful for the majority of DLs; however may be lacking if we're using key/micro blocks.</p>
  */
-public class ContextObliviousValidator<P extends SybilElectionProof> extends StatelessValidator<P> {
+public class ContextObliviousValidator<P extends SybilResistantElectionProof> extends StatelessValidator<P> {
 
     private static final Logger logger = LogManager.getLogger(ContextObliviousValidator.class);
 

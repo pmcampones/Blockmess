@@ -9,7 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -22,7 +22,7 @@ import static java.lang.Integer.parseInt;
  * Block validator that does not verify if the inputs and outputs match.
  * Effectively only makes the necessary validations that do not require maintaining a state.
  */
-public class StatelessValidator<P extends SybilElectionProof>
+public class StatelessValidator<P extends SybilResistantElectionProof>
         extends GenericProtocol implements BlockValidator<LedgerBlock<ContentList<SlimTransaction>, P>> {
 
     private static final Logger logger = LogManager.getLogger(StatelessValidator.class);

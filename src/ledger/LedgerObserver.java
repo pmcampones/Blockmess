@@ -3,7 +3,7 @@ package ledger;
 import catecoin.blocks.ContentList;
 import ledger.blocks.LedgerBlock;
 import main.ProtoPojo;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.List;
 import java.util.Set;
@@ -14,7 +14,7 @@ import java.util.UUID;
  * object according to the Observer design pattern.
  * @param <B> The type of blocks used by the Subject Ledger.
  */
-public interface LedgerObserver<B extends LedgerBlock<? extends ContentList<? extends ProtoPojo>,? extends SybilElectionProof>> {
+public interface LedgerObserver<B extends LedgerBlock<? extends ContentList<? extends ProtoPojo>,? extends SybilResistantElectionProof>> {
 
     void deliverNonFinalizedBlock(B block, int weight);
 

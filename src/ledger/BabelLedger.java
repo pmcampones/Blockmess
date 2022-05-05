@@ -11,7 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
 
@@ -21,7 +21,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-public class BabelLedger<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilElectionProof>>
+public class BabelLedger<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilResistantElectionProof>>
         extends GenericProtocol
         implements LedgerObserver<B> {
 

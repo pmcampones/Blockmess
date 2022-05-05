@@ -7,7 +7,7 @@ import catecoin.txs.IndexableContent;
 import io.netty.buffer.ByteBuf;
 import main.ProtoPojo;
 import pt.unl.fct.di.novasys.network.ISerializer;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
 
 import java.io.IOException;
@@ -15,7 +15,7 @@ import java.security.*;
 import java.util.List;
 import java.util.UUID;
 
-public class BlockmessBlockImp<C extends ContentList<? extends IndexableContent>, P extends SybilElectionProof>
+public class BlockmessBlockImp<C extends ContentList<? extends IndexableContent>, P extends ProtoPojo & SizeAccountable>
         implements BlockmessBlock<C,P> {
 
     public static final short ID = 11037;
@@ -77,7 +77,7 @@ public class BlockmessBlockImp<C extends ContentList<? extends IndexableContent>
             int inherentWeight = in.readInt();
             List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
             ContentList contentList = (ContentList) deserializePojo(in);
-            SybilElectionProof proof = (SybilElectionProof) deserializePojo(in);
+            SybilResistantElectionProof proof = (SybilResistantElectionProof) deserializePojo(in);
             List<ValidatorSignature> validatorSignatures = LedgerBlockImp.deserializeValidatorSignatures(in);
             UUID destinationChain = deserializeDestinationChain(in);
             long currentRank = in.readLong();

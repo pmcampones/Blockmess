@@ -5,14 +5,15 @@ import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.txs.IndexableContent;
 import ledger.blocks.LedgerBlock;
 import ledger.blocks.LedgerBlockImp;
+import ledger.blocks.SizeAccountable;
 import ledger.ledgerManager.StructuredValue;
-import sybilResistantElection.SybilElectionProof;
+import main.ProtoPojo;
 
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
 
-public class StructuredValueChunkCreator<E extends IndexableContent, P extends SybilElectionProof>
+public class StructuredValueChunkCreator<E extends IndexableContent, P extends ProtoPojo & SizeAccountable>
         implements MempoolChunkCreator<StructuredValue<E>,P> {
 
     private final MempoolChunkCreator<E,P> inner;

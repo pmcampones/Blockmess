@@ -3,7 +3,6 @@ package ledger.blocks;
 import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
 import main.ProtoPojo;
-import sybilResistantElection.SybilElectionProof;
 
 import java.security.PublicKey;
 import java.util.List;
@@ -16,7 +15,7 @@ import java.util.UUID;
  * @param <C> The type of the content used in the application running the Distributed Ledger.
  * @param <P> The type of the SybilElectionProof used in these Blocks.
  */
-public interface LedgerBlock<C extends ContentList<?>, P extends SybilElectionProof>
+public interface LedgerBlock<C extends ContentList<?>, P extends ProtoPojo & SizeAccountable>
         extends SizeAccountable, ProtoPojo {
 
     /**

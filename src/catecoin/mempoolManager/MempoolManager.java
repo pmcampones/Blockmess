@@ -13,7 +13,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
 import utils.IDGenerator;
 
@@ -30,7 +30,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class MempoolManager<E extends IndexableContent, P extends SybilElectionProof> extends GenericProtocol {
+public class MempoolManager<E extends IndexableContent, P extends SybilResistantElectionProof> extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(MempoolManager.class);
 

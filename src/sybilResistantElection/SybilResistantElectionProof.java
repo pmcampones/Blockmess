@@ -1,6 +1,7 @@
 package sybilResistantElection;
 
 import io.netty.buffer.ByteBuf;
+import ledger.blocks.SizeAccountable;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import org.apache.commons.lang3.tuple.Pair;
@@ -11,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class SybilResistantElectionProof extends ProtoPojoAbstract implements SybilElectionProof {
+public class SybilResistantElectionProof extends ProtoPojoAbstract implements ProtoPojo, SizeAccountable {
 
     public static final short ID = 7265;
 

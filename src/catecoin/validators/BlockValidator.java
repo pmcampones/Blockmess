@@ -3,12 +3,12 @@ package catecoin.validators;
 import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.blocks.LedgerBlock;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 /**
  * Represents an application component that verifies the validity of blocks.
  */
-public interface BlockValidator<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>, ? extends SybilElectionProof>> {
+public interface BlockValidator<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>, ? extends SybilResistantElectionProof>> {
 
     /**
      * Verifies the validity of a block.

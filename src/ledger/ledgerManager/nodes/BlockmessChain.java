@@ -8,13 +8,13 @@ import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BlockmessChain<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
+public interface BlockmessChain<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
         extends Ledger<BlockmessBlock<C,P>>, ComposableContentStorage<E> {
 
     UUID getChainId();

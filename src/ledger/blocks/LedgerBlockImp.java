@@ -8,7 +8,7 @@ import io.netty.buffer.Unpooled;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P extends SybilElectionProof> extends ProtoPojoAbstract
+public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P extends ProtoPojo & SizeAccountable> extends ProtoPojoAbstract
         implements LedgerBlock<C, P> {
 
     public static final short ID = 9888;
@@ -32,7 +32,7 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
 
         @Override
         public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
-            LedgerBlock<ContentList<IndexableContent>, SybilElectionProof> block = (LedgerBlock) protoPojo;
+            LedgerBlock<ContentList<IndexableContent>, SybilResistantElectionProof> block = (LedgerBlock) protoPojo;
             out.writeInt(block.getInherentWeight());
             serializePrevs(block.getPrevRefs(), out);
             serializePojo(block.getContentList(), out);
@@ -67,7 +67,7 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
             int inherentWeight = in.readInt();
             List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
             ContentList ContentList = (ContentList) deserializeInnerPojo(in);
-            SybilElectionProof proof = (SybilElectionProof) deserializeInnerPojo(in);
+            SybilResistantElectionProof proof = (SybilResistantElectionProof) deserializeInnerPojo(in);
             List<ValidatorSignature> validatorSignatures = deserializeValidatorSignatures(in);
             return new LedgerBlockImp<>(inherentWeight, prevRefs,
                     ContentList, proof, validatorSignatures);
@@ -146,7 +146,7 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
         return in.array();
     }
 
-    static <C extends ContentList, P extends SybilElectionProof> ByteBuf getLedgerBlockByteBuf(
+    static <C extends ContentList, P extends ProtoPojo & SizeAccountable> ByteBuf getLedgerBlockByteBuf(
             int bufferSize, int inherentWeight, List<UUID> prevRefs, C ContentList, P proof)
             throws IOException {
         ByteBuf in = Unpooled.buffer(bufferSize);

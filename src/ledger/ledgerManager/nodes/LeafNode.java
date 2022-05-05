@@ -13,7 +13,7 @@ import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;
 import java.util.*;
@@ -37,7 +37,7 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
+public class LeafNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
         implements BlockmessChain<E,C,P>, LedgerObserver<BlockmessBlock<C,P>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);

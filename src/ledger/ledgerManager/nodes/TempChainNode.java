@@ -11,7 +11,7 @@ import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
 
 import java.io.IOException;
@@ -29,7 +29,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
+public class TempChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
         implements InnerNode<E,C,P>, LedgerObserver<BlockmessBlock<C,P>>, BlockmessChain<E,C,P> {
 
     private final Properties props;

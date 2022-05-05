@@ -11,7 +11,7 @@ import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;
 import java.util.*;
@@ -23,7 +23,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * to directly contact the Chain.
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
-public class ReferenceNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
+public class ReferenceNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
         implements InnerNode<E,C,P>, BlockmessChain<E,C,P> {
 
     /**

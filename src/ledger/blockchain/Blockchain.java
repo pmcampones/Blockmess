@@ -11,7 +11,7 @@ import ledger.PrototypicalLedger;
 import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -21,7 +21,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.*;
 
-public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>, ? extends SybilElectionProof>>
+public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>, ? extends SybilResistantElectionProof>>
         implements PrototypicalLedger<B>, Ledger<B> {
 
     private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());

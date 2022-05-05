@@ -1,11 +1,11 @@
 package ledger.blocks;
 
 import catecoin.blocks.ContentList;
-import sybilResistantElection.SybilElectionProof;
+import main.ProtoPojo;
 
 import java.util.UUID;
 
-public interface BlockmessBlock<C extends ContentList<?>, P extends SybilElectionProof>
+public interface BlockmessBlock<C extends ContentList<?>, P extends ProtoPojo & SizeAccountable>
         extends LedgerBlock<C, P> {
 
     /**

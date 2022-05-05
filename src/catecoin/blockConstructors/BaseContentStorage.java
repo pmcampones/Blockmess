@@ -5,7 +5,7 @@ import catecoin.txs.IndexableContent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;
 import java.util.*;
@@ -16,7 +16,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toMap;
 import static sybilResistantElection.SybilResistantElection.INITIALIZATION_TIME;
 
-public class BaseContentStorage<E extends IndexableContent, P extends SybilElectionProof>
+public class BaseContentStorage<E extends IndexableContent, P extends SybilResistantElectionProof>
         implements PrototypicalContentStorage<E> {
 
     public static final int MAX_THRESHOLD_THROUGHPUT = Integer.MAX_VALUE;

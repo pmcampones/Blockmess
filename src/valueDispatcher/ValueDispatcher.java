@@ -15,7 +15,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilElectionProof;
+import sybilResistantElection.SybilResistantElectionProof;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
 import valueDispatcher.pojos.DispatcherWrapper;
@@ -37,7 +37,7 @@ import java.util.Properties;
  *      Doing a verification of the ProtoPojo type here is important but not necessary.
  *      Verifying here ensures malformed content is discarded without upsetting the logic of the more complex upper protocols.
  */
-public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends ContentList<? extends IndexableContent>, P extends SybilElectionProof> extends GenericProtocol {
+public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends ContentList<? extends IndexableContent>, P extends SybilResistantElectionProof> extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(ValueDispatcher.class);
 
