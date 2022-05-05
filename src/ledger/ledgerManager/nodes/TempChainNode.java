@@ -384,7 +384,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
 
     @Override
     public int getFinalizedWeight() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getFinalizedWeight();
+        return inner.getFinalizedWeight();
     }
 
     @Override

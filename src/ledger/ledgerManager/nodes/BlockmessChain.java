@@ -100,4 +100,11 @@ public interface BlockmessChain<E extends IndexableContent, C extends ContentLis
     void submitContentDirectly(Collection<StructuredValue<E>> content);
 
     int countReferencedPermanent();
+
+    int getNumUnderloaded();
+
+    int getNumOverloaded();
+
+    int getNumFinalizedPending();
+
 }

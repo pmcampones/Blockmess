@@ -40,6 +40,10 @@ public interface Ledger<B extends LedgerBlock<? extends ContentList<? extends In
 
     boolean isInLongestChain(UUID nodeId);
 
+    int getFinalizedWeight();
+
+    Set<UUID> getForkBlocks(int depth);
+
     void close();
 
 }

@@ -14,11 +14,7 @@ public interface DebugBlockmessChain<E extends IndexableContent, C extends Conte
 
     int getNumSamples();
 
-    int getNumUnderloaded();
 
-    int getNumOverloaded();
-
-    int getFinalizedWeight();
 
     boolean isOverloaded();
 
@@ -35,7 +31,5 @@ public interface DebugBlockmessChain<E extends IndexableContent, C extends Conte
     int getNumSpawnedChains();
 
     List<DebugBlockmessChain<E,C,P>> getSpawnedChains();
-
-    int getNumFinalizedPending();
 
 }

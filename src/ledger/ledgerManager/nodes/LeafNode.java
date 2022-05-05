@@ -418,7 +418,7 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
 
     @Override
     public int getFinalizedWeight() {
-        return ((DebugLedger<BlockmessBlock<C,P>>)ledger).getFinalizedWeight();
+        return ledger.getFinalizedWeight();
     }
 
     @Override

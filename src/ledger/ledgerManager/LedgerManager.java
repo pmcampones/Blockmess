@@ -4,14 +4,12 @@ import catecoin.blockConstructors.ComposableContentStorageImp;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
-import ledger.DebugLedger;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.ledgerManager.nodes.BlockmessChain;
-import ledger.ledgerManager.nodes.DebugBlockmessChain;
 import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
@@ -34,7 +32,7 @@ import static java.util.stream.Collectors.toSet;
 
 public class LedgerManager<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         implements ParentTreeNode<E,C,P>,
-        DebugLedger<BlockmessBlock<C,P>>, LedgerObserver<BlockmessBlock<C,P>>, ContentStorage<StructuredValue<E>> {
+        Ledger<BlockmessBlock<C,P>>, LedgerObserver<BlockmessBlock<C,P>>, ContentStorage<StructuredValue<E>> {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 
@@ -45,10 +43,6 @@ public class LedgerManager<E extends IndexableContent, C extends ContentList<Str
     private final BlockingQueue<UUID> toRemoveChains = new LinkedBlockingQueue<>();
 
     private final List<LedgerObserver<BlockmessBlock<C,P>>> observers = new LinkedList<>();
-
-    private final Set<UUID> allBlockIds = new HashSet<>();
-
-    private final Set<UUID> allFinalized = new HashSet<>();
 
     private final int finalizedWeight;
 
@@ -185,7 +179,6 @@ public class LedgerManager<E extends IndexableContent, C extends ContentList<Str
 
     @Override
     public void deliverNonFinalizedBlock(BlockmessBlock<C, P> nonFinalized, int weight) {
-        allBlockIds.add(nonFinalized.getBlockId());
         for (LedgerObserver<BlockmessBlock<C,P>> observer : observers)
             observer.deliverNonFinalizedBlock(nonFinalized, weight);
     }
@@ -213,14 +206,13 @@ public class LedgerManager<E extends IndexableContent, C extends ContentList<Str
         if (finalNumChains != initialNumChains)
             changesLog.forEach(obs -> obs.logChangeInNumChains(finalNumChains));
         System.out.println();
-        for (BlockmessChain<E,C,P> Chain : chains.values())
+        for (BlockmessChain<E,C,P> chain : chains.values())
             logger.debug("Chain {} has {} finalized blocks pending, minNextRank is {}, next block has rank {}",
-                    Chain.getChainId(), ((DebugBlockmessChain<E,C,P>)Chain).getNumFinalizedPending(), Chain.getNextRank(),
-                    Chain.hasFinalized() ? Chain.peekFinalized().getBlockRank() : -1);
+                    chain.getChainId(), chain.getNumFinalizedPending(), chain.getNextRank(),
+                    chain.hasFinalized() ? chain.peekFinalized().getBlockRank() : -1);
         List<BlockmessBlock<C,P>> linearizedFinalized = linearizeFinalizedBlocksInChains();
         assert linearizedFinalized != null;
         List<UUID> linearizedUUID = linearizedFinalized.stream().map(BlockmessBlock::getBlockId).collect(toList());
-        allFinalized.addAll(linearizedUUID);
         for (var observer : observers)
             observer.deliverFinalizedBlocks(linearizedUUID, emptySet());
     }
@@ -276,14 +268,14 @@ public class LedgerManager<E extends IndexableContent, C extends ContentList<Str
         while (ChainIterator.hasNext()) {
             Optional<BlockmessChain<E,C,P>> ChainOp = findNextChainToDeliver(ChainIterator);
             if (ChainOp.isPresent()) {
-                BlockmessChain<E,C,P> Chain = ChainOp.get();
-                BlockmessBlock<C,P> nextDeliver = Chain.deliverChainBlock();
+                BlockmessChain<E,C,P> chain = ChainOp.get();
+                BlockmessBlock<C,P> nextDeliver = chain.deliverChainBlock();
                 res.add(nextDeliver);
-                logger.info("Finalizing block {} in Chain {}", nextDeliver.getBlockId(), Chain.getChainId());
-                logger.debug("Number overloaded recent finalized blocks: {}", ((DebugBlockmessChain)Chain).getNumOverloaded());
-                logger.debug("Number underloaded recent finalized blocks: {}", ((DebugBlockmessChain)Chain).getNumUnderloaded());
-                if (Chain.shouldSpawn() && countReferencedPermanent() <= maxNumChains - 2)
-                    Chain.spawnChildren(nextDeliver.getBlockId());
+                logger.info("Finalizing block {} in Chain {}", nextDeliver.getBlockId(), chain.getChainId());
+                logger.debug("Number overloaded recent finalized blocks: {}", chain.getNumOverloaded());
+                logger.debug("Number underloaded recent finalized blocks: {}", chain.getNumUnderloaded());
+                if (chain.shouldSpawn() && countReferencedPermanent() <= maxNumChains - 2)
+                    chain.spawnChildren(nextDeliver.getBlockId());
                 else {
                     discardSuccessiveChains();
                     ChainIterator = chains.values().iterator();
@@ -341,18 +333,8 @@ public class LedgerManager<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public Set<UUID> getFinalizedIds() {
-        return Set.copyOf(allFinalized);
-    }
-
-    @Override
-    public Set<UUID> getNodesIds() {
-        return Set.copyOf(allBlockIds);
-    }
-
-    @Override
     public Set<UUID> getForkBlocks(int depth) {
-        return ((DebugLedger<BlockmessBlock<C,P>>) chains.values().iterator().next()).getForkBlocks(1);
+        return chains.values().iterator().next().getForkBlocks(1);
     }
 
     public long getHighestSeenRank() {

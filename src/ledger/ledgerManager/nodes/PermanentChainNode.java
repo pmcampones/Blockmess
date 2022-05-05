@@ -260,7 +260,7 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
 
     @Override
     public int getFinalizedWeight() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getFinalizedWeight();
+        return inner.getFinalizedWeight();
     }
 
     @Override

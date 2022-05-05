@@ -11,11 +11,7 @@ import java.util.UUID;
 public interface DebugLedger<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilElectionProof>>
         extends Ledger<B> {
 
-    int getFinalizedWeight();
-
     Set<UUID> getFinalizedIds();
 
     Set<UUID> getNodesIds();
-
-    Set<UUID> getForkBlocks(int depth);
 }
