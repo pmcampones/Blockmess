@@ -4,7 +4,7 @@ import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValueMask;
 import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -28,15 +28,15 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>The lower the InnerNode in the Chain's hierarchy,
  * the later were the referenced Chains spawned.</p>
  */
-public class PermanentChainNode<E extends IndexableContent>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, BlockmessChain<E>{
+public class PermanentChainNode
+        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, BlockmessChain<Transaction>{
 
-    private final ReferenceNode<E> lft, rgt;
-    private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
-    private BlockmessChain<E> inner;
+    private final ReferenceNode lft, rgt;
+    private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
+    private BlockmessChain<Transaction> inner;
 
-    public PermanentChainNode(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent, BlockmessChain<E> inner,
-                               ReferenceNode<E> lft, ReferenceNode<E> rgt) {
+    public PermanentChainNode(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent, BlockmessChain<Transaction> inner,
+                               ReferenceNode lft, ReferenceNode rgt) {
         this.parent = parent;
         this.inner = inner;
         this.lft = lft;
@@ -54,12 +54,12 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
         inner.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> observer) {
         inner.attachObserver(observer);
     }
 
@@ -84,7 +84,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent) {
+    public void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent) {
         this.parent = parent;
     }
 
@@ -99,12 +99,12 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> peekFinalized() {
         return inner.peekFinalized();
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> deliverChainBlock() {
+    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> deliverChainBlock() {
         return inner.deliverChainBlock();
     }
 
@@ -133,7 +133,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
         return inner.getBlocks(blockIds);
     }
 
@@ -148,7 +148,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessChain<E>> getPriorityChains() {
+    public Set<BlockmessChain<Transaction>> getPriorityChains() {
         return union(inner.getPriorityChains(), union(lft.getPriorityChains(), rgt.getPriorityChains()));
     }
 
@@ -169,7 +169,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void submitContentDirectly(Collection<StructuredValue<E>> content) {
+    public void submitContentDirectly(Collection<StructuredValue<Transaction>> content) {
         inner.submitContentDirectly(content);
     }
 
@@ -179,7 +179,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E> newChild) {
+    public void replaceChild(BlockmessChain<Transaction> newChild) {
         inner = newChild;
     }
 
@@ -189,12 +189,12 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E>> createdChains) {
+    public void createChains(List<BlockmessChain<Transaction>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> getTreeRoot() {
+    public ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> getTreeRoot() {
         return parent.getTreeRoot();
     }
 
@@ -255,24 +255,24 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return inner.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
         return inner.generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<E>> content) {
+    public void submitContent(Collection<StructuredValue<Transaction>> content) {
         content.forEach(this::submitContent);
     }
 
     @Override
-    public void submitContent(StructuredValue<E> content) {
+    public void submitContent(StructuredValue<Transaction> content) {
         StructuredValueMask.MaskResult res = content.matchIds();
         content.advanceMask();
         switch (res) {
@@ -295,7 +295,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Collection<StructuredValue<E>> getStoredContent() {
+    public Collection<StructuredValue<Transaction>> getStoredContent() {
         return inner.getStoredContent();
     }
 
@@ -320,14 +320,14 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> separateContent(
-            StructuredValueMask mask, ContentStorage<StructuredValue<E>> innerLft,
-            ContentStorage<StructuredValue<E>> innerRgt) {
+    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> separateContent(
+            StructuredValueMask mask, ContentStorage<StructuredValue<Transaction>> innerLft,
+            ContentStorage<StructuredValue<Transaction>> innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<E>> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }

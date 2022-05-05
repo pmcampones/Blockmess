@@ -2,7 +2,7 @@ package ledger.ledgerManager.nodes;
 
 import catecoin.blockConstructors.*;
 import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -37,8 +37,8 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode<E extends IndexableContent>
-        implements BlockmessChain<E>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> {
+public class LeafNode
+        implements BlockmessChain<Transaction>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -46,9 +46,9 @@ public class LeafNode<E extends IndexableContent>
 
     private final UUID ChainId;
 
-    private final Ledger<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> ledger;
+    private final Ledger<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> ledger;
 
-    private final List<LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>> observers = new LinkedList<>();
+    private final List<LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>> observers = new LinkedList<>();
 
     private final ReadWriteLock observersLock = new ReentrantReadWriteLock();
     /**
@@ -58,15 +58,15 @@ public class LeafNode<E extends IndexableContent>
      * <p>Shouldn't need to be concurrent if the inner {@link Ledger} is a {@link ledger.blockchain.Blockchain},
      * however, in case the ledger implementation is changed, this will be kept as concurrent.</p>
      */
-    private final Map<UUID, BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> blocks = new ConcurrentHashMap<>();
+    private final Map<UUID, BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> blocks = new ConcurrentHashMap<>();
 
-    private final ComposableContentStorage<E> contentStorage;
+    private final ComposableContentStorage<Transaction> contentStorage;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
      */
-    private final Queue<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> finalizedBuffer = new ConcurrentLinkedQueue<>();
-    private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
+    private final Queue<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> finalizedBuffer = new ConcurrentLinkedQueue<>();
+    private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
 
     /** Ledger<BlockmessBlock<C,P>> ledger
      * Number of samples used to determine if the Chain should spawn new Chains or merge into its parent.
@@ -112,15 +112,15 @@ public class LeafNode<E extends IndexableContent>
     private int depth;
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage)
+            Properties props, UUID ChainId, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage)
             throws PrototypeHasNotBeenDefinedException {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage, UUID prevBlock)
+            Properties props, UUID ChainId, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock)
             throws PrototypeHasNotBeenDefinedException {
         this.props = props;
         this.ChainId = ChainId;
@@ -148,12 +148,12 @@ public class LeafNode<E extends IndexableContent>
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
         ledger.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> observer) {
         try {
             observersLock.writeLock().lock();
             observers.add(observer);
@@ -183,34 +183,39 @@ public class LeafNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent) {
+    public void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent) {
         this.parent = parent;
     }
 
     @Override
     public void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException {
         StructuredValueMask mask = new StructuredValueMask(depth);
-        ContentStorage<StructuredValue<E>> lft = ContentStoragePrototype.getPrototype();
-        ContentStorage<StructuredValue<E>> rgt = ContentStoragePrototype.getPrototype();
+        ContentStorage<StructuredValue<Transaction>> lft = ContentStoragePrototype.getPrototype();
+        ContentStorage<StructuredValue<Transaction>> rgt = ContentStoragePrototype.getPrototype();
         depth++;
         contentStorage.halveChainThroughput();
-        Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> spawnedChainDirectors =
+        Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> spawnedChainDirectors =
                 contentStorage.separateContent(mask, lft, rgt);
-        TempChainNode<E> encapsulating =
-                new TempChainNode<>(props, this, parent, originator, depth, spawnedChainDirectors);
+        TempChainNode encapsulating =
+                new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
         parent.replaceChild(encapsulating);
         this.parent = encapsulating;
         resetSamples();
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> peekFinalized() {
         return finalizedBuffer.peek();
     }
 
     @Override
-    public void submitContentDirectly(Collection<StructuredValue<E>> content) {
-        contentStorage.submitContent(content);
+    public BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> deliverChainBlock() {
+        BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block = finalizedBuffer.poll();
+        if (block != null) {
+            computeBlockSizeStatistics(block);
+            updateNextRank();
+        }
+        return block;
     }
 
     @Override
@@ -228,17 +233,7 @@ public class LeafNode<E extends IndexableContent>
         return true;
     }
 
-    @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> deliverChainBlock() {
-        BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block = finalizedBuffer.poll();
-        if (block != null) {
-            computeBlockSizeStatistics(block);
-            updateNextRank();
-        }
-        return block;
-    }
-
-    private void computeBlockSizeStatistics(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block) {
+    private void computeBlockSizeStatistics(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
         if (blocksBeforeResumingMetrics > 0)
             blocksBeforeResumingMetrics--;
         else {
@@ -256,13 +251,22 @@ public class LeafNode<E extends IndexableContent>
         }
     }
 
-    private int getContentSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
+    private int getContentSerializedSize(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
         try {
             return block.getContentList().getSerializedSize();
         } catch (IOException e) {
             e.printStackTrace();
             throw new Error();
         }
+    }
+
+    private int getBlockSerializedSize(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
+        try {
+            return block.getSerializedSize();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return maxBlockSize / 2;
     }
 
     private Set<UUID> getFinalizedContent(List<UUID> finalized) {
@@ -288,16 +292,7 @@ public class LeafNode<E extends IndexableContent>
         return !finalizedBuffer.isEmpty();
     }
 
-    private int getBlockSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
-        try {
-            return block.getSerializedSize();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return maxBlockSize / 2;
-    }
-
-    private int getProofSize(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> block) {
+    private int getProofSize(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
         try {
             return block.getSybilElectionProof().getSerializedSize();
         } catch (IOException e) {
@@ -307,12 +302,12 @@ public class LeafNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
         return blockIds.stream().map(blocks::get).filter(Objects::nonNull).collect(toSet());
     }
 
     @Override
-    public Set<BlockmessChain<E>> getPriorityChains() {
+    public Set<BlockmessChain<Transaction>> getPriorityChains() {
         return emptySet();
     }
 
@@ -321,31 +316,36 @@ public class LeafNode<E extends IndexableContent>
             throws PrototypeHasNotBeenDefinedException {
         depth++;
         contentStorage.halveChainThroughput();
-        ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
-        ReferenceNode<E> lft = new ReferenceNode<>(props, lftId, treeRoot,
+        ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
+        ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
                 0, 1, depth, new ComposableContentStorageImp<>(),
                 new UUID(0,0));
-        ReferenceNode<E> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
+        ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
                 0, 1, depth, new ComposableContentStorageImp<>(),
                 new UUID(0,0));
         lft.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
         rgt.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
-        PermanentChainNode<E> encapsulating =
-                new PermanentChainNode<>(this.parent, this, lft, rgt);
+        PermanentChainNode encapsulating =
+                new PermanentChainNode(this.parent, this, lft, rgt);
         parent.replaceChild(encapsulating);
         this.parent = encapsulating;
         resetSamples();
         parent.createChains(List.of(lft, rgt));
     }
 
+    @Override
+    public void submitContentDirectly(Collection<StructuredValue<Transaction>> content) {
+        contentStorage.submitContent(content);
+    }
+
     private void updateNextRank() {
-        BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> nextFinalized = finalizedBuffer.peek();
+        BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> nextFinalized = finalizedBuffer.peek();
         if (nextFinalized != null && nextFinalized.getNextRank() > minNextRank)
             minNextRank = nextFinalized.getNextRank();
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block, int weight) {
         blocks.put(block.getBlockId(), block);
         logger.debug("Delivering non finalized block {} in Chain {}",
                 block.getBlockId(), ChainId);
@@ -396,7 +396,7 @@ public class LeafNode<E extends IndexableContent>
         return minRank;
     }
 
-    private void deliverNonFinalizedBlockToObservers(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block, int weight) {
+    private void deliverNonFinalizedBlockToObservers(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block, int weight) {
         try {
             observersLock.readLock().lock();
             for (var observer : observers)
@@ -426,7 +426,7 @@ public class LeafNode<E extends IndexableContent>
     @Override
     public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
         if (finalized.isEmpty() && discarded.isEmpty()) return;
-        List<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
+        List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
         finalizedBuffer.addAll(finalizedBlocks);
         updateNextRank();
         contentStorage.deleteContent(getFinalizedContent(finalized));
@@ -458,24 +458,24 @@ public class LeafNode<E extends IndexableContent>
     }
 
     @Override
-    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return contentStorage.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
         return contentStorage.generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<E>> content) {
+    public void submitContent(Collection<StructuredValue<Transaction>> content) {
         contentStorage.submitContent(content);
     }
 
     @Override
-    public void submitContent(StructuredValue<E> content) {
+    public void submitContent(StructuredValue<Transaction> content) {
         contentStorage.submitContent(content);
     }
 
@@ -485,14 +485,14 @@ public class LeafNode<E extends IndexableContent>
     }
 
     @Override
-    public Collection<StructuredValue<E>> getStoredContent() {
+    public Collection<StructuredValue<Transaction>> getStoredContent() {
         return Stream.concat(
                 contentStorage.getStoredContent().stream(),
                 getTxsInBufferedFinalizedBlocks(finalizedBuffer.stream())
                 ).collect(toSet());
     }
 
-    private Stream<StructuredValue<E>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> stream) {
+    private Stream<StructuredValue<Transaction>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> stream) {
         return stream
                 .map(BlockmessBlock::getContentList)
                 .map(ContentList::getContentList)
@@ -520,15 +520,15 @@ public class LeafNode<E extends IndexableContent>
     }
 
     @Override
-    public Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> separateContent(
+    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> separateContent(
             StructuredValueMask mask,
-            ContentStorage<StructuredValue<E>> innerLft,
-            ContentStorage<StructuredValue<E>> innerRgt) {
+            ContentStorage<StructuredValue<Transaction>> innerLft,
+            ContentStorage<StructuredValue<Transaction>> innerRgt) {
         return contentStorage.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<E>> blockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> blockConstructors) {
         contentStorage.aggregateContent(blockConstructors);
     }
 

@@ -4,7 +4,7 @@ import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValueMask;
 import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -29,8 +29,8 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode<E extends IndexableContent>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>, BlockmessChain<E> {
+public class TempChainNode
+        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain<Transaction> {
 
     private final Properties props;
 
@@ -38,11 +38,10 @@ public class TempChainNode<E extends IndexableContent>
      * Maps the identifier of the Chain root block to the Chains that are originated.
      * <p>Eventually, one and only one of the root blocks in this DS will originate a valid Chain.</p>
      */
-    private final Map<UUID, Pair<ReferenceNode<E>, ReferenceNode<E>>> tentativeChains = new HashMap<>();
-
-    private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
-
-    private BlockmessChain<E> inner;
+    private final Map<UUID, Pair<ReferenceNode, ReferenceNode>> tentativeChains = new HashMap<>();
+    private final Pair<ComposableContentStorage<Transaction>,
+            ComposableContentStorage<Transaction>> contentStoragePair;
+    private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
 
     private final int finalizedWeight;
 
@@ -52,14 +51,12 @@ public class TempChainNode<E extends IndexableContent>
      * How deep is this Chain in the Blockmess Tree
      */
     private final int ChainDepth;
-
-    private final Pair<ComposableContentStorage<E>,
-            ComposableContentStorage<E>> contentStoragePair;
+    private BlockmessChain<Transaction> inner;
 
     public TempChainNode(
-            Properties props, BlockmessChain<E> inner, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
+            Properties props, BlockmessChain<Transaction> inner, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
             UUID ChainOriginatorBlockId, int ChainDepth,
-            Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> contentStoragePair)
+            Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> contentStoragePair)
             throws PrototypeHasNotBeenDefinedException {
         this.props = props;
         this.inner = inner;
@@ -74,27 +71,27 @@ public class TempChainNode<E extends IndexableContent>
 
     private void fillChainMap(UUID ChainOriginatorBlockId) throws PrototypeHasNotBeenDefinedException {
         Set<UUID> rootIds = inner.getFollowing(ChainOriginatorBlockId, finalizedWeight + 3);
-        Set<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> roots = inner.getBlocks(rootIds);
-        for (BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> root : roots)
+        Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> roots = inner.getBlocks(rootIds);
+        for (BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> root : roots)
             tentativeChains.put(root.getBlockId(), computeChains(root));
         parent.createChains(getTentative());
     }
 
-    private List<BlockmessChain<E>> getTentative() {
+    private List<BlockmessChain<Transaction>> getTentative() {
         return tentativeChains.values().stream()
                 .map(pair -> List.of(pair.getLeft(), pair.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
     }
 
-    private Pair<ReferenceNode<E>, ReferenceNode<E>> computeChains(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> root)
+    private Pair<ReferenceNode, ReferenceNode> computeChains(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> root)
             throws PrototypeHasNotBeenDefinedException {
-        ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
+        ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
         UUID lftId = computeChainId(root.getBlockId(), "lft".getBytes());
-        ReferenceNode<E> lft = new ReferenceNode<>(props, lftId, treeRoot,
+        ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
                 root.getNextRank(), root.getNextRank(), ChainDepth, contentStoragePair.getLeft(), root.getBlockId());
         UUID rgtId = computeChainId(root.getBlockId(), "rgt".getBytes());
-        ReferenceNode<E> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
+        ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
                 root.getNextRank(), root.getNextRank(), ChainDepth, contentStoragePair.getRight(), root.getBlockId());
         return Pair.of(lft, rgt);
     }
@@ -113,12 +110,12 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
         inner.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> observer) {
         inner.attachObserver(observer);
     }
 
@@ -148,7 +145,7 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent) {
+    public void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent) {
         this.parent = parent;
     }
 
@@ -165,7 +162,7 @@ public class TempChainNode<E extends IndexableContent>
         inner.resetSamples();
         inner.lowerLeafDepth();
         inner.doubleChainThroughput();
-        List<BlockmessChain<E>> toMerge =  tentativeChains.values().stream()
+        List<BlockmessChain<Transaction>> toMerge =  tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
@@ -189,14 +186,14 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> peekFinalized() {
         return inner.peekFinalized();
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> deliverChainBlock() {
-        BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> delivered = inner.deliverChainBlock();
-        Pair<ReferenceNode<E>, ReferenceNode<E>> confirmedChains =
+    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> deliverChainBlock() {
+        BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> delivered = inner.deliverChainBlock();
+        Pair<ReferenceNode, ReferenceNode> confirmedChains =
                 tentativeChains.get(delivered.getBlockId());
         if (confirmedChains != null) {
             replaceThisNode(confirmedChains);
@@ -205,7 +202,7 @@ public class TempChainNode<E extends IndexableContent>
         return delivered;
     }
 
-    private Set<UUID> computeDiscardedChainsIds(Pair<ReferenceNode<E>, ReferenceNode<E>> confirmed) {
+    private Set<UUID> computeDiscardedChainsIds(Pair<ReferenceNode, ReferenceNode> confirmed) {
         Set<UUID> confirmedIds = Set.of(confirmed.getLeft().getChainId(), confirmed.getRight().getChainId());
         return tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
@@ -242,7 +239,7 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
         return inner.getBlocks(blockIds);
     }
 
@@ -257,7 +254,7 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessChain<E>> getPriorityChains() {
+    public Set<BlockmessChain<Transaction>> getPriorityChains() {
         var priorityChainsOpt = getPreferableTemp();
         if (priorityChainsOpt.isEmpty())
             return inner.getPriorityChains();
@@ -284,7 +281,7 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void submitContentDirectly(Collection<StructuredValue<E>> content) {
+    public void submitContentDirectly(Collection<StructuredValue<Transaction>> content) {
         inner.submitContentDirectly(content);
     }
 
@@ -293,7 +290,7 @@ public class TempChainNode<E extends IndexableContent>
         return 2 + inner.countReferencedPermanent();
     }
 
-    private Optional<Pair<ReferenceNode<E>, ReferenceNode<E>>> getPreferableTemp() {
+    private Optional<Pair<ReferenceNode, ReferenceNode>> getPreferableTemp() {
         var eligible = tentativeChains.entrySet().stream()
                 .filter(e -> this.isInLongestChain(e.getKey()))
                 .map(Map.Entry::getValue)
@@ -303,8 +300,8 @@ public class TempChainNode<E extends IndexableContent>
         return Optional.of(eligible.get(0));
     }
 
-    private void replaceThisNode(Pair<ReferenceNode<E>, ReferenceNode<E>> correctChains) {
-        PermanentChainNode<E> replacement = new PermanentChainNode<>(this.parent, this.inner,
+    private void replaceThisNode(Pair<ReferenceNode, ReferenceNode> correctChains) {
+        PermanentChainNode replacement = new PermanentChainNode(this.parent, this.inner,
                 correctChains.getLeft(), correctChains.getRight());
         this.parent.replaceChild(replacement);
         this.inner.replaceParent(replacement);
@@ -316,22 +313,22 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E> newChild) {
+    public void replaceChild(BlockmessChain<Transaction> newChild) {
         this.inner = newChild;
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E>> createdChains) {
+    public void createChains(List<BlockmessChain<Transaction>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> getTreeRoot() {
+    public ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> getTreeRoot() {
         return parent.getTreeRoot();
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block, int weight) {
         if (weight == rootWeight + finalizedWeight + 3)
             tryToInsertNewChainRoot(block);
     }
@@ -342,9 +339,9 @@ public class TempChainNode<E extends IndexableContent>
         // ledger manager has linearized the blocks.
     }
 
-    private void tryToInsertNewChainRoot(BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> root) {
+    private void tryToInsertNewChainRoot(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> root) {
         try {
-            Pair<ReferenceNode<E>, ReferenceNode<E>> createdChains = computeChains(root);
+            Pair<ReferenceNode, ReferenceNode> createdChains = computeChains(root);
             tentativeChains.put(root.getBlockId(), createdChains);
             parent.createChains(List.of(createdChains.getLeft(), createdChains.getRight()));
         } catch (PrototypeHasNotBeenDefinedException e) {
@@ -378,24 +375,24 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return inner.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
         return inner.generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<E>> content) {
+    public void submitContent(Collection<StructuredValue<Transaction>> content) {
         content.forEach(this::submitContent);
     }
 
     @Override
-    public void submitContent(StructuredValue<E> content) {
+    public void submitContent(StructuredValue<Transaction> content) {
         StructuredValueMask.MaskResult res = content.matchIds();
         content.advanceMask();
         switch (res) {
@@ -420,7 +417,7 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Collection<StructuredValue<E>> getStoredContent() {
+    public Collection<StructuredValue<Transaction>> getStoredContent() {
         return inner.getStoredContent();
     }
 
@@ -445,14 +442,14 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> separateContent(
-            StructuredValueMask mask, ContentStorage<StructuredValue<E>> innerLft,
-            ContentStorage<StructuredValue<E>> innerRgt) {
+    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> separateContent(
+            StructuredValueMask mask, ContentStorage<StructuredValue<Transaction>> innerLft,
+            ContentStorage<StructuredValue<Transaction>> innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<E>> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }

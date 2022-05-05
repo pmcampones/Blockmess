@@ -67,7 +67,7 @@ public class LedgerManager
     }
 
     public LedgerManager(Properties props, UUID ogChainId) throws PrototypeHasNotBeenDefinedException {
-        var originChain = new ReferenceNode<>(props, ogChainId, this, 0, 1, 0,
+        var originChain = new ReferenceNode(props, ogChainId, this, 0, 1, 0,
                 new ComposableContentStorageImp<>());
         originChain.attachObserver(this);
         this.minNumChains = parseInt(props.getProperty("minNumChains", "1"));
