@@ -1,6 +1,6 @@
 package catecoin.utxos;
 
-import catecoin.txs.SlimTransaction;
+import catecoin.txs.Transaction;
 import utils.CryptographicUtils;
 
 import java.io.*;
@@ -12,27 +12,27 @@ import java.util.UUID;
 /**
  * Contents of a UTXO after it is validated and decoupled from its transaction.
  * It only contains the fields required for the validation of future transactions.
- * Is formed from the contents of a {@link SlimUTXO} and a {@link SlimTransaction}.
+ * Is formed from the contents of a {@link UTXO} and a {@link Transaction}.
  */
 public class StorageUTXO {
 
     /**
      * Identifier of the UTXO.
-     * Corresponds to the identifier of the matching {@link SlimUTXO} instance that preceds this.
-     * Used to ensure future {@link SlimTransaction}s do not reference non existent UTXOs
+     * Corresponds to the identifier of the matching {@link UTXO} instance that preceds this.
+     * Used to ensure future {@link Transaction}s do not reference non existent UTXOs
      */
     private final UUID id;
 
     /**
      * Owner of the UTXO.
-     * Corresponds to either the origin or the destination of the {@link SlimTransaction} where the UTXO was issued.
+     * Corresponds to either the origin or the destination of the {@link Transaction} where the UTXO was issued.
      * Used to ensure the issuer of a transaction only uses inputs belonging to it.
      */
     private final PublicKey owner;
 
     /**
      * The amount of coins in this transaction output.
-     * Used to ensure the amount of input coins in a {@link SlimTransaction} equals the number of coins in the output.
+     * Used to ensure the amount of input coins in a {@link Transaction} equals the number of coins in the output.
      */
     private final int amount;
 

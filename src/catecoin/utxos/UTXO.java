@@ -19,7 +19,7 @@ import java.util.UUID;
  * Replaces the FatUTXO class, who add all the necessary (and excessive) contents for local validation,
  *  but proved very heavy on the network load as blocks were being broadcast.
  */
-public class SlimUTXO implements Serializable {
+public class UTXO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -44,7 +44,7 @@ public class SlimUTXO implements Serializable {
      * @param destination The destination of the UTXO, who may be different from the destination of the transaction.
      * @throws IOException If the Keys received are malformed this is thrown.
      */
-    public SlimUTXO(int amount, PublicKey origin, PublicKey destination)
+    public UTXO(int amount, PublicKey origin, PublicKey destination)
             throws IOException {
         this.nonce = new Random().nextInt();
         this.amount = amount;
@@ -58,7 +58,7 @@ public class SlimUTXO implements Serializable {
      * @param origin The originator of the transaction
      * @param destination The destination of the UTXO, who may be different from the destination of the transaction.
      */
-    public SlimUTXO(SlimUTXOIndependentFields fields, PublicKey origin, PublicKey destination)
+    public UTXO(SlimUTXOIndependentFields fields, PublicKey origin, PublicKey destination)
             throws IOException {
         this.nonce = fields.getNonce();
         this.amount = fields.getAmount();
@@ -97,7 +97,7 @@ public class SlimUTXO implements Serializable {
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof SlimUTXO && outputId.equals(((SlimUTXO) other).outputId);
+        return other instanceof UTXO && outputId.equals(((UTXO) other).outputId);
     }
 
     @Override

@@ -3,7 +3,7 @@ package catecoin.validators;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import catecoin.blocks.ContentList;
 import catecoin.notifications.AnswerMessageValidationNotification;
-import catecoin.txs.SlimTransaction;
+import catecoin.txs.Transaction;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import org.apache.commons.lang3.tuple.Pair;
@@ -25,7 +25,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 public class BlockmessGPoETValidator extends GenericProtocol
-        implements BlockValidator<BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> {
+        implements BlockValidator<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> {
 
     public static final short ID = IDGenerator.genId();
 
@@ -40,14 +40,14 @@ public class BlockmessGPoETValidator extends GenericProtocol
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     @Override
-    public boolean isBlockValid(BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+    public boolean isBlockValid(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
         boolean isValid = isProofValid(block)
                 && block.getContentList().hasValidSemantics();
         notifyBlockValidity(block);
         return isValid;
     }
 
-    private void notifyBlockValidity(BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+    private void notifyBlockValidity(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
         try {
             triggerNotification(new AnswerMessageValidationNotification(block.getBlockingID()));
         } catch (InnerValueIsNotBlockingBroadcast e) {
@@ -55,7 +55,7 @@ public class BlockmessGPoETValidator extends GenericProtocol
         }
     }
 
-    public boolean isProofValid(BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+    public boolean isProofValid(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
         SybilResistantElectionProof proof = block.getSybilElectionProof();
         UUID destinationChain = block.getDestinationChain();
         if (proof.getChainSeeds().stream().map(Pair::getLeft).noneMatch(id -> id.equals(destinationChain)))
@@ -67,7 +67,7 @@ public class BlockmessGPoETValidator extends GenericProtocol
     }
 
     private MerkleTree computeRandomSeed(
-            BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+            BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
         List<byte[]> randomSeedElems = new LinkedList<>();
         randomSeedElems.add(block.getProposer().getEncoded());
         UUID destinationChain = block.getDestinationChain();

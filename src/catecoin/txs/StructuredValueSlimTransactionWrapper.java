@@ -5,7 +5,7 @@ import utils.CryptographicUtils;
 
 public class StructuredValueSlimTransactionWrapper {
 
-    public static StructuredValue<SlimTransaction> wrapTx(SlimTransaction tx) {
+    public static StructuredValue<Transaction> wrapTx(Transaction tx) {
         byte[] id1 = CryptographicUtils.hashInput(tx.getOrigin().getEncoded());
         byte[] id2 = CryptographicUtils.hashInput(tx.getDestination().getEncoded());
         return new StructuredValue<>(id1, id2, tx);

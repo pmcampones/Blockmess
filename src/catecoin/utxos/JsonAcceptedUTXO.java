@@ -1,6 +1,6 @@
 package catecoin.utxos;
 
-import catecoin.txs.SlimTransaction;
+import catecoin.txs.Transaction;
 import utils.CryptographicUtils;
 
 import java.security.NoSuchAlgorithmException;
@@ -15,21 +15,21 @@ public class JsonAcceptedUTXO {
 
     /**
      * Identifier of the UTXO.
-     * Corresponds to the identifier of the matching {@link SlimUTXO} instance that preceds this.
-     * Used to ensure future {@link SlimTransaction}s do not reference non existent UTXOs
+     * Corresponds to the identifier of the matching {@link UTXO} instance that preceds this.
+     * Used to ensure future {@link Transaction}s do not reference non existent UTXOs
      */
     private final UUID id;
 
     /**
      * Owner of the UTXO.
-     * Corresponds to either the origin or the destination of the {@link SlimTransaction} where the UTXO was issued.
+     * Corresponds to either the origin or the destination of the {@link Transaction} where the UTXO was issued.
      * Used to ensure the issuer of a transaction only uses inputs belonging to it.
      */
     private final byte[] ownerEncoded;
 
     /**
      * The amount of coins in this transaction output.
-     * Used to ensure the amount of input coins in a {@link SlimTransaction} equals the number of coins in the output.
+     * Used to ensure the amount of input coins in a {@link Transaction} equals the number of coins in the output.
      */
     private final int amount;
 

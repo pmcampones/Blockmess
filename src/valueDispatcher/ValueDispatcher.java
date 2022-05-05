@@ -8,7 +8,7 @@ import broadcastProtocols.notifications.DeliverVal;
 import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverIndexableContentNotification;
 import catecoin.txs.IndexableContent;
-import catecoin.txs.SlimTransaction;
+import catecoin.txs.Transaction;
 import ledger.blocks.LedgerBlock;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
@@ -81,8 +81,8 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends ContentList<?
     private void notifyUpperProtocols(ValType type, ProtoPojo val) {
         switch (type) {
             case TRANSACTION:
-                if (val instanceof SlimTransaction)
-                    triggerNotification(new DeliverIndexableContentNotification((SlimTransaction) val));
+                if (val instanceof Transaction)
+                    triggerNotification(new DeliverIndexableContentNotification((Transaction) val));
                 break;
             case SIGNED_BLOCK:
                 if (val instanceof LedgerBlock)

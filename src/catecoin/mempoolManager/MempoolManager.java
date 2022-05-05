@@ -4,7 +4,7 @@ import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.notifications.DeliverFinalizedBlocksContentNotification;
-import catecoin.txs.SlimTransaction;
+import catecoin.txs.Transaction;
 import catecoin.utxos.StorageUTXO;
 import ledger.blocks.LedgerBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -66,7 +66,7 @@ public class MempoolManager extends GenericProtocol {
         loadInitialUtxos();
         bootstrapDL();
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
@@ -108,8 +108,8 @@ public class MempoolManager extends GenericProtocol {
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> notif) {
-        LedgerBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block = notif.getNonFinalizedBlock();
+            DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif) {
+        LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block = notif.getNonFinalizedBlock();
         logger.debug("Received non finalized block with id {}", block.getBlockId());
         MempoolChunk chunk = mempoolChunkCreator.createChunk(block, notif.getCumulativeWeight());
         mempool.put(chunk.getId(), chunk);

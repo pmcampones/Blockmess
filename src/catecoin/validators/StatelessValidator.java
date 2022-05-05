@@ -3,7 +3,7 @@ package catecoin.validators;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import catecoin.blocks.ContentList;
 import catecoin.notifications.AnswerMessageValidationNotification;
-import catecoin.txs.SlimTransaction;
+import catecoin.txs.Transaction;
 import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,7 +23,7 @@ import static java.lang.Integer.parseInt;
  * Effectively only makes the necessary validations that do not require maintaining a state.
  */
 public class StatelessValidator<P extends SybilResistantElectionProof>
-        extends GenericProtocol implements BlockValidator<LedgerBlock<ContentList<SlimTransaction>, P>> {
+        extends GenericProtocol implements BlockValidator<LedgerBlock<ContentList<Transaction>, P>> {
 
     private static final Logger logger = LogManager.getLogger(StatelessValidator.class);
 
@@ -42,13 +42,13 @@ public class StatelessValidator<P extends SybilResistantElectionProof>
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     @Override
-    public boolean isBlockValid(LedgerBlock<ContentList<SlimTransaction>,P> block) {
+    public boolean isBlockValid(LedgerBlock<ContentList<Transaction>,P> block) {
         boolean isValid = receivedValid(block);
         notifyOfBlockValidity(block, isValid);
         return isValid;
     }
 
-    private void notifyOfBlockValidity(LedgerBlock<ContentList<SlimTransaction>,P> block, boolean isValid) {
+    private void notifyOfBlockValidity(LedgerBlock<ContentList<Transaction>,P> block, boolean isValid) {
         try {
             tryToNotifyOfBlockValidity(block, isValid);
         } catch (InnerValueIsNotBlockingBroadcast innerValueIsNotBlockingBroadcast) {
@@ -57,7 +57,7 @@ public class StatelessValidator<P extends SybilResistantElectionProof>
         }
     }
 
-    private void tryToNotifyOfBlockValidity(LedgerBlock<ContentList<SlimTransaction>,P> block, boolean isValid)
+    private void tryToNotifyOfBlockValidity(LedgerBlock<ContentList<Transaction>,P> block, boolean isValid)
             throws InnerValueIsNotBlockingBroadcast {
         UUID blockingId = block.getBlockId();
         triggerNotification(new AnswerMessageValidationNotification(blockingId));
@@ -65,7 +65,7 @@ public class StatelessValidator<P extends SybilResistantElectionProof>
                 blockingId, isValid);
     }
 
-    public boolean receivedValid(LedgerBlock<ContentList<SlimTransaction>,P> block) {
+    public boolean receivedValid(LedgerBlock<ContentList<Transaction>,P> block) {
         return hasValidSize(block)
                 && proofValidator.isValid(block.getSybilElectionProof(), block.getProposer())
                 && block.getContentList().hasValidSemantics()
@@ -73,7 +73,7 @@ public class StatelessValidator<P extends SybilResistantElectionProof>
                 && block.getSignatures().get(0).isValid(block.getBlockId());
     }
 
-    boolean hasValidSize(LedgerBlock<ContentList<SlimTransaction>,P> block) {
+    boolean hasValidSize(LedgerBlock<ContentList<Transaction>,P> block) {
         try {
             return block.getSerializedSize() <= maxBlockSize;
         } catch (IOException e) {

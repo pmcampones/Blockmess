@@ -4,9 +4,9 @@ import catecoin.blocks.ContentList;
 import catecoin.exceptions.InputNotFoundException;
 import catecoin.mempoolManager.MempoolManager;
 import catecoin.mempoolManager.UTXOCollection;
-import catecoin.txs.SlimTransaction;
-import catecoin.utxos.SlimUTXO;
+import catecoin.txs.Transaction;
 import catecoin.utxos.StorageUTXO;
+import catecoin.utxos.UTXO;
 import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,12 +56,12 @@ public class ContextObliviousValidator<P extends SybilResistantElectionProof> ex
      *
      *  The validation of whether the blocks reference correct previous blocks is responsibility of the Ledger component.
      **/
-    public boolean receivedValid(LedgerBlock<ContentList<SlimTransaction>, P> block) {
+    public boolean receivedValid(LedgerBlock<ContentList<Transaction>, P> block) {
         return super.receivedValid(block)
                 && areBlockInputsValid(block);
     }
 
-    boolean areBlockInputsValid(LedgerBlock<ContentList<SlimTransaction>, P> block) {
+    boolean areBlockInputsValid(LedgerBlock<ContentList<Transaction>, P> block) {
         try {
             mempoolManager.getMempoolReadLock().lock();
             return tryToCheckAreBlockInputsValid(block);
@@ -70,7 +70,7 @@ public class ContextObliviousValidator<P extends SybilResistantElectionProof> ex
         }
     }
 
-    private boolean tryToCheckAreBlockInputsValid(LedgerBlock<ContentList<SlimTransaction>, P> block) {
+    private boolean tryToCheckAreBlockInputsValid(LedgerBlock<ContentList<Transaction>, P> block) {
         List<UUID> prevStates = block.getPrevRefs();
         Set<UUID> invalidInMempool = aggregateInvalidMempoolUTXOs(prevStates);
         Set<StorageUTXO> validInMempool = aggregateValidMempoolUTXOs(prevStates, invalidInMempool);
@@ -80,7 +80,7 @@ public class ContextObliviousValidator<P extends SybilResistantElectionProof> ex
                 .allMatch(tx -> areTransactionInputsValid(tx, invalidInMempool, mapValidInMempool));
     }
 
-    private boolean areTransactionInputsValid(SlimTransaction tx, Set<UUID> invalid,
+    private boolean areTransactionInputsValid(Transaction tx, Set<UUID> invalid,
                                               Map<UUID, StorageUTXO> validInMempool) {
         try {
             return tryToVerifyAreTransactionInputsValid(tx, invalid, validInMempool);
@@ -90,7 +90,7 @@ public class ContextObliviousValidator<P extends SybilResistantElectionProof> ex
         return false;
     }
 
-    private boolean tryToVerifyAreTransactionInputsValid(SlimTransaction tx, Set<UUID> invalid,
+    private boolean tryToVerifyAreTransactionInputsValid(Transaction tx, Set<UUID> invalid,
                                                          Map<UUID, StorageUTXO> validInMempool)
             throws InputNotFoundException {
         Set<StorageUTXO> inputUtxos = getTxStorageUtxos(tx, invalid, validInMempool);
@@ -98,7 +98,7 @@ public class ContextObliviousValidator<P extends SybilResistantElectionProof> ex
                 && transactionAmountsMatch(inputUtxos, tx);
     }
 
-    private Set<StorageUTXO> getTxStorageUtxos(SlimTransaction tx, Set<UUID> invalid,
+    private Set<StorageUTXO> getTxStorageUtxos(Transaction tx, Set<UUID> invalid,
                                                Map<UUID, StorageUTXO> validInMempool)
             throws InputNotFoundException {
         Set<StorageUTXO> inputUtxos = new HashSet<>(tx.getInputs().size());
@@ -116,11 +116,11 @@ public class ContextObliviousValidator<P extends SybilResistantElectionProof> ex
         return inputUtxos;
     }
 
-    private boolean transactionAmountsMatch(Set<StorageUTXO> input, SlimTransaction tx) {
+    private boolean transactionAmountsMatch(Set<StorageUTXO> input, Transaction tx) {
         return input.stream()
                 .mapToInt(StorageUTXO::getAmount).sum() ==
                 Stream.concat(tx.getOutputsDestination().stream(), tx.getOutputsOrigin().stream())
-                .mapToInt(SlimUTXO::getAmount).sum();
+                .mapToInt(UTXO::getAmount).sum();
     }
 
     private Set<UUID> aggregateInvalidMempoolUTXOs(Collection<UUID> previousStates) {

@@ -2,7 +2,7 @@ package catecoin.blockConstructors;
 
 import catecoin.mempoolManager.MempoolManager;
 import catecoin.txs.IndexableContent;
-import catecoin.txs.SlimTransaction;
+import catecoin.txs.Transaction;
 import ledger.ledgerManager.StructuredValue;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +19,7 @@ import static java.util.stream.Collectors.toMap;
 import static sybilResistantElection.SybilResistantElection.INITIALIZATION_TIME;
 
 public class BaseContentStorage
-        implements PrototypicalContentStorage<StructuredValue<SlimTransaction>> {
+        implements PrototypicalContentStorage<StructuredValue<Transaction>> {
 
     public static final int MAX_THRESHOLD_THROUGHPUT = Integer.MAX_VALUE;
     public static final int MAX_BLOCK_SIZE = 40000;
@@ -34,7 +34,7 @@ public class BaseContentStorage
      * Used to throttle load in the application for the experimental evaluation.
      */
     private final int maxThresholdThroughput;
-    private final Map<UUID, StructuredValue<SlimTransaction>> contentMap;
+    private final Map<UUID, StructuredValue<Transaction>> contentMap;
     private final boolean useRandomTransactionAllocation;
     /**
      * Factor by which the load is lowered in this particular chain.
@@ -59,13 +59,13 @@ public class BaseContentStorage
     }
 
     @Override
-    public List<StructuredValue<SlimTransaction>> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException {
+    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException {
         Set<UUID> used = findUsedTransactions(states);
         return getContentList(usedSpace, used);
     }
 
     @Override
-    public List<StructuredValue<SlimTransaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException {
+    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException {
         Set<UUID> used = findUsedTransactions(states);
         return getContentWithinBounds(usedSpace, used, maxTxs);
     }
@@ -78,33 +78,33 @@ public class BaseContentStorage
         return used;
     }
 
-    protected List<StructuredValue<SlimTransaction>> getContentWithinBounds(int usedSpace, Set<UUID> used, int maxTxs) throws IOException {
+    protected List<StructuredValue<Transaction>> getContentWithinBounds(int usedSpace, Set<UUID> used, int maxTxs) throws IOException {
         return getContentDeterministicOrderBound(usedSpace, used, maxTxs);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<SlimTransaction>> content) {
+    public void submitContent(Collection<StructuredValue<Transaction>> content) {
         contentMap.putAll(content.stream()
                 .collect(toMap(IndexableContent::getId,c->c)));
     }
 
     @Override
-    public void submitContent(StructuredValue<SlimTransaction> content) {
+    public void submitContent(StructuredValue<Transaction> content) {
         contentMap.put(content.getId(), content);
     }
 
     @Override
-    public Collection<StructuredValue<SlimTransaction>> getStoredContent() {
+    public Collection<StructuredValue<Transaction>> getStoredContent() {
         return contentMap.values();
     }
 
-    protected List<StructuredValue<SlimTransaction>> getContentList(int usedSpace, Set<UUID> used) throws IOException {
+    protected List<StructuredValue<Transaction>> getContentList(int usedSpace, Set<UUID> used) throws IOException {
         return this.useRandomTransactionAllocation
                 ? getContentRandomOrder(usedSpace, used)
                 : getContentDeterministicOrder(usedSpace, used);
     }
 
-    private List<StructuredValue<SlimTransaction>> getContentDeterministicOrder(int usedSpace, Set<UUID> used) throws IOException {
+    private List<StructuredValue<Transaction>> getContentDeterministicOrder(int usedSpace, Set<UUID> used) throws IOException {
 
         long elapsedTime = Math.max(0, (System.currentTimeMillis() - timeStart) / 1000);
         int maxNumTxs = (int) Math.min(Integer.MAX_VALUE,
@@ -113,13 +113,13 @@ public class BaseContentStorage
     }
 
     @NotNull
-    private List<StructuredValue<SlimTransaction>> getContentDeterministicOrderBound(int usedSpace, Set<UUID> used, int maxNumTxs) throws IOException {
+    private List<StructuredValue<Transaction>> getContentDeterministicOrderBound(int usedSpace, Set<UUID> used, int maxNumTxs) throws IOException {
         logger.debug(loadBalancing + " : " + maxNumTxs * loadBalancing + " : " + maxNumTxs);
-        Iterator<Map.Entry<UUID, StructuredValue<SlimTransaction>>> contentEntries = contentMap.entrySet().iterator();
-        List<StructuredValue<SlimTransaction>> content = new ArrayList<>();
+        Iterator<Map.Entry<UUID, StructuredValue<Transaction>>> contentEntries = contentMap.entrySet().iterator();
+        List<StructuredValue<Transaction>> content = new ArrayList<>();
         while (contentEntries.hasNext() && content.size() < maxNumTxs
                 && usedSpace < maxBlockSize - maxSizeOffset) {
-            Map.Entry<UUID, StructuredValue<SlimTransaction>> contentEntry = contentEntries.next();
+            Map.Entry<UUID, StructuredValue<Transaction>> contentEntry = contentEntries.next();
             if (!used.contains(contentEntry.getKey())) {
                 content.add(contentEntry.getValue());
                 usedSpace += contentEntry.getValue().getSerializedSize();
@@ -128,15 +128,15 @@ public class BaseContentStorage
         return content;
     }
 
-    private List<StructuredValue<SlimTransaction>> getContentRandomOrder(int usedSpace, Set<UUID> used) throws IOException {
+    private List<StructuredValue<Transaction>> getContentRandomOrder(int usedSpace, Set<UUID> used) throws IOException {
         long elapsedTime = Math.max(0, (System.currentTimeMillis() - timeStart) / 1000);
         int txsMaxIndex = (int) Math.min(elapsedTime * this.maxThresholdThroughput, contentMap.size());
         return getContentRandomOrderBound(usedSpace, used, (double) elapsedTime, txsMaxIndex);
     }
 
     @NotNull
-    private List<StructuredValue<SlimTransaction>> getContentRandomOrderBound(int usedSpace, Set<UUID> used, double elapsedTime, int txsMaxIndex) throws IOException {
-        List<StructuredValue<SlimTransaction>> allowedContentList = sublist(contentMap.values(), 0, txsMaxIndex)
+    private List<StructuredValue<Transaction>> getContentRandomOrderBound(int usedSpace, Set<UUID> used, double elapsedTime, int txsMaxIndex) throws IOException {
+        List<StructuredValue<Transaction>> allowedContentList = sublist(contentMap.values(), 0, txsMaxIndex)
                 .stream()
                 .filter(content -> !used.contains(content.getId()))
                 .collect(Collectors.toList());
@@ -148,22 +148,22 @@ public class BaseContentStorage
                 : extractRandomIndexes(allowedContentList, maxNumTxs, usedSpace);
     }
 
-    private List<StructuredValue<SlimTransaction>> extractRandomIndexes(List<StructuredValue<SlimTransaction>> allowedContentList, int maxNumTxs, int usedSpace)
+    private List<StructuredValue<Transaction>> extractRandomIndexes(List<StructuredValue<Transaction>> allowedContentList, int maxNumTxs, int usedSpace)
             throws IOException {
-        LinkedList<StructuredValue<SlimTransaction>> allowedLList = new LinkedList<>(allowedContentList);
+        LinkedList<StructuredValue<Transaction>> allowedLList = new LinkedList<>(allowedContentList);
         Random r = new Random();
-        List<StructuredValue<SlimTransaction>> toReturn = new ArrayList<>(maxNumTxs);
+        List<StructuredValue<Transaction>> toReturn = new ArrayList<>(maxNumTxs);
         while (toReturn.size() < maxNumTxs && usedSpace < maxBlockSize - maxSizeOffset) {
-            StructuredValue<SlimTransaction> contentPiece = allowedLList.remove(r.nextInt(allowedLList.size()));
+            StructuredValue<Transaction> contentPiece = allowedLList.remove(r.nextInt(allowedLList.size()));
             usedSpace += contentPiece.getSerializedSize();
             toReturn.add(contentPiece);
         }
         return toReturn;
     }
 
-    private List<StructuredValue<SlimTransaction>> sublist(Collection<StructuredValue<SlimTransaction>> values, int start, int end) {
-        List<StructuredValue<SlimTransaction>> sublist = new ArrayList<>(end - start);
-        Iterator<StructuredValue<SlimTransaction>> ogIt = List.copyOf(values).listIterator(start);
+    private List<StructuredValue<Transaction>> sublist(Collection<StructuredValue<Transaction>> values, int start, int end) {
+        List<StructuredValue<Transaction>> sublist = new ArrayList<>(end - start);
+        Iterator<StructuredValue<Transaction>> ogIt = List.copyOf(values).listIterator(start);
         for (int i = start; i < end && ogIt.hasNext(); i++)
             sublist.add(ogIt.next());
         return sublist;
@@ -175,7 +175,7 @@ public class BaseContentStorage
     }
 
     @Override
-    public PrototypicalContentStorage<StructuredValue<SlimTransaction>> clonePrototype() {
+    public PrototypicalContentStorage<StructuredValue<Transaction>> clonePrototype() {
         return new BaseContentStorage();
     }
 
