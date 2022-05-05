@@ -31,7 +31,7 @@ import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class LedgerManager
-        implements ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>,
+        implements ParentTreeNode,
         Ledger<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, ContentStorage<StructuredValue<Transaction>> {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
@@ -182,7 +182,7 @@ public class LedgerManager
     }
 
     @Override
-    public ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> getTreeRoot() {
+    public ParentTreeNode getTreeRoot() {
         return this;
     }
 

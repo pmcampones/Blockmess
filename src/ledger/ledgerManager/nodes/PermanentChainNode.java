@@ -28,14 +28,13 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>The lower the InnerNode in the Chain's hierarchy,
  * the later were the referenced Chains spawned.</p>
  */
-public class PermanentChainNode
-        implements InnerNode, BlockmessChain{
+public class PermanentChainNode implements InnerNode, BlockmessChain{
 
     private final ReferenceNode lft, rgt;
-    private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
+    private ParentTreeNode parent;
     private BlockmessChain inner;
 
-    public PermanentChainNode(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent, BlockmessChain inner,
+    public PermanentChainNode(ParentTreeNode parent, BlockmessChain inner,
                                ReferenceNode lft, ReferenceNode rgt) {
         this.parent = parent;
         this.inner = inner;
@@ -84,7 +83,7 @@ public class PermanentChainNode
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent) {
+    public void replaceParent(ParentTreeNode parent) {
         this.parent = parent;
     }
 
@@ -194,7 +193,7 @@ public class PermanentChainNode
     }
 
     @Override
-    public ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> getTreeRoot() {
+    public ParentTreeNode getTreeRoot() {
         return parent.getTreeRoot();
     }
 

@@ -37,8 +37,7 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode
-        implements BlockmessChain, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> {
+public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -66,7 +65,7 @@ public class LeafNode
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
      */
     private final Queue<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> finalizedBuffer = new ConcurrentLinkedQueue<>();
-    private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
+    private ParentTreeNode parent;
 
     /** Ledger<BlockmessBlock<C,P>> ledger
      * Number of samples used to determine if the Chain should spawn new Chains or merge into its parent.
@@ -112,14 +111,14 @@ public class LeafNode
     private int depth;
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            Properties props, UUID ChainId, ParentTreeNode parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage)
             throws PrototypeHasNotBeenDefinedException {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            Properties props, UUID ChainId, ParentTreeNode parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock)
             throws PrototypeHasNotBeenDefinedException {
         this.props = props;
@@ -183,7 +182,7 @@ public class LeafNode
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent) {
+    public void replaceParent(ParentTreeNode parent) {
         this.parent = parent;
     }
 
@@ -316,7 +315,7 @@ public class LeafNode
             throws PrototypeHasNotBeenDefinedException {
         depth++;
         contentStorage.halveChainThroughput();
-        ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
+        ParentTreeNode treeRoot = parent.getTreeRoot();
         ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
                 0, 1, depth, new ComposableContentStorageImp<>(),
                 new UUID(0,0));

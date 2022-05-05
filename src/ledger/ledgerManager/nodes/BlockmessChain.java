@@ -19,7 +19,7 @@ public interface BlockmessChain
 
     UUID getChainId();
 
-    void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent);
+    void replaceParent(ParentTreeNode parent);
 
     void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException;
 

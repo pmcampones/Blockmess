@@ -23,8 +23,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * to directly contact the Chain.
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
-public class ReferenceNode
-        implements InnerNode, BlockmessChain{
+public class ReferenceNode implements InnerNode, BlockmessChain{
 
     /**
      * Reference to the lead node in this Chain.
@@ -40,10 +39,10 @@ public class ReferenceNode
      * References the inner node from a parent Chain that spawned this.
      * <p>It could also be a reference to the LedgerManager itself.</p>
      */
-    private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
+    private ParentTreeNode parent;
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            Properties props, UUID ChainId, ParentTreeNode parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage)
             throws PrototypeHasNotBeenDefinedException {
         this.leaf = new LeafNode(props, ChainId, this, minRank, minNextRank, depth, contentStorage);
@@ -52,7 +51,7 @@ public class ReferenceNode
     }
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            Properties props, UUID ChainId, ParentTreeNode parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock)
             throws PrototypeHasNotBeenDefinedException {
         this.leaf = new LeafNode(props, ChainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
@@ -110,7 +109,7 @@ public class ReferenceNode
         leaf.close();
     }
     @Override
-    public void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent) {
+    public void replaceParent(ParentTreeNode parent) {
         this.parent = parent;
     }
 
@@ -219,7 +218,7 @@ public class ReferenceNode
     }
 
     @Override
-    public ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> getTreeRoot() {
+    public ParentTreeNode getTreeRoot() {
         return parent;
     }
 

@@ -29,8 +29,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode
-        implements InnerNode, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain {
+public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain {
 
     private final Properties props;
 
@@ -41,7 +40,7 @@ public class TempChainNode
     private final Map<UUID, Pair<ReferenceNode, ReferenceNode>> tentativeChains = new HashMap<>();
     private final Pair<ComposableContentStorage<Transaction>,
             ComposableContentStorage<Transaction>> contentStoragePair;
-    private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
+    private ParentTreeNode parent;
 
     private final int finalizedWeight;
 
@@ -54,7 +53,7 @@ public class TempChainNode
     private BlockmessChain inner;
 
     public TempChainNode(
-            Properties props, BlockmessChain inner, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            Properties props, BlockmessChain inner, ParentTreeNode parent,
             UUID ChainOriginatorBlockId, int ChainDepth,
             Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> contentStoragePair)
             throws PrototypeHasNotBeenDefinedException {
@@ -86,7 +85,7 @@ public class TempChainNode
 
     private Pair<ReferenceNode, ReferenceNode> computeChains(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> root)
             throws PrototypeHasNotBeenDefinedException {
-        ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> treeRoot = parent.getTreeRoot();
+        ParentTreeNode treeRoot = parent.getTreeRoot();
         UUID lftId = computeChainId(root.getBlockId(), "lft".getBytes());
         ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
                 root.getNextRank(), root.getNextRank(), ChainDepth, contentStoragePair.getLeft(), root.getBlockId());
@@ -145,7 +144,7 @@ public class TempChainNode
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent) {
+    public void replaceParent(ParentTreeNode parent) {
         this.parent = parent;
     }
 
@@ -323,7 +322,7 @@ public class TempChainNode
     }
 
     @Override
-    public ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> getTreeRoot() {
+    public ParentTreeNode getTreeRoot() {
         return parent.getTreeRoot();
     }
 
