@@ -30,7 +30,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
 public class TempChainNode
-        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain<Transaction> {
+        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain {
 
     private final Properties props;
 
@@ -51,10 +51,10 @@ public class TempChainNode
      * How deep is this Chain in the Blockmess Tree
      */
     private final int ChainDepth;
-    private BlockmessChain<Transaction> inner;
+    private BlockmessChain inner;
 
     public TempChainNode(
-            Properties props, BlockmessChain<Transaction> inner, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
+            Properties props, BlockmessChain inner, ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent,
             UUID ChainOriginatorBlockId, int ChainDepth,
             Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> contentStoragePair)
             throws PrototypeHasNotBeenDefinedException {
@@ -77,7 +77,7 @@ public class TempChainNode
         parent.createChains(getTentative());
     }
 
-    private List<BlockmessChain<Transaction>> getTentative() {
+    private List<BlockmessChain> getTentative() {
         return tentativeChains.values().stream()
                 .map(pair -> List.of(pair.getLeft(), pair.getRight()))
                 .flatMap(Collection::stream)
@@ -162,7 +162,7 @@ public class TempChainNode
         inner.resetSamples();
         inner.lowerLeafDepth();
         inner.doubleChainThroughput();
-        List<BlockmessChain<Transaction>> toMerge =  tentativeChains.values().stream()
+        List<BlockmessChain> toMerge =  tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
@@ -254,7 +254,7 @@ public class TempChainNode
     }
 
     @Override
-    public Set<BlockmessChain<Transaction>> getPriorityChains() {
+    public Set<BlockmessChain> getPriorityChains() {
         var priorityChainsOpt = getPreferableTemp();
         if (priorityChainsOpt.isEmpty())
             return inner.getPriorityChains();
@@ -313,12 +313,12 @@ public class TempChainNode
     }
 
     @Override
-    public void replaceChild(BlockmessChain<Transaction> newChild) {
+    public void replaceChild(BlockmessChain newChild) {
         this.inner = newChild;
     }
 
     @Override
-    public void createChains(List<BlockmessChain<Transaction>> createdChains) {
+    public void createChains(List<BlockmessChain> createdChains) {
         parent.createChains(createdChains);
     }
 

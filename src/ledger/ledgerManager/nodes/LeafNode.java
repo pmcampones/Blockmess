@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.toSet;
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
 public class LeafNode
-        implements BlockmessChain<Transaction>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> {
+        implements BlockmessChain, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -307,7 +307,7 @@ public class LeafNode
     }
 
     @Override
-    public Set<BlockmessChain<Transaction>> getPriorityChains() {
+    public Set<BlockmessChain> getPriorityChains() {
         return emptySet();
     }
 

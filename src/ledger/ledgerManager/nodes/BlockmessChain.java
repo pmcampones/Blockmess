@@ -2,7 +2,7 @@ package ledger.ledgerManager.nodes;
 
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -14,12 +14,12 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BlockmessChain<E extends IndexableContent>
-        extends Ledger<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>, ComposableContentStorage<E> {
+public interface BlockmessChain
+        extends Ledger<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, ComposableContentStorage<Transaction> {
 
     UUID getChainId();
 
-    void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent);
+    void replaceParent(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent);
 
     void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException;
 
@@ -41,14 +41,14 @@ public interface BlockmessChain<E extends IndexableContent>
      * Gets the first finalized block in the Chain that is yet to be delivered to the application.
      * @return The first block or null if no block was finalized.
      */
-    BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> peekFinalized();
+    BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> peekFinalized();
 
     /**
      * Removes the first finalized block in the Chain that is yet to be delivered to the application.
      * <p>Processes the block delivery.</p>
      * @return The block removed or null if no block was finalized.
      */
-    BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> deliverChainBlock();
+    BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> deliverChainBlock();
 
     /**
      * Queries whether this Chain should spawn two sub-Chains to alleviate its load.
@@ -77,13 +77,13 @@ public interface BlockmessChain<E extends IndexableContent>
      */
     long getMinimumRank();
 
-    Set<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds);
+    Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds);
 
     void resetSamples();
 
     long getRankFromRefs(Set<UUID> refs);
 
-    Set<BlockmessChain<E>> getPriorityChains();
+    Set<BlockmessChain> getPriorityChains();
 
     void lowerLeafDepth();
 
@@ -97,7 +97,7 @@ public interface BlockmessChain<E extends IndexableContent>
      * <p>This is used to test the wasted performance of other parallel chain solutions that
      * allow repeated transactions in several chains.</p>
      */
-    void submitContentDirectly(Collection<StructuredValue<E>> content);
+    void submitContentDirectly(Collection<StructuredValue<Transaction>> content);
 
     int countReferencedPermanent();
 

@@ -29,13 +29,13 @@ import static org.apache.commons.collections4.SetUtils.union;
  * the later were the referenced Chains spawned.</p>
  */
 public class PermanentChainNode
-        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, BlockmessChain<Transaction>{
+        implements InnerNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>, BlockmessChain{
 
     private final ReferenceNode lft, rgt;
     private ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent;
-    private BlockmessChain<Transaction> inner;
+    private BlockmessChain inner;
 
-    public PermanentChainNode(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent, BlockmessChain<Transaction> inner,
+    public PermanentChainNode(ParentTreeNode<Transaction,ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> parent, BlockmessChain inner,
                                ReferenceNode lft, ReferenceNode rgt) {
         this.parent = parent;
         this.inner = inner;
@@ -148,7 +148,7 @@ public class PermanentChainNode
     }
 
     @Override
-    public Set<BlockmessChain<Transaction>> getPriorityChains() {
+    public Set<BlockmessChain> getPriorityChains() {
         return union(inner.getPriorityChains(), union(lft.getPriorityChains(), rgt.getPriorityChains()));
     }
 
@@ -179,7 +179,7 @@ public class PermanentChainNode
     }
 
     @Override
-    public void replaceChild(BlockmessChain<Transaction> newChild) {
+    public void replaceChild(BlockmessChain newChild) {
         inner = newChild;
     }
 
@@ -189,7 +189,7 @@ public class PermanentChainNode
     }
 
     @Override
-    public void createChains(List<BlockmessChain<Transaction>> createdChains) {
+    public void createChains(List<BlockmessChain> createdChains) {
         parent.createChains(createdChains);
     }
 

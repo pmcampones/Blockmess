@@ -11,11 +11,11 @@ import java.util.UUID;
 
 public interface ParentTreeNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof> {
 
-    void replaceChild(BlockmessChain<E> newChild);
+    void replaceChild(BlockmessChain newChild);
 
     void forgetUnconfirmedChains(Set<UUID> discartedChainsIds);
 
-    void createChains(List<BlockmessChain<E>> createdChains);
+    void createChains(List<BlockmessChain> createdChains);
 
     ParentTreeNode<E,C,P> getTreeRoot();
 

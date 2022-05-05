@@ -20,9 +20,9 @@ public class ChainSeed {
 
     private final byte[] chainSeed;
 
-    private final BlockmessChain<Transaction> chain;
+    private final BlockmessChain chain;
 
-    public ChainSeed(UUID chainId, UUID prevBlock, ContentList<StructuredValue<Transaction>> currContent, BlockmessChain<Transaction> chain) {
+    public ChainSeed(UUID chainId, UUID prevBlock, ContentList<StructuredValue<Transaction>> currContent, BlockmessChain chain) {
         this.chainId = chainId;
         this.prevBlock = prevBlock;
         this.currContent = currContent;
@@ -61,7 +61,7 @@ public class ChainSeed {
         return chainSeed;
     }
 
-    public BlockmessChain<Transaction> getChain() {
+    public BlockmessChain getChain() {
         return chain;
     }
 
