@@ -23,29 +23,27 @@ import static org.apache.commons.collections4.SetUtils.union;
  * to directly contact the Chain.
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
-public class ReferenceNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
-        implements InnerNode<E,C,P>, BlockmessChain<E,C,P> {
-
-    /**
-     * Uses the State design pattern to modify its behaviour
-     * depending on whether it is a leaf node or an inner node.
-     */
-    private BlockmessChain<E,C,P> nodeState;
+public class ReferenceNode<E extends IndexableContent, P extends SybilResistantElectionProof>
+        implements InnerNode<E,ContentList<StructuredValue<E>>,P>, BlockmessChain<E,P> {
 
     /**
      * Reference to the lead node in this Chain.
      * <p>This reference reduces the chain of method calls for operations that always end up calling the leaf.</p>
      */
-    private final LeafNode<E,C,P> leaf;
-
+    private final LeafNode<E,P> leaf;
+    /**
+     * Uses the State design pattern to modify its behaviour
+     * depending on whether it is a leaf node or an inner node.
+     */
+    private BlockmessChain<E,P> nodeState;
     /**
      * References the inner node from a parent Chain that spawned this.
      * <p>It could also be a reference to the LedgerManager itself.</p>
      */
-    private ParentTreeNode<E,C,P> parent;
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,C,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage)
             throws PrototypeHasNotBeenDefinedException {
         this.leaf = new LeafNode<>(props, ChainId, this, minRank, minNextRank, depth, contentStorage);
@@ -54,7 +52,7 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,C,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage, UUID prevBlock)
             throws PrototypeHasNotBeenDefinedException {
         this.leaf = new LeafNode<>(props, ChainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
@@ -83,12 +81,12 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<C,P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
         leaf.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<C,P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>> observer) {
         leaf.attachObserver(observer);
     }
 
@@ -112,7 +110,7 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
         leaf.close();
     }
     @Override
-    public void replaceParent(ParentTreeNode<E,C,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
         this.parent = parent;
     }
 
@@ -127,7 +125,7 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public BlockmessBlock<C, P> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, P> peekFinalized() {
         return leaf.peekFinalized();
     }
 
@@ -135,7 +133,7 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
      *  Must not send directly to the leaf node
      */
     @Override
-    public BlockmessBlock<C, P> deliverChainBlock() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, P> deliverChainBlock() {
         return nodeState.deliverChainBlock();
     }
 
@@ -160,7 +158,7 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public Set<BlockmessBlock<C, P>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
         return leaf.getBlocks(blockIds);
     }
 
@@ -175,7 +173,7 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public Set<BlockmessChain<E, C, P>> getPriorityChains() {
+    public Set<BlockmessChain<E,P>> getPriorityChains() {
         return union(Set.of(this), nodeState.getPriorityChains());
     }
 
@@ -206,7 +204,7 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,C,P> newChild) {
+    public void replaceChild(BlockmessChain<E,P> newChild) {
         this.nodeState = newChild;
     }
 
@@ -216,12 +214,12 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,C,P>> createdChains) {
+    public void createChains(List<BlockmessChain<E,P>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,C,P> getTreeRoot() {
+    public ParentTreeNode<E,ContentList<StructuredValue<E>>,P> getTreeRoot() {
         return parent;
     }
 

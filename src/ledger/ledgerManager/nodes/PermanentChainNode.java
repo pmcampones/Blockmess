@@ -28,17 +28,15 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>The lower the InnerNode in the Chain's hierarchy,
  * the later were the referenced Chains spawned.</p>
  */
-public class PermanentChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
-        implements InnerNode<E,C,P>, BlockmessChain<E,C,P>{
+public class PermanentChainNode<E extends IndexableContent, P extends SybilResistantElectionProof>
+        implements InnerNode<E,ContentList<StructuredValue<E>>,P>, BlockmessChain<E,P>{
 
-    private ParentTreeNode<E,C,P> parent;
+    private final ReferenceNode<E,P> lft, rgt;
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
+    private BlockmessChain<E,P> inner;
 
-    private BlockmessChain<E,C,P> inner;
-
-    private final ReferenceNode<E,C,P> lft, rgt;
-
-    public PermanentChainNode(ParentTreeNode<E,C,P> parent, BlockmessChain<E,C,P> inner,
-                               ReferenceNode<E,C,P> lft, ReferenceNode<E,C,P> rgt) {
+    public PermanentChainNode(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent, BlockmessChain<E,P> inner,
+                               ReferenceNode<E,P> lft, ReferenceNode<E,P> rgt) {
         this.parent = parent;
         this.inner = inner;
         this.lft = lft;
@@ -56,12 +54,12 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<C,P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
         inner.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<C, P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, P>> observer) {
         inner.attachObserver(observer);
     }
 
@@ -86,7 +84,7 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,C,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
         this.parent = parent;
     }
 
@@ -101,12 +99,12 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public BlockmessBlock<C, P> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, P> peekFinalized() {
         return inner.peekFinalized();
     }
 
     @Override
-    public BlockmessBlock<C, P> deliverChainBlock() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, P> deliverChainBlock() {
         return inner.deliverChainBlock();
     }
 
@@ -135,7 +133,7 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public Set<BlockmessBlock<C, P>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
         return inner.getBlocks(blockIds);
     }
 
@@ -150,7 +148,7 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public Set<BlockmessChain<E, C, P>> getPriorityChains() {
+    public Set<BlockmessChain<E,P>> getPriorityChains() {
         return union(inner.getPriorityChains(), union(lft.getPriorityChains(), rgt.getPriorityChains()));
     }
 
@@ -181,7 +179,7 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,C,P> newChild) {
+    public void replaceChild(BlockmessChain<E,P> newChild) {
         inner = newChild;
     }
 
@@ -191,12 +189,12 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,C,P>> createdChains) {
+    public void createChains(List<BlockmessChain<E,P>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,C,P> getTreeRoot() {
+    public ParentTreeNode<E,ContentList<StructuredValue<E>>,P> getTreeRoot() {
         return parent.getTreeRoot();
     }
 

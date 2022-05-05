@@ -187,25 +187,14 @@ public class SybilResistantElection extends GenericProtocol {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
+        List<BlockmessChain<Transaction, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
         if (wereChainsChanged(chains))
             reactToChangeInNumberOfChains(chains);
         BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> updatedChain = notif.getNonFinalizedBlock();
         replaceChainIfNecessary(updatedChain);
     }
 
-    private void uponDeliverFinalizedBlockNotification() {
-        List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
-        try {
-            lock.lock();
-            if (wereChainsChanged(chains))
-                reactToChangeInNumberOfChains(chains);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    private void reactToChangeInNumberOfChains(List<BlockmessChain<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> chains) {
+    private void reactToChangeInNumberOfChains(List<BlockmessChain<Transaction, SybilResistantElectionProof>> chains) {
         difficultyComputer.setNumChains(chains.size());
         chainSeeds = replaceChainSeeds(chains);
         randomSeed = computeRandomSeed();
@@ -213,15 +202,8 @@ public class SybilResistantElection extends GenericProtocol {
                 chainSeeds.size(), difficultyComputer.getNumLeadingZeros());
     }
 
-    private boolean wereChainsChanged(List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> updatedChains) {
-        return !(updatedChains.size() == chainSeeds.size()
-                && updatedChains.stream()
-                .map(BlockmessChain::getChainId)
-                .allMatch(chainSeeds::containsKey));
-    }
-
     private LinkedHashMap<UUID, ChainSeed> replaceChainSeeds(
-            List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> updatedChains) {
+            List<BlockmessChain<Transaction, SybilResistantElectionProof>> updatedChains) {
         try {
             return tryToReplaceChainSeeds(updatedChains);
         } catch (IOException e) {
@@ -231,7 +213,7 @@ public class SybilResistantElection extends GenericProtocol {
     }
 
     private LinkedHashMap<UUID, ChainSeed> tryToReplaceChainSeeds(
-            List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> updatedChains) throws IOException {
+            List<BlockmessChain<Transaction, SybilResistantElectionProof>> updatedChains) throws IOException {
         LinkedHashMap<UUID, ChainSeed> replacement = new LinkedHashMap<>(updatedChains.size());
         for (var chain : updatedChains) {
             ChainSeed oldSeed = chainSeeds.get(chain.getChainId());
@@ -242,12 +224,30 @@ public class SybilResistantElection extends GenericProtocol {
         return replacement;
     }
 
-    private ChainSeed computeChainRandomSeed(BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> chain)
+    private ChainSeed computeChainRandomSeed(BlockmessChain<Transaction, SybilResistantElectionProof> chain)
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
         List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(prevBlocks, getAproximateProofSize());
         ContentList<StructuredValue<Transaction>> content = new ContentList<>(contentLst);
         return new ChainSeed(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
+    }
+
+    private boolean wereChainsChanged(List<BlockmessChain<Transaction, SybilResistantElectionProof>> updatedChains) {
+        return !(updatedChains.size() == chainSeeds.size()
+                && updatedChains.stream()
+                .map(BlockmessChain::getChainId)
+                .allMatch(chainSeeds::containsKey));
+    }
+
+    private void uponDeliverFinalizedBlockNotification() {
+        List<BlockmessChain<Transaction, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
+        try {
+            lock.lock();
+            if (wereChainsChanged(chains))
+                reactToChangeInNumberOfChains(chains);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private void replaceChainIfNecessary(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> newBlock) {
@@ -270,7 +270,7 @@ public class SybilResistantElection extends GenericProtocol {
 
     private void replaceChain(ChainSeed oldSeed, Set<UUID> newPrevs) throws IOException {
         UUID newPrev = newPrevs.iterator().next();
-        BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> chain = oldSeed.getChain();
+        BlockmessChain<Transaction, SybilResistantElectionProof> chain = oldSeed.getChain();
         List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(newPrevs, getAproximateProofSize());
         ContentList<StructuredValue<Transaction>> newContent = new ContentList<>(contentLst);
         ChainSeed newChainSeed =

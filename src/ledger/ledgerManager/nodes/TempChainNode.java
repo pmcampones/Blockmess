@@ -29,8 +29,8 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
-        implements InnerNode<E,C,P>, LedgerObserver<BlockmessBlock<C,P>>, BlockmessChain<E,C,P> {
+public class TempChainNode<E extends IndexableContent, P extends SybilResistantElectionProof>
+        implements InnerNode<E,ContentList<StructuredValue<E>>,P>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>>, BlockmessChain<E,P> {
 
     private final Properties props;
 
@@ -38,11 +38,11 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
      * Maps the identifier of the Chain root block to the Chains that are originated.
      * <p>Eventually, one and only one of the root blocks in this DS will originate a valid Chain.</p>
      */
-    private final Map<UUID, Pair<ReferenceNode<E,C,P>, ReferenceNode<E,C,P>>> tentativeChains = new HashMap<>();
+    private final Map<UUID, Pair<ReferenceNode<E,P>, ReferenceNode<E,P>>> tentativeChains = new HashMap<>();
 
-    private ParentTreeNode<E,C,P> parent;
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
 
-    private BlockmessChain<E,C,P> inner;
+    private BlockmessChain<E,P> inner;
 
     private final int finalizedWeight;
 
@@ -57,7 +57,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
             ComposableContentStorage<E>> contentStoragePair;
 
     public TempChainNode(
-            Properties props, BlockmessChain<E,C,P> inner, ParentTreeNode<E,C,P> parent,
+            Properties props, BlockmessChain<E,P> inner, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
             UUID ChainOriginatorBlockId, int ChainDepth,
             Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> contentStoragePair)
             throws PrototypeHasNotBeenDefinedException {
@@ -74,27 +74,27 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
 
     private void fillChainMap(UUID ChainOriginatorBlockId) throws PrototypeHasNotBeenDefinedException {
         Set<UUID> rootIds = inner.getFollowing(ChainOriginatorBlockId, finalizedWeight + 3);
-        Set<BlockmessBlock<C,P>> roots = inner.getBlocks(rootIds);
-        for (BlockmessBlock<C,P> root : roots)
+        Set<BlockmessBlock<ContentList<StructuredValue<E>>,P>> roots = inner.getBlocks(rootIds);
+        for (BlockmessBlock<ContentList<StructuredValue<E>>,P> root : roots)
             tentativeChains.put(root.getBlockId(), computeChains(root));
         parent.createChains(getTentative());
     }
 
-    private List<BlockmessChain<E,C,P>> getTentative() {
+    private List<BlockmessChain<E,P>> getTentative() {
         return tentativeChains.values().stream()
                 .map(pair -> List.of(pair.getLeft(), pair.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
     }
 
-    private Pair<ReferenceNode<E,C,P>, ReferenceNode<E,C,P>> computeChains(BlockmessBlock<C,P> root)
+    private Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> computeChains(BlockmessBlock<ContentList<StructuredValue<E>>,P> root)
             throws PrototypeHasNotBeenDefinedException {
-        ParentTreeNode<E,C,P> treeRoot = parent.getTreeRoot();
+        ParentTreeNode<E,ContentList<StructuredValue<E>>,P> treeRoot = parent.getTreeRoot();
         UUID lftId = computeChainId(root.getBlockId(), "lft".getBytes());
-        ReferenceNode<E,C,P> lft = new ReferenceNode<>(props, lftId, treeRoot,
+        ReferenceNode<E,P> lft = new ReferenceNode<>(props, lftId, treeRoot,
                 root.getNextRank(), root.getNextRank(), ChainDepth, contentStoragePair.getLeft(), root.getBlockId());
         UUID rgtId = computeChainId(root.getBlockId(), "rgt".getBytes());
-        ReferenceNode<E,C,P> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
+        ReferenceNode<E,P> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
                 root.getNextRank(), root.getNextRank(), ChainDepth, contentStoragePair.getRight(), root.getBlockId());
         return Pair.of(lft, rgt);
     }
@@ -113,12 +113,12 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<C, P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>, P> block) {
         inner.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<C, P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>, P>> observer) {
         inner.attachObserver(observer);
     }
 
@@ -148,7 +148,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,C,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
         this.parent = parent;
     }
 
@@ -165,7 +165,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
         inner.resetSamples();
         inner.lowerLeafDepth();
         inner.doubleChainThroughput();
-        List<BlockmessChain<E,C,P>> toMerge =  tentativeChains.values().stream()
+        List<BlockmessChain<E,P>> toMerge =  tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
@@ -189,14 +189,14 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public BlockmessBlock<C, P> peekFinalized() {
+    public BlockmessBlock<ContentList<StructuredValue<E>>, P> peekFinalized() {
         return inner.peekFinalized();
     }
 
     @Override
-    public BlockmessBlock<C, P> deliverChainBlock() {
-        BlockmessBlock<C,P> delivered = inner.deliverChainBlock();
-        Pair<ReferenceNode<E,C,P>, ReferenceNode<E,C,P>> confirmedChains =
+    public BlockmessBlock<ContentList<StructuredValue<E>>, P> deliverChainBlock() {
+        BlockmessBlock<ContentList<StructuredValue<E>>,P> delivered = inner.deliverChainBlock();
+        Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> confirmedChains =
                 tentativeChains.get(delivered.getBlockId());
         if (confirmedChains != null) {
             replaceThisNode(confirmedChains);
@@ -205,7 +205,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
         return delivered;
     }
 
-    private Set<UUID> computeDiscardedChainsIds(Pair<ReferenceNode<E,C,P>, ReferenceNode<E,C,P>> confirmed) {
+    private Set<UUID> computeDiscardedChainsIds(Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> confirmed) {
         Set<UUID> confirmedIds = Set.of(confirmed.getLeft().getChainId(), confirmed.getRight().getChainId());
         return tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
@@ -242,7 +242,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public Set<BlockmessBlock<C, P>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
         return inner.getBlocks(blockIds);
     }
 
@@ -257,7 +257,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public Set<BlockmessChain<E, C, P>> getPriorityChains() {
+    public Set<BlockmessChain<E,P>> getPriorityChains() {
         var priorityChainsOpt = getPreferableTemp();
         if (priorityChainsOpt.isEmpty())
             return inner.getPriorityChains();
@@ -293,7 +293,7 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
         return 2 + inner.countReferencedPermanent();
     }
 
-    private Optional<Pair<ReferenceNode<E,C,P>, ReferenceNode<E,C,P>>> getPreferableTemp() {
+    private Optional<Pair<ReferenceNode<E,P>, ReferenceNode<E,P>>> getPreferableTemp() {
         var eligible = tentativeChains.entrySet().stream()
                 .filter(e -> this.isInLongestChain(e.getKey()))
                 .map(Map.Entry::getValue)
@@ -303,9 +303,11 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
         return Optional.of(eligible.get(0));
     }
 
-    @Override
-    public void replaceChild(BlockmessChain<E,C,P> newChild) {
-        this.inner = newChild;
+    private void replaceThisNode(Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> correctChains) {
+        PermanentChainNode<E,P> replacement = new PermanentChainNode<>(this.parent, this.inner,
+                correctChains.getLeft(), correctChains.getRight());
+        this.parent.replaceChild(replacement);
+        this.inner.replaceParent(replacement);
     }
 
     @Override
@@ -314,29 +316,24 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,C,P>> createdChains) {
+    public void replaceChild(BlockmessChain<E,P> newChild) {
+        this.inner = newChild;
+    }
+
+    @Override
+    public void createChains(List<BlockmessChain<E,P>> createdChains) {
         parent.createChains(createdChains);
     }
 
     @Override
-    public ParentTreeNode<E,C,P> getTreeRoot() {
+    public ParentTreeNode<E,ContentList<StructuredValue<E>>,P> getTreeRoot() {
         return parent.getTreeRoot();
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<C, P> block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, P> block, int weight) {
         if (weight == rootWeight + finalizedWeight + 3)
             tryToInsertNewChainRoot(block);
-    }
-
-    private void tryToInsertNewChainRoot(BlockmessBlock<C,P> root) {
-        try {
-            Pair<ReferenceNode<E,C,P>, ReferenceNode<E,C,P>> createdChains = computeChains(root);
-            tentativeChains.put(root.getBlockId(), createdChains);
-            parent.createChains(List.of(createdChains.getLeft(), createdChains.getRight()));
-        } catch (PrototypeHasNotBeenDefinedException e) {
-            e.printStackTrace();
-        }
     }
 
     @Override
@@ -345,11 +342,14 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
         // ledger manager has linearized the blocks.
     }
 
-    private void replaceThisNode(Pair<ReferenceNode<E,C,P>, ReferenceNode<E,C,P>> correctChains) {
-        PermanentChainNode<E,C,P> replacement = new PermanentChainNode<>(this.parent, this.inner,
-                correctChains.getLeft(), correctChains.getRight());
-        this.parent.replaceChild(replacement);
-        this.inner.replaceParent(replacement);
+    private void tryToInsertNewChainRoot(BlockmessBlock<ContentList<StructuredValue<E>>,P> root) {
+        try {
+            Pair<ReferenceNode<E,P>, ReferenceNode<E,P>> createdChains = computeChains(root);
+            tentativeChains.put(root.getBlockId(), createdChains);
+            parent.createChains(List.of(createdChains.getLeft(), createdChains.getRight()));
+        } catch (PrototypeHasNotBeenDefinedException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

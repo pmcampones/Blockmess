@@ -6,4 +6,4 @@ import ledger.ledgerManager.StructuredValue;
 import sybilResistantElection.SybilResistantElectionProof;
 
 public interface InnerNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
-        extends BlockmessChain<E,C,P>, ParentTreeNode<E,C,P> {}
+        extends BlockmessChain<E,P>, ParentTreeNode<E,C,P> {}

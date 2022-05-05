@@ -37,8 +37,8 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilResistantElectionProof>
-        implements BlockmessChain<E,C,P>, LedgerObserver<BlockmessBlock<C,P>> {
+public class LeafNode<E extends IndexableContent, P extends SybilResistantElectionProof>
+        implements BlockmessChain<E,P>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -46,16 +46,11 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
 
     private final UUID ChainId;
 
-    private final Ledger<BlockmessBlock<C,P>> ledger;
+    private final Ledger<BlockmessBlock<ContentList<StructuredValue<E>>,P>> ledger;
 
-    private final List<LedgerObserver<BlockmessBlock<C,P>>> observers = new LinkedList<>();
+    private final List<LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>>> observers = new LinkedList<>();
 
     private final ReadWriteLock observersLock = new ReentrantReadWriteLock();
-
-    private ParentTreeNode<E,C,P> parent;
-
-    private final ComposableContentStorage<E> contentStorage;
-
     /**
      * Contains a mapping between all the blocks' ids and themselves.
      * <p>Used because the inner ledger does not provide the finalized blocks, only their identifier.
@@ -63,13 +58,15 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
      * <p>Shouldn't need to be concurrent if the inner {@link Ledger} is a {@link ledger.blockchain.Blockchain},
      * however, in case the ledger implementation is changed, this will be kept as concurrent.</p>
      */
-    private final Map<UUID, BlockmessBlock<C,P>> blocks = new ConcurrentHashMap<>();
+    private final Map<UUID, BlockmessBlock<ContentList<StructuredValue<E>>,P>> blocks = new ConcurrentHashMap<>();
 
+    private final ComposableContentStorage<E> contentStorage;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
      */
-    private final Queue<BlockmessBlock<C,P>> finalizedBuffer = new ConcurrentLinkedQueue<>();
+    private final Queue<BlockmessBlock<ContentList<StructuredValue<E>>,P>> finalizedBuffer = new ConcurrentLinkedQueue<>();
+    private ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent;
 
     /** Ledger<BlockmessBlock<C,P>> ledger
      * Number of samples used to determine if the Chain should spawn new Chains or merge into its parent.
@@ -115,14 +112,14 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     private int depth;
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,C,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage)
             throws PrototypeHasNotBeenDefinedException {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode<E,C,P> parent,
+            Properties props, UUID ChainId, ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent,
             long minRank, long minNextRank, int depth, ComposableContentStorage<E> contentStorage, UUID prevBlock)
             throws PrototypeHasNotBeenDefinedException {
         this.props = props;
@@ -151,12 +148,12 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<C,P> block) {
+    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
         ledger.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<C, P>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,P>> observer) {
         try {
             observersLock.writeLock().lock();
             observers.add(observer);
@@ -186,7 +183,7 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     }
 
     @Override
-    public void replaceParent(ParentTreeNode<E,C,P> parent) {
+    public void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent) {
         this.parent = parent;
     }
 
@@ -199,7 +196,7 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
         contentStorage.halveChainThroughput();
         Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> spawnedChainDirectors =
                 contentStorage.separateContent(mask, lft, rgt);
-        TempChainNode<E,C,P> encapsulating =
+        TempChainNode<E,P> encapsulating =
                 new TempChainNode<>(props, this, parent, originator, depth, spawnedChainDirectors);
         parent.replaceChild(encapsulating);
         this.parent = encapsulating;
@@ -207,25 +204,8 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     }
 
     @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId)
-            throws PrototypeHasNotBeenDefinedException {
-        depth++;
-        contentStorage.halveChainThroughput();
-        ParentTreeNode<E,C,P> treeRoot = parent.getTreeRoot();
-        ReferenceNode<E,C,P> lft = new ReferenceNode<>(props, lftId, treeRoot,
-                0, 1, depth, new ComposableContentStorageImp<>(),
-                new UUID(0,0));
-        ReferenceNode<E,C,P> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
-                0, 1, depth, new ComposableContentStorageImp<>(),
-                new UUID(0,0));
-        lft.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
-        rgt.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
-        PermanentChainNode<E,C,P> encapsulating =
-                new PermanentChainNode<>(this.parent, this, lft, rgt);
-        parent.replaceChild(encapsulating);
-        this.parent = encapsulating;
-        resetSamples();
-        parent.createChains(List.of(lft, rgt));
+    public BlockmessBlock<ContentList<StructuredValue<E>>,P> peekFinalized() {
+        return finalizedBuffer.peek();
     }
 
     @Override
@@ -249,36 +229,40 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<C, P> block, int weight) {
-        blocks.put(block.getBlockId(), block);
-        logger.debug("Delivering non finalized block {} in Chain {}",
-                block.getBlockId(), ChainId);
-        deliverNonFinalizedBlockToObservers(block, weight);
+    public BlockmessBlock<ContentList<StructuredValue<E>>,P> deliverChainBlock() {
+        BlockmessBlock<ContentList<StructuredValue<E>>,P> block = finalizedBuffer.poll();
+        if (block != null) {
+            computeBlockSizeStatistics(block);
+            updateNextRank();
+        }
+        return block;
     }
 
-    private void deliverNonFinalizedBlockToObservers(BlockmessBlock<C, P> block, int weight) {
-        try {
-            observersLock.readLock().lock();
-            for (var observer : observers)
-                observer.deliverNonFinalizedBlock(block, weight);
-        } finally {
-            observersLock.readLock().unlock();
+    private void computeBlockSizeStatistics(BlockmessBlock<ContentList<StructuredValue<E>>, P> block) {
+        if (blocksBeforeResumingMetrics > 0)
+            blocksBeforeResumingMetrics--;
+        else {
+            int contentSize = getContentSerializedSize(block);
+            int proofSize = getProofSize(block);
+            int headerSize = getBlockSerializedSize(block) - contentSize;
+            int discountedMaxBlockSize = maxBlockSize - proofSize - headerSize;
+            overloadedBlocksSample.add(contentSize > discountedMaxBlockSize * overloadThreshold);
+            underloadedBlocksSample.add(contentSize < discountedMaxBlockSize * underloadedThreshold);
+            System.out.println(block.getContentList().getContentList().size() + " : " + (contentSize < discountedMaxBlockSize * underloadedThreshold));
+            if (overloadedBlocksSample.size() > blocksSampleSize)
+                overloadedBlocksSample.remove(0);
+            if (underloadedBlocksSample.size() > blocksSampleSize)
+                underloadedBlocksSample.remove(0);
         }
     }
 
-    @Override
-    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
-        if (finalized.isEmpty() && discarded.isEmpty()) return;
-        List<BlockmessBlock<C,P>> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
-        finalizedBuffer.addAll(finalizedBlocks);
-        updateNextRank();
-        contentStorage.deleteContent(getFinalizedContent(finalized));
-        finalized.forEach(blocks::remove);
-        logger.info("Delivering finalized blocks {} in Chain {}",
-                finalized, ChainId);
-        logger.debug("Observed {} blocks over the size threshold",
-                overloadedBlocksSample.stream().filter(b -> b).count());
-        deliverFinalizedBlocksToObservers(finalized, discarded);
+    private int getContentSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
+        try {
+            return block.getContentList().getSerializedSize();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new Error();
+        }
     }
 
     private Set<UUID> getFinalizedContent(List<UUID> finalized) {
@@ -304,55 +288,7 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
         return !finalizedBuffer.isEmpty();
     }
 
-    @Override
-    public BlockmessBlock<C,P> peekFinalized() {
-        return finalizedBuffer.peek();
-    }
-
-    @Override
-    public BlockmessBlock<C,P> deliverChainBlock() {
-        BlockmessBlock<C,P> block = finalizedBuffer.poll();
-        if (block != null) {
-            computeBlockSizeStatistics(block);
-            updateNextRank();
-        }
-        return block;
-    }
-
-    private void updateNextRank() {
-        BlockmessBlock<C,P> nextFinalized = finalizedBuffer.peek();
-        if (nextFinalized != null && nextFinalized.getNextRank() > minNextRank)
-            minNextRank = nextFinalized.getNextRank();
-    }
-
-    private void computeBlockSizeStatistics(BlockmessBlock<C, P> block) {
-        if (blocksBeforeResumingMetrics > 0)
-            blocksBeforeResumingMetrics--;
-        else {
-            int contentSize = getContentSerializedSize(block);
-            int proofSize = getProofSize(block);
-            int headerSize = getBlockSerializedSize(block) - contentSize;
-            int discountedMaxBlockSize = maxBlockSize - proofSize - headerSize;
-            overloadedBlocksSample.add(contentSize > discountedMaxBlockSize * overloadThreshold);
-            underloadedBlocksSample.add(contentSize < discountedMaxBlockSize * underloadedThreshold);
-            System.out.println(block.getContentList().getContentList().size() + " : " + (contentSize < discountedMaxBlockSize * underloadedThreshold));
-            if (overloadedBlocksSample.size() > blocksSampleSize)
-                overloadedBlocksSample.remove(0);
-            if (underloadedBlocksSample.size() > blocksSampleSize)
-                underloadedBlocksSample.remove(0);
-        }
-    }
-
-    private int getContentSerializedSize(BlockmessBlock<C,P> block) {
-        try {
-            return block.getContentList().getSerializedSize();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new Error();
-        }
-    }
-
-    private int getBlockSerializedSize(BlockmessBlock<C,P> block) {
+    private int getBlockSerializedSize(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
         try {
             return block.getSerializedSize();
         } catch (IOException e) {
@@ -361,12 +297,62 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
         return maxBlockSize / 2;
     }
 
-    private int getProofSize(BlockmessBlock<C,P> block) {
+    private int getProofSize(BlockmessBlock<ContentList<StructuredValue<E>>,P> block) {
         try {
             return block.getSybilElectionProof().getSerializedSize();
         } catch (IOException e) {
             e.printStackTrace();
             throw new Error();
+        }
+    }
+
+    @Override
+    public Set<BlockmessBlock<ContentList<StructuredValue<E>>, P>> getBlocks(Set<UUID> blockIds) {
+        return blockIds.stream().map(blocks::get).filter(Objects::nonNull).collect(toSet());
+    }
+
+    @Override
+    public Set<BlockmessChain<E,P>> getPriorityChains() {
+        return emptySet();
+    }
+
+    @Override
+    public void spawnPermanentChildren(UUID lftId, UUID rgtId)
+            throws PrototypeHasNotBeenDefinedException {
+        depth++;
+        contentStorage.halveChainThroughput();
+        ParentTreeNode<E,ContentList<StructuredValue<E>>,P> treeRoot = parent.getTreeRoot();
+        ReferenceNode<E,P> lft = new ReferenceNode<>(props, lftId, treeRoot,
+                0, 1, depth, new ComposableContentStorageImp<>(),
+                new UUID(0,0));
+        ReferenceNode<E,P> rgt = new ReferenceNode<>(props, rgtId, treeRoot,
+                0, 1, depth, new ComposableContentStorageImp<>(),
+                new UUID(0,0));
+        lft.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
+        rgt.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
+        PermanentChainNode<E,P> encapsulating =
+                new PermanentChainNode<>(this.parent, this, lft, rgt);
+        parent.replaceChild(encapsulating);
+        this.parent = encapsulating;
+        resetSamples();
+        parent.createChains(List.of(lft, rgt));
+    }
+
+    @Override
+    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<E>>, P> block, int weight) {
+        blocks.put(block.getBlockId(), block);
+        logger.debug("Delivering non finalized block {} in Chain {}",
+                block.getBlockId(), ChainId);
+        deliverNonFinalizedBlockToObservers(block, weight);
+    }
+
+    private void deliverNonFinalizedBlockToObservers(BlockmessBlock<ContentList<StructuredValue<E>>, P> block, int weight) {
+        try {
+            observersLock.readLock().lock();
+            for (var observer : observers)
+                observer.deliverNonFinalizedBlock(block, weight);
+        } finally {
+            observersLock.readLock().unlock();
         }
     }
 
@@ -415,8 +401,18 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     }
 
     @Override
-    public Set<BlockmessBlock<C, P>> getBlocks(Set<UUID> blockIds) {
-        return blockIds.stream().map(blocks::get).filter(Objects::nonNull).collect(toSet());
+    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+        if (finalized.isEmpty() && discarded.isEmpty()) return;
+        List<BlockmessBlock<ContentList<StructuredValue<E>>,P>> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
+        finalizedBuffer.addAll(finalizedBlocks);
+        updateNextRank();
+        contentStorage.deleteContent(getFinalizedContent(finalized));
+        finalized.forEach(blocks::remove);
+        logger.info("Delivering finalized blocks {} in Chain {}",
+                finalized, ChainId);
+        logger.debug("Observed {} blocks over the size threshold",
+                overloadedBlocksSample.stream().filter(b -> b).count());
+        deliverFinalizedBlocksToObservers(finalized, discarded);
     }
 
     @Override
@@ -436,9 +432,10 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
         return nextRank.orElse(minRank);
     }
 
-    @Override
-    public Set<BlockmessChain<E, C, P>> getPriorityChains() {
-        return emptySet();
+    private void updateNextRank() {
+        BlockmessBlock<ContentList<StructuredValue<E>>,P> nextFinalized = finalizedBuffer.peek();
+        if (nextFinalized != null && nextFinalized.getNextRank() > minNextRank)
+            minNextRank = nextFinalized.getNextRank();
     }
 
     @Override
@@ -495,7 +492,7 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
                 ).collect(toSet());
     }
 
-    private Stream<StructuredValue<E>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<C, P>> stream) {
+    private Stream<StructuredValue<E>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<ContentList<StructuredValue<E>>, P>> stream) {
         return stream
                 .map(BlockmessBlock::getContentList)
                 .map(ContentList::getContentList)
