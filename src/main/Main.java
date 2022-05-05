@@ -123,7 +123,7 @@ public class Main {
         var mempoolManager = MempoolManager.getSingleton();
         protocols.add(mempoolManager);
         setUpLedgerPrototype(props);
-        setUpContentStoragePrototype(props, mempoolManager);
+        setUpContentStoragePrototype();
         var ledgerManager = setUpLedgerManager(props, protocols);
         bootstrapContent(props, ledgerManager);
         setUpSybilElection(props, protocols, ledgerManager);
@@ -148,9 +148,8 @@ public class Main {
         return ledgerManager;
     }
 
-    private static void setUpContentStoragePrototype(Properties props, MempoolManager mempoolManager) throws PrototypeAlreadyDefinedException {
-        PrototypicalContentStorage<StructuredValue<SlimTransaction>> contentStorage =
-                new BaseContentStorage<>(props, mempoolManager);
+    private static void setUpContentStoragePrototype() throws PrototypeAlreadyDefinedException {
+        PrototypicalContentStorage<StructuredValue<SlimTransaction>> contentStorage = new BaseContentStorage();
         ContentStoragePrototype.setPrototype(contentStorage);
     }
 
