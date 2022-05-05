@@ -2,6 +2,7 @@ package sybilResistantElection;
 
 import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import utils.CryptographicUtils;
@@ -9,24 +10,24 @@ import utils.CryptographicUtils;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-public class ChainSeed<E extends IndexableContent, C extends ContentList<StructuredValue<E>>> {
+public class ChainSeed {
 
     private final UUID chainId;
 
     private final UUID prevBlock;
 
-    private final C currContent;
+    private final ContentList<StructuredValue<Transaction>> currContent;
 
-    private final byte[] ChainSeed;
+    private final byte[] chainSeed;
 
-    private final BlockmessChain<E,C, SybilResistantElectionProof> Chain;
+    private final BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> chain;
 
-    public ChainSeed(UUID chainId, UUID prevBlock, C currContent, BlockmessChain<E,C, SybilResistantElectionProof> Chain) {
+    public ChainSeed(UUID chainId, UUID prevBlock, ContentList<StructuredValue<Transaction>> currContent, BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> chain) {
         this.chainId = chainId;
         this.prevBlock = prevBlock;
         this.currContent = currContent;
-        this.Chain = Chain;
-        ChainSeed = computeChainSeed();
+        this.chain = chain;
+        chainSeed = computeChainSeed();
     }
 
     private byte[] computeChainSeed() {
@@ -52,16 +53,16 @@ public class ChainSeed<E extends IndexableContent, C extends ContentList<Structu
         return prevBlock;
     }
 
-    public C getCurrContent() {
+    public ContentList<StructuredValue<Transaction>> getCurrContent() {
         return currContent;
     }
 
     public byte[] getChainSeed() {
-        return ChainSeed;
+        return chainSeed;
     }
 
-    public BlockmessChain<E,C, SybilResistantElectionProof> getChain() {
-        return Chain;
+    public BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> getChain() {
+        return chain;
     }
 
 }
