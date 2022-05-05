@@ -90,13 +90,11 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
      * <p>Upon the conclusion of these steps, node B will repeat the process from step 1 to transmit the information to some other node C.</p>
      * <p>This execution occurs for every value proposed until there are no nodes unaware of the value proposed.</p>
      **/
-    public LazyPushBroadcast(Properties props, Host self,
-                             PeriodicPrunableHashMap<UUID, LazyValMessage> messageBuffer)
+    public LazyPushBroadcast(Properties props, Host self)
             throws HandlerRegistrationException, IOException {
         super(LazyPushBroadcast.class.getSimpleName(), ID);
         this.self = self;
-        //this.membership = membership;
-        this.messageBuffer = messageBuffer;
+        this.messageBuffer = new PeriodicPrunableHashMap<>();
         this.delayedValueTimer = parseLong(props.getProperty("delayedValueTimer",
                 String.valueOf(DELAYED_VALUE_TIMER)));
         channelId = createTCPChannel(props);

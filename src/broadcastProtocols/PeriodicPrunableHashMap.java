@@ -1,14 +1,16 @@
 package broadcastProtocols;
 
-import broadcastProtocols.lazyPush.timers.PruneTimer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import utils.IDGenerator;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -16,11 +18,11 @@ import java.util.stream.Collectors;
  * Items can be deleted if they have belonged to the dictionary for longer than the product of the instance's parameters,
  * in milliseconds.
  */
-public class PeriodicPrunableHashMap<K, V> extends GenericProtocol implements Map<K, V>{
+public class PeriodicPrunableHashMap<K,V> implements Map<K,V>{
 
     private static final Logger logger = LogManager.getLogger(PeriodicPrunableHashMap.class);
 
-    private static int instance = 0;
+    private static final ScheduledExecutorService pool = Executors.newScheduledThreadPool(1);;
 
     /**
      * Default period of time between pruning messages.
@@ -34,8 +36,6 @@ public class PeriodicPrunableHashMap<K, V> extends GenericProtocol implements Ma
 
     private static final short NUM_BUCKETS = 3;
 
-    private static final int DEFAULT_CAPACITY = 10;
-
     private final ConcurrentHashMap<K,V>[] buckets;
 
     private int currentBucket = 0;
@@ -43,41 +43,13 @@ public class PeriodicPrunableHashMap<K, V> extends GenericProtocol implements Ma
     /**
      * Creates a new map that deletes items in the given period.
      * The time <code>t</code> an item stays in the collection is between: period * (numBuckets - 1)  <= t <= period * numBuckets.
-     * @param period Period of time between pruning operations. The shorter the period, the more often will old content be removed.
      */
-    public PeriodicPrunableHashMap(long period) throws HandlerRegistrationException {
-        this(period, NUM_BUCKETS, DEFAULT_CAPACITY);
+    public PeriodicPrunableHashMap() {
+        buckets = new ConcurrentHashMap[NUM_BUCKETS];
+        for (int i = 0; i < NUM_BUCKETS; i++)
+            buckets[i] = new ConcurrentHashMap<>(PERIOD_BUFFER_CAPACITY);
+        pool.scheduleAtFixedRate(this::uponTimer, MESSAGE_PRUNE_PERIOD, MESSAGE_PRUNE_PERIOD, TimeUnit.MILLISECONDS);
     }
-
-    /**
-     * Creates a new map that deletes items in the given period.
-     * The time <code>t</code> an item stays in the collection is between: period * (numBuckets - 1)  <= t <= period * numBuckets.
-     * @param period Period of time between pruning operations. The shorter the period, the more often will old content be removed.
-     * @param capacity Initial capacity for each bucket in the data structure.
-     */
-    public PeriodicPrunableHashMap(long period, int capacity) throws HandlerRegistrationException {
-        this(period, NUM_BUCKETS, capacity);
-    }
-
-    /**
-     * Creates a new map that deletes items in the given period.
-     * The time <code>t</code> an item stays in the collection is between: period * (numBuckets - 1)  <= t <= period * numBuckets.
-     * @param period Period of time between pruning operations. The shorter the period, the more often will old content be removed.
-     * @param numBuckets Number of buckets in the data structure. The more buckets exist, the less items are deleted per pruning operation.
-     * @param capacity Initial capacity for each bucket in the data structure.
-     */
-    public PeriodicPrunableHashMap(long period, short numBuckets, int capacity) throws HandlerRegistrationException {
-        super(PeriodicPrunableHashMap.class.getSimpleName() + instance, IDGenerator.genId());
-        instance++;
-        buckets = new ConcurrentHashMap[numBuckets];
-        for (int i = 0; i < numBuckets; i++)
-            buckets[i] = new ConcurrentHashMap<>(capacity);
-        registerTimerHandler(PruneTimer.ID, (PruneTimer t, long tId) -> uponTimer());
-        setupPeriodicTimer(new PruneTimer(), period, period);
-    }
-
-    @Override
-    public void init(Properties properties) {}
 
     /**
      * Deletes the items in the oldest bucket and advances the index of the current bucket items are added

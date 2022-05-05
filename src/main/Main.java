@@ -1,10 +1,7 @@
 package main;
 
-import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
-import broadcastProtocols.eagerPush.EagerValMessage;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
-import broadcastProtocols.lazyPush.messages.LazyValMessage;
 import catecoin.blockConstructors.*;
 import catecoin.blocks.ContentList;
 import catecoin.mempoolManager.BootstrapModule;
@@ -51,8 +48,6 @@ import java.security.KeyPair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static broadcastProtocols.PeriodicPrunableHashMap.MESSAGE_PRUNE_PERIOD;
-import static broadcastProtocols.PeriodicPrunableHashMap.PERIOD_BUFFER_CAPACITY;
 import static java.lang.Integer.parseInt;
 
 public class Main {
@@ -224,15 +219,8 @@ public class Main {
                                                                HyparView peerSamplingProtocol)
             throws HandlerRegistrationException, IOException {
         List<GenericProtocol> protocols = new LinkedList<>();
-        PeriodicPrunableHashMap<UUID, LazyValMessage> lazyPrunableHashMap =
-                new PeriodicPrunableHashMap<>(MESSAGE_PRUNE_PERIOD, PERIOD_BUFFER_CAPACITY);
-        protocols.add(lazyPrunableHashMap);
-        PeriodicPrunableHashMap<UUID, EagerValMessage> eagerPrunableHashMap =
-                new PeriodicPrunableHashMap<>(MESSAGE_PRUNE_PERIOD, PERIOD_BUFFER_CAPACITY);
-        protocols.add(eagerPrunableHashMap);
-        protocols.add(new LazyPushBroadcast(props, myself, lazyPrunableHashMap));
-        protocols.add(new EagerPushBroadcast(peerSamplingProtocol,
-                eagerPrunableHashMap));
+        protocols.add(new LazyPushBroadcast(props, myself));
+        protocols.add(new EagerPushBroadcast(peerSamplingProtocol));
         return protocols;
     }
 

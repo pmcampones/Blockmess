@@ -45,12 +45,11 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
      */
     private final Map<UUID, EagerValMessage> mapBlockingIdToMid = new ConcurrentHashMap<>();
 
-    public EagerPushBroadcast(HyparView membership,
-                              PeriodicPrunableHashMap<UUID, EagerValMessage> messageBuffer)
+    public EagerPushBroadcast(HyparView membership)
             throws HandlerRegistrationException {
         super(EagerPushBroadcast.class.getSimpleName(), ID);
         this.membership = membership;
-        this.messageBuffer = messageBuffer;
+        this.messageBuffer = new PeriodicPrunableHashMap<>();;
         subscribeNotification(AnswerMessageValidationNotification.ID,
                 (AnswerMessageValidationNotification notif, short source) -> uponAnswerMessageValidationNotification(notif));
         registerRequestHandler(EagerBroadcastRequest.ID, this::uponBroadcastRequest);
