@@ -2,7 +2,7 @@ package sybilResistantElection;
 
 import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.BlockmessBlockImp;
 import ledger.ledgerManager.LedgerManager;
@@ -42,7 +42,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toList;
 import static sybilResistantElection.difficultyComputers.BaseDifficultyComputer.TIME_BETWEEN_QUERIES;
 
-public class SybilResistantElection<E extends IndexableContent>
+public class SybilResistantElection
         extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(SybilResistantElection.class);
@@ -53,10 +53,10 @@ public class SybilResistantElection<E extends IndexableContent>
 
     private final KeyPair self;
 
-    private final LedgerManager<E, ContentList<StructuredValue<E>>, SybilResistantElectionProof> blockmessRoot;
+    private final LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> blockmessRoot;
 
     private MerkleTree randomSeed;
-    private LinkedHashMap<UUID, ChainSeed<E,ContentList<StructuredValue<E>>>> chainSeeds = new LinkedHashMap<>();
+    private LinkedHashMap<UUID, ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>>> chainSeeds = new LinkedHashMap<>();
 
     private final MultiChainDifficultyComputer difficultyComputer;
 
@@ -64,7 +64,7 @@ public class SybilResistantElection<E extends IndexableContent>
 
     private int nonce = 0;
 
-    public SybilResistantElection(Properties props, KeyPair self, LedgerManager<E, ContentList<StructuredValue<E>>, SybilResistantElectionProof> blockmessRoot) throws HandlerRegistrationException {
+    public SybilResistantElection(Properties props, KeyPair self, LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> blockmessRoot) throws HandlerRegistrationException {
         super(SybilResistantElection.class.getSimpleName(), ID);
         this.self = self;
         this.blockmessRoot = blockmessRoot;
@@ -86,7 +86,7 @@ public class SybilResistantElection<E extends IndexableContent>
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification());
     }
@@ -122,10 +122,10 @@ public class SybilResistantElection<E extends IndexableContent>
     private void tryToProposeBlock(byte[] solution) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
         logger.info("Found valid solution with nonce {}, with {} leading zeros",
                 nonce, difficultyComputer.getSolutionLeadingZeros(solution));
-        ChainSeed<E,ContentList<StructuredValue<E>>> placementChain = multiplexChain(solution);
+        ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> placementChain = multiplexChain(solution);
         List<Pair<UUID, byte[]>> chainSeeds = computeChainSeedsList();
         SybilResistantElectionProof proof = new SybilResistantElectionProof(chainSeeds, nonce);
-        BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> block =
+        BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block =
                 new BlockmessBlockImp<>(1, List.of(placementChain.getPrevBlock()),
                         placementChain.getCurrContent(), proof, self, placementChain.getChainId(),
                         placementChain.getChain().getRankFromRefs(Set.of(placementChain.getPrevBlock())),
@@ -149,14 +149,14 @@ public class SybilResistantElection<E extends IndexableContent>
                 .collect(toList());
     }
 
-    private ChainSeed<E,ContentList<StructuredValue<E>>> multiplexChain(byte[] solution) {
+    private ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> multiplexChain(byte[] solution) {
         long lastInteger = Integer.toUnsignedLong(getLastInteger(solution));
         int numChains = chainSeeds.size();
         long maxUnsignedInteger = 1L << Integer.SIZE;
         long ChainInterval = maxUnsignedInteger / numChains;
         long accum = 0;
-        ChainSeed<E,ContentList<StructuredValue<E>>> currProof;
-        Iterator<ChainSeed<E,ContentList<StructuredValue<E>>>> it = chainSeeds.values().iterator();
+        ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> currProof;
+        Iterator<ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>>> it = chainSeeds.values().iterator();
         do {
             currProof = it.next();
             accum += ChainInterval;
@@ -173,7 +173,7 @@ public class SybilResistantElection<E extends IndexableContent>
     }
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> notif) {
+            DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif) {
         try {
             lock.lock();
             updateMetaContentList(notif);
@@ -182,21 +182,21 @@ public class SybilResistantElection<E extends IndexableContent>
         }
     }
 
-    private void updateMetaContentList(DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof>> notif) {
+    private void updateMetaContentList(DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif) {
         try {
             Thread.sleep(100);  //Enough time for the mempool manager to process the block.
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        List<BlockmessChain<E,ContentList<StructuredValue<E>>, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
+        List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
         if (wereChainsChanged(chains))
             reactToChangeInNumberOfChains(chains);
-        BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> updatedChain = notif.getNonFinalizedBlock();
+        BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> updatedChain = notif.getNonFinalizedBlock();
         replaceChainIfNecessary(updatedChain);
     }
 
     private void uponDeliverFinalizedBlockNotification() {
-        List<BlockmessChain<E,ContentList<StructuredValue<E>>, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
+        List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> chains = blockmessRoot.getAvailableChains();
         try {
             lock.lock();
             if (wereChainsChanged(chains))
@@ -206,7 +206,7 @@ public class SybilResistantElection<E extends IndexableContent>
         }
     }
 
-    private void reactToChangeInNumberOfChains(List<BlockmessChain<E, ContentList<StructuredValue<E>>, SybilResistantElectionProof>> chains) {
+    private void reactToChangeInNumberOfChains(List<BlockmessChain<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> chains) {
         difficultyComputer.setNumChains(chains.size());
         chainSeeds = replaceChainSeeds(chains);
         randomSeed = computeRandomSeed();
@@ -214,15 +214,15 @@ public class SybilResistantElection<E extends IndexableContent>
                 chainSeeds.size(), difficultyComputer.getNumLeadingZeros());
     }
 
-    private boolean wereChainsChanged(List<BlockmessChain<E,ContentList<StructuredValue<E>>, SybilResistantElectionProof>> updatedChains) {
+    private boolean wereChainsChanged(List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> updatedChains) {
         return !(updatedChains.size() == chainSeeds.size()
                 && updatedChains.stream()
                 .map(BlockmessChain::getChainId)
                 .allMatch(chainSeeds::containsKey));
     }
 
-    private LinkedHashMap<UUID, ChainSeed<E,ContentList<StructuredValue<E>>>> replaceChainSeeds(
-            List<BlockmessChain<E,ContentList<StructuredValue<E>>, SybilResistantElectionProof>> updatedChains) {
+    private LinkedHashMap<UUID, ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>>> replaceChainSeeds(
+            List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> updatedChains) {
         try {
             return tryToReplaceChainSeeds(updatedChains);
         } catch (IOException e) {
@@ -231,27 +231,27 @@ public class SybilResistantElection<E extends IndexableContent>
         return chainSeeds;
     }
 
-    private LinkedHashMap<UUID, ChainSeed<E,ContentList<StructuredValue<E>>>> tryToReplaceChainSeeds(
-            List<BlockmessChain<E,ContentList<StructuredValue<E>>, SybilResistantElectionProof>> updatedChains) throws IOException {
-        LinkedHashMap<UUID, ChainSeed<E,ContentList<StructuredValue<E>>>> replacement = new LinkedHashMap<>(updatedChains.size());
+    private LinkedHashMap<UUID, ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>>> tryToReplaceChainSeeds(
+            List<BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> updatedChains) throws IOException {
+        LinkedHashMap<UUID, ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>>> replacement = new LinkedHashMap<>(updatedChains.size());
         for (var chain : updatedChains) {
-            ChainSeed<E,ContentList<StructuredValue<E>>> oldSeed = chainSeeds.get(chain.getChainId());
-            ChainSeed<E,ContentList<StructuredValue<E>>> replacementSeed = oldSeed == null ?
+            ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> oldSeed = chainSeeds.get(chain.getChainId());
+            ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> replacementSeed = oldSeed == null ?
                     computeChainRandomSeed(chain) : oldSeed;
             replacement.put(replacementSeed.getChainId(), replacementSeed);
         }
         return replacement;
     }
 
-    private ChainSeed<E,ContentList<StructuredValue<E>>> computeChainRandomSeed(BlockmessChain<E,ContentList<StructuredValue<E>>, SybilResistantElectionProof> chain)
+    private ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> computeChainRandomSeed(BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> chain)
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
-        List<StructuredValue<E>> contentLst = chain.generateContentListList(prevBlocks, getAproximateProofSize());
-        ContentList<StructuredValue<E>> content = new ContentList<>(contentLst);
+        List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(prevBlocks, getAproximateProofSize());
+        ContentList<StructuredValue<Transaction>> content = new ContentList<>(contentLst);
         return new ChainSeed<>(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
     }
 
-    private void replaceChainIfNecessary(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> newBlock) {
+    private void replaceChainIfNecessary(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> newBlock) {
         try {
             tryToReplaceChainIfNecessary(newBlock);
         } catch (IOException e) {
@@ -259,9 +259,9 @@ public class SybilResistantElection<E extends IndexableContent>
         }
     }
 
-    private void tryToReplaceChainIfNecessary(BlockmessBlock<ContentList<StructuredValue<E>>, SybilResistantElectionProof> newBlock)
+    private void tryToReplaceChainIfNecessary(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> newBlock)
             throws IOException {
-        ChainSeed<E,ContentList<StructuredValue<E>>> oldSeed = chainSeeds.get(newBlock.getDestinationChain());
+        ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> oldSeed = chainSeeds.get(newBlock.getDestinationChain());
         if (oldSeed != null) {
             Set<UUID> newPrevs = oldSeed.getChain().getBlockR();
             if (!newPrevs.contains(oldSeed.getPrevBlock()))
@@ -269,12 +269,12 @@ public class SybilResistantElection<E extends IndexableContent>
         }
     }
 
-    private void replaceChain(ChainSeed<E, ContentList<StructuredValue<E>>> oldSeed, Set<UUID> newPrevs) throws IOException {
+    private void replaceChain(ChainSeed<Transaction, ContentList<StructuredValue<Transaction>>> oldSeed, Set<UUID> newPrevs) throws IOException {
         UUID newPrev = newPrevs.iterator().next();
-        BlockmessChain<E,ContentList<StructuredValue<E>>, SybilResistantElectionProof> chain = oldSeed.getChain();
-        List<StructuredValue<E>> contentLst = chain.generateContentListList(newPrevs, getAproximateProofSize());
-        ContentList<StructuredValue<E>> newContent = new ContentList<>(contentLst);
-        ChainSeed<E,ContentList<StructuredValue<E>>> newChainSeed =
+        BlockmessChain<Transaction,ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> chain = oldSeed.getChain();
+        List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(newPrevs, getAproximateProofSize());
+        ContentList<StructuredValue<Transaction>> newContent = new ContentList<>(contentLst);
+        ChainSeed<Transaction,ContentList<StructuredValue<Transaction>>> newChainSeed =
                 new ChainSeed<>(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
         chainSeeds.replace(oldSeed.getChainId(), newChainSeed);
         randomSeed.replaceLeaf(oldSeed.getChainSeed(), newChainSeed.getChainSeed());

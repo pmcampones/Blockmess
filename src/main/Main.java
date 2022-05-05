@@ -134,7 +134,7 @@ public class Main {
 
     private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager<Transaction, ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> ledgerManager) throws Exception {
         KeyPair myKeys = CryptographicUtils.getNodeKeys(props);
-        protocols.add(new SybilResistantElection<>(props, myKeys, ledgerManager));
+        protocols.add(new SybilResistantElection(props, myKeys, ledgerManager));
     }
 
     @NotNull
