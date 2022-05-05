@@ -30,7 +30,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
 public class TempChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
-        implements InnerNode<E,C,P>, LedgerObserver<BlockmessBlock<C,P>>, DebugBlockmessChain<E,C,P> {
+        implements InnerNode<E,C,P>, LedgerObserver<BlockmessBlock<C,P>>, BlockmessChain<E,C,P> {
 
     private final Properties props;
 
@@ -353,33 +353,18 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public Set<UUID> getFinalizedIds() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getFinalizedIds();
-    }
-
-    @Override
-    public Set<UUID> getNodesIds() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNodesIds();
-    }
-
-    @Override
     public Set<UUID> getForkBlocks(int depth) {
-        return ((DebugBlockmessChain<E,C,P>)inner).getForkBlocks(depth);
-    }
-
-    @Override
-    public int getNumSamples() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumSamples();
+        return inner.getForkBlocks(depth);
     }
 
     @Override
     public int getNumUnderloaded() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumUnderloaded();
+        return inner.getNumUnderloaded();
     }
 
     @Override
     public int getNumOverloaded() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumOverloaded();
+        return inner.getNumOverloaded();
     }
 
     @Override
@@ -388,47 +373,8 @@ public class TempChainNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public boolean isOverloaded() {
-        return ((DebugBlockmessChain<E,C,P>)inner).isOverloaded();
-    }
-
-    @Override
-    public int getMaxBlockSize() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getMaxBlockSize();
-    }
-
-    @Override
-    public boolean hasTemporaryChains() {
-        return true;
-    }
-
-    @Override
-    public int getNumChaining() {
-        return 1 + ((DebugBlockmessChain<E,C,P>)inner).getNumChaining();
-    }
-
-    @Override
-    public int getNumSpawnedChains() {
-        return tentativeChains.size() * 2 + ((DebugBlockmessChain<E,C,P>)inner).getNumSpawnedChains();
-    }
-
-    @Override
-    public List<DebugBlockmessChain<E, C, P>> getSpawnedChains() {
-        List<DebugBlockmessChain<E,C,P>> Chains = new ArrayList<>(getTempChains());
-        Chains.addAll(((DebugBlockmessChain<E,C,P>) inner).getSpawnedChains());
-        return Chains;
-    }
-
-    @Override
     public int getNumFinalizedPending() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumFinalizedPending();
-    }
-
-    private List<DebugBlockmessChain<E,C,P>> getTempChains() {
-        return tentativeChains.values().stream()
-                .map(p -> List.of(p.getLeft(), p.getRight()))
-                .flatMap(Collection::stream)
-                .collect(toList());
+        return inner.getNumFinalizedPending();
     }
 
     @Override

@@ -5,7 +5,7 @@ import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.mempoolManager.BootstrapModule;
 import catecoin.txs.IndexableContent;
 import catecoin.validators.BlockValidator;
-import ledger.DebugLedger;
+import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.PrototypicalLedger;
 import ledger.blocks.LedgerBlock;
@@ -22,7 +22,7 @@ import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.*;
 
 public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>, ? extends SybilElectionProof>>
-        implements PrototypicalLedger<B>, DebugLedger<B> {
+        implements PrototypicalLedger<B>, Ledger<B> {
 
     private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());
 
@@ -164,16 +164,6 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
     @Override
     public int getFinalizedWeight() {
         return finalizedWeight;
-    }
-
-    @Override
-    public Set<UUID> getFinalizedIds() {
-        return Set.copyOf(finalized.keySet());
-    }
-
-    @Override
-    public Set<UUID> getNodesIds() {
-        return Set.copyOf(blocks.keySet());
     }
 
     @Override

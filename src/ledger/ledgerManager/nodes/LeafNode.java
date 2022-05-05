@@ -3,7 +3,6 @@ package ledger.ledgerManager.nodes;
 import catecoin.blockConstructors.*;
 import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
-import ledger.DebugLedger;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -39,7 +38,7 @@ import static java.util.stream.Collectors.toSet;
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
 public class LeafNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
-        implements DebugBlockmessChain<E,C,P>, LedgerObserver<BlockmessBlock<C,P>> {
+        implements BlockmessChain<E,C,P>, LedgerObserver<BlockmessBlock<C,P>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -376,34 +375,8 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
         return isOverloaded();
     }
 
-    @Override
-    public boolean isOverloaded() {
+    private boolean isOverloaded() {
         return getNumOverloaded() > blocksSampleSize / 2;
-    }
-
-    @Override
-    public int getMaxBlockSize() {
-        return maxBlockSize;
-    }
-
-    @Override
-    public boolean hasTemporaryChains() {
-        return false;
-    }
-
-    @Override
-    public int getNumChaining() {
-        return 0;
-    }
-
-    @Override
-    public int getNumSpawnedChains() {
-        return 0;
-    }
-
-    @Override
-    public List<DebugBlockmessChain<E, C, P>> getSpawnedChains() {
-        return Collections.emptyList();
     }
 
     @Override
@@ -422,18 +395,8 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     }
 
     @Override
-    public Set<UUID> getFinalizedIds() {
-        return ((DebugLedger<BlockmessBlock<C,P>>)ledger).getFinalizedIds();
-    }
-
-    @Override
-    public Set<UUID> getNodesIds() {
-        return ((DebugLedger<BlockmessBlock<C,P>>)ledger).getNodesIds();
-    }
-
-    @Override
     public Set<UUID> getForkBlocks(int depth) {
-        return ((DebugLedger<BlockmessBlock<C,P>>)ledger).getForkBlocks(depth);
+        return ledger.getForkBlocks(depth);
     }
 
     @Override
@@ -486,11 +449,6 @@ public class LeafNode<E extends IndexableContent, C extends ContentList<Structur
     @Override
     public long getNextRank() {
         return minNextRank;
-    }
-
-    @Override
-    public int getNumSamples() {
-        return blocksSampleSize;
     }
 
     @Override

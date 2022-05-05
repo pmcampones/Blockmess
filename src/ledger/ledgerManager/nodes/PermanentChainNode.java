@@ -14,7 +14,10 @@ import org.apache.commons.lang3.tuple.Pair;
 import sybilResistantElection.SybilElectionProof;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.apache.commons.collections4.SetUtils.union;
 
@@ -26,7 +29,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * the later were the referenced Chains spawned.</p>
  */
 public class PermanentChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
-        implements InnerNode<E,C,P>, DebugBlockmessChain<E,C,P>{
+        implements InnerNode<E,C,P>, BlockmessChain<E,C,P>{
 
     private ParentTreeNode<E,C,P> parent;
 
@@ -229,33 +232,18 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public Set<UUID> getFinalizedIds() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getFinalizedIds();
-    }
-
-    @Override
-    public Set<UUID> getNodesIds() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNodesIds();
-    }
-
-    @Override
     public Set<UUID> getForkBlocks(int depth) {
-        return ((DebugBlockmessChain<E,C,P>)inner).getForkBlocks(depth);
-    }
-
-    @Override
-    public int getNumSamples() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumSamples();
+        return inner.getForkBlocks(depth);
     }
 
     @Override
     public int getNumUnderloaded() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumUnderloaded();
+        return inner.getNumUnderloaded();
     }
 
     @Override
     public int getNumOverloaded() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumOverloaded();
+        return inner.getNumOverloaded();
     }
 
     @Override
@@ -264,40 +252,8 @@ public class PermanentChainNode<E extends IndexableContent, C extends ContentLis
     }
 
     @Override
-    public boolean isOverloaded() {
-        return ((DebugBlockmessChain<E,C,P>)inner).isOverloaded();
-    }
-
-    @Override
-    public int getMaxBlockSize() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getMaxBlockSize();
-    }
-
-    @Override
-    public boolean hasTemporaryChains() {
-        return ((DebugBlockmessChain<E,C,P>)inner).hasTemporaryChains();
-    }
-
-    @Override
-    public int getNumChaining() {
-        return 1 + ((DebugBlockmessChain<E,C,P>)inner).getNumChaining();
-    }
-
-    @Override
-    public int getNumSpawnedChains() {
-        return 2 + ((DebugBlockmessChain<E,C,P>)inner).getNumSpawnedChains();
-    }
-
-    @Override
-    public List<DebugBlockmessChain<E, C, P>> getSpawnedChains() {
-        List<DebugBlockmessChain<E,C,P>> spawnedChains = new ArrayList<>(List.of(lft, rgt));
-        spawnedChains.addAll(((DebugBlockmessChain<E,C,P>)inner).getSpawnedChains());
-        return spawnedChains;
-    }
-
-    @Override
     public int getNumFinalizedPending() {
-        return ((DebugBlockmessChain<E,C,P>)inner).getNumFinalizedPending();
+        return inner.getNumFinalizedPending();
     }
 
     @Override

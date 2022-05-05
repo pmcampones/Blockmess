@@ -24,7 +24,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
 public class ReferenceNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
-        implements InnerNode<E,C,P>, DebugBlockmessChain<E,C,P> {
+        implements InnerNode<E,C,P>, BlockmessChain<E,C,P> {
 
     /**
      * Uses the State design pattern to modify its behaviour
@@ -226,11 +226,6 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public int getNumSamples() {
-        return leaf.getNumSamples();
-    }
-
-    @Override
     public int getNumUnderloaded() {
         return leaf.getNumUnderloaded();
     }
@@ -246,48 +241,8 @@ public class ReferenceNode<E extends IndexableContent, C extends ContentList<Str
     }
 
     @Override
-    public boolean isOverloaded() {
-        return leaf.isOverloaded();
-    }
-
-    @Override
-    public int getMaxBlockSize() {
-        return leaf.getMaxBlockSize();
-    }
-
-    @Override
-    public boolean hasTemporaryChains() {
-        return ((DebugBlockmessChain<E,C,P>)nodeState).hasTemporaryChains();
-    }
-
-    @Override
-    public int getNumChaining() {
-        return ((DebugBlockmessChain<E,C,P>)nodeState).getNumChaining();
-    }
-
-    @Override
-    public int getNumSpawnedChains() {
-        return ((DebugBlockmessChain<E,C,P>)nodeState).getNumSpawnedChains();
-    }
-
-    @Override
-    public List<DebugBlockmessChain<E, C, P>> getSpawnedChains() {
-        return ((DebugBlockmessChain<E,C,P>) nodeState).getSpawnedChains();
-    }
-
-    @Override
     public int getNumFinalizedPending() {
-        return ((DebugBlockmessChain<E,C,P>)leaf).getNumFinalizedPending();
-    }
-
-    @Override
-    public Set<UUID> getFinalizedIds() {
-        return leaf.getFinalizedIds();
-    }
-
-    @Override
-    public Set<UUID> getNodesIds() {
-        return leaf.getNodesIds();
+        return leaf.getNumFinalizedPending();
     }
 
     @Override
