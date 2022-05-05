@@ -1,7 +1,9 @@
 package ledger.blocks;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
+import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
+import catecoin.txs.IndexableContent;
 import io.netty.buffer.ByteBuf;
 import main.ProtoPojo;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -13,7 +15,7 @@ import java.security.*;
 import java.util.List;
 import java.util.UUID;
 
-public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P extends SybilElectionProof>
+public class BlockmessBlockImp<C extends ContentList<? extends IndexableContent>, P extends SybilElectionProof>
         implements BlockmessBlock<C,P> {
 
     public static final short ID = 11037;
@@ -26,16 +28,6 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
 
     private final long nextRank;
 
-    public BlockmessBlockImp(int inherentWeight, List<UUID> prevRefs, C blockContent,
-                             P proof, KeyPair proposer, UUID destinationChain, long currentRank, long nextRank)
-            throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
-        UUID blockId = computeBlockId(inherentWeight, prevRefs, blockContent, proof, destinationChain);
-        this.ledgerBlock = new LedgerBlockImp<>(blockId,inherentWeight, prevRefs, blockContent, proof, proposer, ID);
-        this.destinationChain = destinationChain;
-        this.currentRank = currentRank;
-        this.nextRank = nextRank;
-    }
-
     public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
 
         @Override
@@ -43,7 +35,7 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
             BlockmessBlockImp block = (BlockmessBlockImp) protoPojo;
             out.writeInt(block.getInherentWeight());
             ProtoPojo.serializeUuids(block.getPrevRefs(), out);
-            serializePojo(block.getBlockContent(), out);
+            serializePojo(block.getContentList(), out);
             serializePojo(block.getSybilElectionProof(), out);
             serializeValidatorSignatures(block.getSignatures(), out);
             serializeDestinationChain(block.destinationChain, out);
@@ -84,13 +76,13 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
         public ProtoPojo deserialize(ByteBuf in) throws IOException {
             int inherentWeight = in.readInt();
             List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
-            BlockContent blockContent = (BlockContent) deserializePojo(in);
+            ContentList contentList = (ContentList) deserializePojo(in);
             SybilElectionProof proof = (SybilElectionProof) deserializePojo(in);
             List<ValidatorSignature> validatorSignatures = LedgerBlockImp.deserializeValidatorSignatures(in);
             UUID destinationChain = deserializeDestinationChain(in);
             long currentRank = in.readLong();
             long nextRank = in.readLong();
-            return new BlockmessBlockImp(inherentWeight, prevRefs, blockContent,
+            return new BlockmessBlockImp(inherentWeight, prevRefs, contentList,
                     proof, validatorSignatures, destinationChain, currentRank, nextRank);
         }
 
@@ -106,20 +98,30 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
 
     };
 
-    private UUID computeBlockId(int inherentWeight, List<UUID> prevRefs, C blockContent,
+    public BlockmessBlockImp(int inherentWeight, List<UUID> prevRefs, C contentList,
+                             P proof, KeyPair proposer, UUID destinationChain, long currentRank, long nextRank)
+            throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
+        UUID blockId = computeBlockId(inherentWeight, prevRefs, contentList, proof, destinationChain);
+        this.ledgerBlock = new LedgerBlockImp<>(blockId,inherentWeight, prevRefs, contentList, proof, proposer, ID);
+        this.destinationChain = destinationChain;
+        this.currentRank = currentRank;
+        this.nextRank = nextRank;
+    }
+
+    private UUID computeBlockId(int inherentWeight, List<UUID> prevRefs, C ContentList,
                                 P proof, UUID destinationChain) throws IOException {
-        byte[] blockBytes = computeBlockBytes(inherentWeight, prevRefs, blockContent, proof, destinationChain);
+        byte[] blockBytes = computeBlockBytes(inherentWeight, prevRefs, ContentList, proof, destinationChain);
         return CryptographicUtils.generateUUIDFromBytes(blockBytes);
     }
 
-    private byte[] computeBlockBytes(int inherentWeight, List<UUID> prevRefs, C blockContent,
+    private byte[] computeBlockBytes(int inherentWeight, List<UUID> prevRefs, C ContentList,
                                      P proof, UUID destinationChain) throws IOException {
         int bufferSize = Integer.BYTES
                 + prevRefs.size() * 2 * Long.BYTES
-                + blockContent.getSerializedSize()
+                + ContentList.getSerializedSize()
                 + proof.getSerializedSize()
                 + 2 * Long.BYTES;
-        ByteBuf in = LedgerBlockImp.getLedgerBlockByteBuf(bufferSize, inherentWeight, prevRefs, blockContent, proof);
+        ByteBuf in = LedgerBlockImp.getLedgerBlockByteBuf(bufferSize, inherentWeight, prevRefs, ContentList, proof);
         in.writeLong(destinationChain.getMostSignificantBits());
         in.writeLong(destinationChain.getLeastSignificantBits());
         return in.array();
@@ -156,9 +158,16 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
         return ledgerBlock.getPrevRefs();
     }
 
-    @Override
-    public C getBlockContent() {
-        return ledgerBlock.getBlockContent();
+    private BlockmessBlockImp(int inherentWeight, List<UUID> prevRefs, C ContentList,
+                              P proof, List<ValidatorSignature> validatorSignatures, UUID destinationChain,
+                              long currentRank, long nextRank)
+            throws IOException {
+        UUID blockId = computeBlockId(inherentWeight, prevRefs, ContentList, proof, destinationChain);
+        this.ledgerBlock =
+                new LedgerBlockImp<>(blockId, inherentWeight, prevRefs, ContentList, proof, validatorSignatures, ID);
+        this.destinationChain = destinationChain;
+        this.currentRank = currentRank;
+        this.nextRank = nextRank;
     }
 
     @Override
@@ -166,16 +175,9 @@ public class BlockmessBlockImp<C extends BlockContent<? extends ProtoPojo>, P ex
         return ledgerBlock.getSybilElectionProof();
     }
 
-    private BlockmessBlockImp(int inherentWeight, List<UUID> prevRefs, C blockContent,
-                              P proof, List<ValidatorSignature> validatorSignatures, UUID destinationChain,
-                              long currentRank, long nextRank)
-            throws IOException {
-        UUID blockId = computeBlockId(inherentWeight, prevRefs, blockContent, proof, destinationChain);
-        this.ledgerBlock =
-                new LedgerBlockImp<>(blockId, inherentWeight, prevRefs, blockContent, proof, validatorSignatures, ID);
-        this.destinationChain = destinationChain;
-        this.currentRank = currentRank;
-        this.nextRank = nextRank;
+    @Override
+    public C getContentList() {
+        return ledgerBlock.getContentList();
     }
 
     @Override

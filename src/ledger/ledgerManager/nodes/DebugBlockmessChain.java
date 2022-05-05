@@ -1,15 +1,15 @@
 package ledger.ledgerManager.nodes;
 
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.DebugLedger;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import sybilResistantElection.SybilElectionProof;
 
 import java.util.List;
 
-public interface DebugBlockmessChain<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
+public interface DebugBlockmessChain<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         extends BlockmessChain<E,C,P>, DebugLedger<BlockmessBlock<C,P>> {
 
     int getNumSamples();

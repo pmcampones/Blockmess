@@ -1,9 +1,9 @@
 package ledger.ledgerManager.nodes;
 
 import catecoin.blockConstructors.ComposableContentStorage;
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.Ledger;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BlockmessChain<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
+public interface BlockmessChain<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         extends Ledger<BlockmessBlock<C,P>>, ComposableContentStorage<E> {
 
     UUID getChainId();

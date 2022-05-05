@@ -68,10 +68,10 @@ public abstract class AbstractContentStorage<E extends IndexableContent>
     }
 
     @Override
-    public abstract List<E> generateBlockContentList(Collection<UUID> states, int usedSpace) throws IOException;
+    public abstract List<E> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException;
 
     @Override
-    public abstract List<E> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException;
+    public abstract List<E> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException;
 
     protected List<E> getContentList(int usedSpace, Set<UUID> used) throws IOException {
         return this.useRandomTransactionAllocation

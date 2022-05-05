@@ -2,12 +2,12 @@ package ledger.ledgerManager;
 
 import catecoin.blockConstructors.ComposableContentStorageImp;
 import catecoin.blockConstructors.ContentStorage;
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.DebugLedger;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.ledgerManager.nodes.BlockmessChain;
@@ -32,7 +32,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class LedgerManager<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
+public class LedgerManager<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         implements ParentTreeNode<E,C,P>,
         DebugLedger<BlockmessBlock<C,P>>, LedgerObserver<BlockmessBlock<C,P>>, ContentStorage<StructuredValue<E>> {
 
@@ -379,15 +379,15 @@ public class LedgerManager<E extends IndexableContent, C extends BlockContent<St
     }
 
     @Override
-    public List<StructuredValue<E>> generateBlockContentList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return getOrigin().generateBlockContentList(states, usedSpace);
+        return getOrigin().generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
-        return getOrigin().generateBoundBlockContentList(states, usedSpace, maxTxs);
+        return getOrigin().generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override

@@ -1,10 +1,10 @@
 package catecoin.mempoolManager;
 
+import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.blocks.chunks.MinimalistMempoolChunk;
 import catecoin.txs.SlimTransaction;
 import catecoin.utxos.StorageUTXO;
-import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import sybilResistantElection.SybilElectionProof;
 
@@ -18,18 +18,18 @@ import static java.util.stream.Collectors.toUnmodifiableSet;
 public class MinimalistChunkCreator<P extends SybilElectionProof> implements MempoolChunkCreator<SlimTransaction,P> {
 
     @Override
-    public MempoolChunk createChunk(LedgerBlock<BlockContent<SlimTransaction>, P> block,
+    public MempoolChunk createChunk(LedgerBlock<ContentList<SlimTransaction>, P> block,
                                     int cumulativeWeight) {
-        BlockContent<SlimTransaction> blockContent = block.getBlockContent();
-        Set<StorageUTXO> addedUtxos = extractAddedUtxos(blockContent);
-        Set<UUID> usedUtxos = extractRemovedUtxos(blockContent);
-        Set<UUID> usedTxs = extractUsedTxs(blockContent);
+        ContentList<SlimTransaction> ContentList = block.getContentList();
+        Set<StorageUTXO> addedUtxos = extractAddedUtxos(ContentList);
+        Set<UUID> usedUtxos = extractRemovedUtxos(ContentList);
+        Set<UUID> usedTxs = extractUsedTxs(ContentList);
         return new MinimalistMempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()),
                 unmodifiableSet(addedUtxos), usedUtxos, usedTxs, cumulativeWeight);
     }
 
-    private Set<StorageUTXO> extractAddedUtxos(BlockContent<SlimTransaction> blockContent) {
-        return blockContent.getContentList().parallelStream().flatMap(tx -> Stream.concat(
+    private Set<StorageUTXO> extractAddedUtxos(ContentList<SlimTransaction> ContentList) {
+        return ContentList.getContentList().parallelStream().flatMap(tx -> Stream.concat(
                 tx.getOutputsDestination().stream()
                         .map(u -> new StorageUTXO(u.getId(), u.getAmount(), tx.getDestination())),
                 tx.getOutputsOrigin().stream()
@@ -38,15 +38,15 @@ public class MinimalistChunkCreator<P extends SybilElectionProof> implements Mem
         ).collect(toUnmodifiableSet());
     }
 
-    private Set<UUID> extractRemovedUtxos(BlockContent<SlimTransaction> blockContent) {
-        return blockContent.getContentList()
+    private Set<UUID> extractRemovedUtxos(ContentList<SlimTransaction> ContentList) {
+        return ContentList.getContentList()
                 .stream()
                 .flatMap(tx -> tx.getInputs().stream())
                 .collect(toUnmodifiableSet());
     }
 
-    private Set<UUID> extractUsedTxs(BlockContent<SlimTransaction> blockContent) {
-        return blockContent.getContentList()
+    private Set<UUID> extractUsedTxs(ContentList<SlimTransaction> ContentList) {
+        return ContentList.getContentList()
                 .stream()
                 .map(SlimTransaction::getId)
                 .collect(toUnmodifiableSet());

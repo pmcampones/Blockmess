@@ -10,9 +10,9 @@ import java.util.UUID;
 
 public interface ContentStorage<E extends IndexableContent> {
 
-    List<E> generateBlockContentList(Collection<UUID> states, int usedSpace) throws IOException;
+    List<E> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException;
 
-    List<E> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException;
+    List<E> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException;
 
     void submitContent(Collection<E> content);
 

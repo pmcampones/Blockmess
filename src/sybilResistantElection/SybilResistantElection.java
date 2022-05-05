@@ -1,9 +1,8 @@
 package sybilResistantElection;
 
-import catecoin.blocks.SimpleBlockContentList;
+import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.txs.IndexableContent;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.BlockmessBlockImp;
 import ledger.ledgerManager.LedgerManager;
@@ -43,7 +42,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toList;
 import static sybilResistantElection.difficultyComputers.BaseDifficultyComputer.TIME_BETWEEN_QUERIES;
 
-public class SybilResistantElection<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>>
+public class SybilResistantElection<E extends IndexableContent, C extends ContentList<StructuredValue<E>>>
         extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(SybilResistantElection.class);
@@ -178,13 +177,13 @@ public class SybilResistantElection<E extends IndexableContent, C extends BlockC
             DeliverNonFinalizedBlockNotification<BlockmessBlock<C, SybilResistantElectionProof>> notif) {
         try {
             lock.lock();
-            updateMetablockContent(notif);
+            updateMetaContentList(notif);
         } finally {
             lock.unlock();
         }
     }
 
-    private void updateMetablockContent(DeliverNonFinalizedBlockNotification<BlockmessBlock<C, SybilResistantElectionProof>> notif) {
+    private void updateMetaContentList(DeliverNonFinalizedBlockNotification<BlockmessBlock<C, SybilResistantElectionProof>> notif) {
         try {
             Thread.sleep(100);  //Enough time for the mempool manager to process the block.
         } catch (InterruptedException e) {
@@ -248,8 +247,8 @@ public class SybilResistantElection<E extends IndexableContent, C extends BlockC
     private ChainSeed<E,C> computeChainRandomSeed(BlockmessChain<E,C, SybilResistantElectionProof> chain)
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
-        List<StructuredValue<E>> contentLst = chain.generateBlockContentList(prevBlocks, getAproximateProofSize());
-        C content = (C) new SimpleBlockContentList<>(contentLst);
+        List<StructuredValue<E>> contentLst = chain.generateContentListList(prevBlocks, getAproximateProofSize());
+        C content = (C) new ContentList<>(contentLst);
         return new ChainSeed<>(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
     }
 
@@ -274,8 +273,8 @@ public class SybilResistantElection<E extends IndexableContent, C extends BlockC
     private void replaceChain(ChainSeed<E, C> oldSeed, Set<UUID> newPrevs) throws IOException {
         UUID newPrev = newPrevs.iterator().next();
         BlockmessChain<E,C, SybilResistantElectionProof> chain = oldSeed.getChain();
-        List<StructuredValue<E>> contentLst = chain.generateBlockContentList(newPrevs, getAproximateProofSize());
-        C newContent = (C) new SimpleBlockContentList<>(contentLst);
+        List<StructuredValue<E>> contentLst = chain.generateContentListList(newPrevs, getAproximateProofSize());
+        C newContent = (C) new ContentList<>(contentLst);
         ChainSeed<E,C> newChainSeed =
                 new ChainSeed<>(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
         chainSeeds.replace(oldSeed.getChainId(), newChainSeed);

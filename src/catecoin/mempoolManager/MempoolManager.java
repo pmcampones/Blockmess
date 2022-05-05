@@ -1,12 +1,11 @@
 package catecoin.mempoolManager;
 
-import catecoin.blocks.SimpleBlockContentList;
+import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.notifications.DeliverFinalizedBlocksContentNotification;
 import catecoin.txs.IndexableContent;
 import catecoin.utxos.StorageUTXO;
-import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.ProtoPojo;
@@ -63,10 +62,10 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
         loadInitialUtxos(props);
         bootstrapDL(props);
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<E>, P>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
-        ProtoPojo.pojoSerializers.put(SimpleBlockContentList.ID, SimpleBlockContentList.serializer);
+        ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
     }
 
     private void loadInitialUtxos(Properties props) throws Exception {
@@ -93,8 +92,8 @@ public class MempoolManager<E extends IndexableContent, P extends SybilElectionP
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<BlockContent<E>, P>> notif) {
-        LedgerBlock<BlockContent<E>, P> block = notif.getNonFinalizedBlock();
+            DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<E>, P>> notif) {
+        LedgerBlock<ContentList<E>, P> block = notif.getNonFinalizedBlock();
         logger.debug("Received non finalized block with id {}", block.getBlockId());
         MempoolChunk chunk = mempoolChunkCreator.createChunk(block, notif.getCumulativeWeight());
         mempool.put(chunk.getId(), chunk);

@@ -1,17 +1,18 @@
 package catecoin.validators;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
+import catecoin.blocks.ContentList;
 import catecoin.notifications.AnswerMessageValidationNotification;
 import catecoin.txs.SlimTransaction;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
-import utils.CryptographicUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
+import sybilResistantElection.ChainSeed;
 import sybilResistantElection.SybilResistantElectionProof;
 import sybilResistantElection.difficultyComputers.MultiChainDifficultyComputerImp;
+import utils.CryptographicUtils;
 import utils.IDGenerator;
 import utils.merkleTree.MerkleRoot;
 import utils.merkleTree.MerkleTree;
@@ -24,7 +25,7 @@ import java.util.Properties;
 import java.util.UUID;
 
 public class BlockmessGPoETValidator extends GenericProtocol
-        implements BlockValidator<BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> {
+        implements BlockValidator<BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> {
 
     public static final short ID = IDGenerator.genId();
 
@@ -39,14 +40,14 @@ public class BlockmessGPoETValidator extends GenericProtocol
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     @Override
-    public boolean isBlockValid(BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+    public boolean isBlockValid(BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
         boolean isValid = isProofValid(block)
-                && block.getBlockContent().hasValidSemantics();
+                && block.getContentList().hasValidSemantics();
         notifyBlockValidity(block);
         return isValid;
     }
 
-    private void notifyBlockValidity(BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+    private void notifyBlockValidity(BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
         try {
             triggerNotification(new AnswerMessageValidationNotification(block.getBlockingID()));
         } catch (InnerValueIsNotBlockingBroadcast e) {
@@ -54,7 +55,7 @@ public class BlockmessGPoETValidator extends GenericProtocol
         }
     }
 
-    public boolean isProofValid(BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+    public boolean isProofValid(BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
         SybilResistantElectionProof proof = block.getSybilElectionProof();
         UUID destinationChain = block.getDestinationChain();
         if (proof.getChainSeeds().stream().map(Pair::getLeft).noneMatch(id -> id.equals(destinationChain)))
@@ -66,16 +67,16 @@ public class BlockmessGPoETValidator extends GenericProtocol
     }
 
     private MerkleTree computeRandomSeed(
-            BlockmessBlock<BlockContent<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
+            BlockmessBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof> block) {
         List<byte[]> randomSeedElems = new LinkedList<>();
         randomSeedElems.add(block.getProposer().getEncoded());
         UUID destinationChain = block.getDestinationChain();
         for (var pair : block.getSybilElectionProof().getChainSeeds()) {
-            byte[] ChainSeed = pair.getLeft().equals(destinationChain) ?
-                    sybilResistantElection.ChainSeed.computeChainSeed(block.getDestinationChain(),
-                            block.getBlockContent(), block.getPrevRefs().get(0)) :
+            byte[] chainSeed = pair.getLeft().equals(destinationChain) ?
+                    ChainSeed.computeChainSeed(block.getDestinationChain(),
+                            block.getContentList(), block.getPrevRefs().get(0)) :
                     pair.getRight();
-            randomSeedElems.add(ChainSeed);
+            randomSeedElems.add(chainSeed);
         }
         return new MerkleRoot(randomSeedElems);
     }

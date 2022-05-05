@@ -21,13 +21,13 @@ public class ContextAwareContentStorage<E extends IndexableContent, P extends Sy
     }
 
     @Override
-    public List<E> generateBlockContentList(Collection<UUID> states, int usedSpace) throws IOException {
+    public List<E> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException {
         Set<UUID> used = findUsedTransactions(states);
         return getContentList(usedSpace, used);
     }
 
     @Override
-    public List<E> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException {
+    public List<E> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException {
         Set<UUID> used = findUsedTransactions(states);
         return getContentWithinBounds(usedSpace, used, maxTxs);
     }

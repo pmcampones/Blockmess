@@ -1,12 +1,12 @@
 package catecoin.validators;
 
+import catecoin.blocks.ContentList;
 import catecoin.exceptions.InputNotFoundException;
 import catecoin.mempoolManager.MempoolManager;
 import catecoin.mempoolManager.UTXOCollection;
 import catecoin.txs.SlimTransaction;
 import catecoin.utxos.SlimUTXO;
 import catecoin.utxos.StorageUTXO;
-import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -33,13 +33,7 @@ public class ContextObliviousValidator<P extends SybilElectionProof> extends Sta
 
     public final MempoolManager<?,P> mempoolManager;
 
-    public ContextObliviousValidator(Properties props, MempoolManager<?,P> mempoolManager, SybilProofValidator<P> proofValidator)
-            throws HandlerRegistrationException {
-        this(props, mempoolManager, proofValidator, ID);
-    }
-
-    protected ContextObliviousValidator(Properties props, MempoolManager<?,P> mempoolManager, SybilProofValidator<P> proofValidator, short id)
-            throws HandlerRegistrationException {
+    protected ContextObliviousValidator(Properties props, MempoolManager<?,P> mempoolManager, SybilProofValidator<P> proofValidator, short id) {
         super(props, ContextObliviousValidator.class.getSimpleName(), id, proofValidator);
         this.mempoolManager = mempoolManager;
     }
@@ -62,12 +56,12 @@ public class ContextObliviousValidator<P extends SybilElectionProof> extends Sta
      *
      *  The validation of whether the blocks reference correct previous blocks is responsibility of the Ledger component.
      **/
-    public boolean receivedValid(LedgerBlock<BlockContent<SlimTransaction>, P> block) {
+    public boolean receivedValid(LedgerBlock<ContentList<SlimTransaction>, P> block) {
         return super.receivedValid(block)
                 && areBlockInputsValid(block);
     }
 
-    boolean areBlockInputsValid(LedgerBlock<BlockContent<SlimTransaction>, P> block) {
+    boolean areBlockInputsValid(LedgerBlock<ContentList<SlimTransaction>, P> block) {
         try {
             mempoolManager.getMempoolReadLock().lock();
             return tryToCheckAreBlockInputsValid(block);
@@ -76,13 +70,13 @@ public class ContextObliviousValidator<P extends SybilElectionProof> extends Sta
         }
     }
 
-    private boolean tryToCheckAreBlockInputsValid(LedgerBlock<BlockContent<SlimTransaction>, P> block) {
+    private boolean tryToCheckAreBlockInputsValid(LedgerBlock<ContentList<SlimTransaction>, P> block) {
         List<UUID> prevStates = block.getPrevRefs();
         Set<UUID> invalidInMempool = aggregateInvalidMempoolUTXOs(prevStates);
         Set<StorageUTXO> validInMempool = aggregateValidMempoolUTXOs(prevStates, invalidInMempool);
         Map<UUID, StorageUTXO> mapValidInMempool = validInMempool.stream()
                 .collect(toMap(StorageUTXO::getId, s -> s));
-        return block.getBlockContent().getContentList().parallelStream()
+        return block.getContentList().getContentList().parallelStream()
                 .allMatch(tx -> areTransactionInputsValid(tx, invalidInMempool, mapValidInMempool));
     }
 

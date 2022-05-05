@@ -3,16 +3,16 @@ package ledger.ledgerManager.nodes;
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValueMask;
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.LedgerObserver;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
-import utils.CryptographicUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import sybilResistantElection.SybilElectionProof;
+import utils.CryptographicUtils;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -29,7 +29,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
+public class TempChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         implements InnerNode<E,C,P>, LedgerObserver<BlockmessBlock<C,P>>, DebugBlockmessChain<E,C,P> {
 
     private final Properties props;
@@ -432,15 +432,15 @@ public class TempChainNode<E extends IndexableContent, C extends BlockContent<St
     }
 
     @Override
-    public List<StructuredValue<E>> generateBlockContentList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return inner.generateBlockContentList(states, usedSpace);
+        return inner.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
-        return inner.generateBoundBlockContentList(states, usedSpace, maxTxs);
+        return inner.generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override

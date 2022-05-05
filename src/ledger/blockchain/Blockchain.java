@@ -1,5 +1,6 @@
 package ledger.blockchain;
 
+import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.mempoolManager.BootstrapModule;
 import catecoin.txs.IndexableContent;
@@ -7,7 +8,6 @@ import catecoin.validators.BlockValidator;
 import ledger.DebugLedger;
 import ledger.LedgerObserver;
 import ledger.PrototypicalLedger;
-import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,7 +21,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.*;
 
-public class Blockchain<B extends LedgerBlock<? extends BlockContent<? extends IndexableContent>, ? extends SybilElectionProof>>
+public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>, ? extends SybilElectionProof>>
         implements PrototypicalLedger<B>, DebugLedger<B> {
 
     private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());

@@ -1,8 +1,8 @@
 package ledger;
 
+import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.txs.IndexableContent;
-import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import ledger.blocks.LedgerBlockImp;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
@@ -21,7 +21,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-public class BabelLedger<B extends LedgerBlock<? extends BlockContent<? extends IndexableContent>,? extends SybilElectionProof>>
+public class BabelLedger<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilElectionProof>>
         extends GenericProtocol
         implements LedgerObserver<B> {
 

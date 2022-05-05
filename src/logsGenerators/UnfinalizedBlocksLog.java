@@ -2,7 +2,6 @@ package logsGenerators;
 
 import ledger.LedgerObserver;
 import ledger.blocks.LedgerBlock;
-import utils.IDGenerator;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,7 +35,7 @@ public class UnfinalizedBlocksLog implements LedgerObserver {
         long time = System.currentTimeMillis();
         repeats.add(blockId);
         String output = String.format("%s - %d - %d\n",blockId, time,
-                block.getBlockContent().getContentList().size());
+                block.getContentList().getContentList().size());
         try {
             Files.writeString(unfinalizedBlocksOutputFile, output, APPEND);
         } catch (IOException e) {

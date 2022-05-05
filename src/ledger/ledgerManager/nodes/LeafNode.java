@@ -1,11 +1,11 @@
 package ledger.ledgerManager.nodes;
 
 import catecoin.blockConstructors.*;
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.DebugLedger;
 import ledger.Ledger;
 import ledger.LedgerObserver;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
+public class LeafNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         implements DebugBlockmessChain<E,C,P>, LedgerObserver<BlockmessBlock<C,P>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
@@ -336,7 +336,7 @@ public class LeafNode<E extends IndexableContent, C extends BlockContent<Structu
             int discountedMaxBlockSize = maxBlockSize - proofSize - headerSize;
             overloadedBlocksSample.add(contentSize > discountedMaxBlockSize * overloadThreshold);
             underloadedBlocksSample.add(contentSize < discountedMaxBlockSize * underloadedThreshold);
-            System.out.println(block.getBlockContent().getContentList().size() + " : " + (contentSize < discountedMaxBlockSize * underloadedThreshold));
+            System.out.println(block.getContentList().getContentList().size() + " : " + (contentSize < discountedMaxBlockSize * underloadedThreshold));
             if (overloadedBlocksSample.size() > blocksSampleSize)
                 overloadedBlocksSample.remove(0);
             if (underloadedBlocksSample.size() > blocksSampleSize)
@@ -346,7 +346,7 @@ public class LeafNode<E extends IndexableContent, C extends BlockContent<Structu
 
     private int getContentSerializedSize(BlockmessBlock<C,P> block) {
         try {
-            return block.getBlockContent().getSerializedSize();
+            return block.getContentList().getSerializedSize();
         } catch (IOException e) {
             e.printStackTrace();
             throw new Error();
@@ -503,15 +503,15 @@ public class LeafNode<E extends IndexableContent, C extends BlockContent<Structu
     }
 
     @Override
-    public List<StructuredValue<E>> generateBlockContentList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return contentStorage.generateBlockContentList(states, usedSpace);
+        return contentStorage.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
-        return contentStorage.generateBoundBlockContentList(states, usedSpace, maxTxs);
+        return contentStorage.generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override
@@ -539,8 +539,8 @@ public class LeafNode<E extends IndexableContent, C extends BlockContent<Structu
 
     private Stream<StructuredValue<E>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<C, P>> stream) {
         return stream
-                .map(BlockmessBlock::getBlockContent)
-                .map(BlockContent::getContentList)
+                .map(BlockmessBlock::getContentList)
+                .map(ContentList::getContentList)
                 .flatMap(Collection::stream);
     }
 

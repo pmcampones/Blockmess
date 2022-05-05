@@ -3,9 +3,9 @@ package ledger.ledgerManager.nodes;
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValueMask;
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.LedgerObserver;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
@@ -25,7 +25,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>The lower the InnerNode in the Chain's hierarchy,
  * the later were the referenced Chains spawned.</p>
  */
-public class PermanentChainNode<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
+public class PermanentChainNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         implements InnerNode<E,C,P>, DebugBlockmessChain<E,C,P>{
 
     private ParentTreeNode<E,C,P> parent;
@@ -301,15 +301,15 @@ public class PermanentChainNode<E extends IndexableContent, C extends BlockConte
     }
 
     @Override
-    public List<StructuredValue<E>> generateBlockContentList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return inner.generateBlockContentList(states, usedSpace);
+        return inner.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
-        return inner.generateBoundBlockContentList(states, usedSpace, maxTxs);
+        return inner.generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override

@@ -1,9 +1,11 @@
 package ledger.ledgerManager.nodes;
 
-import catecoin.blockConstructors.*;
+import catecoin.blockConstructors.ComposableContentStorage;
+import catecoin.blockConstructors.ContentStorage;
+import catecoin.blockConstructors.StructuredValueMask;
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
 import ledger.LedgerObserver;
-import ledger.blocks.BlockContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
@@ -21,7 +23,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * to directly contact the Chain.
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
-public class ReferenceNode<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>, P extends SybilElectionProof>
+public class ReferenceNode<E extends IndexableContent, C extends ContentList<StructuredValue<E>>, P extends SybilElectionProof>
         implements InnerNode<E,C,P>, DebugBlockmessChain<E,C,P> {
 
     /**
@@ -294,15 +296,15 @@ public class ReferenceNode<E extends IndexableContent, C extends BlockContent<St
     }
 
     @Override
-    public List<StructuredValue<E>> generateBlockContentList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return leaf.generateBlockContentList(states, usedSpace);
+        return leaf.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
-        return leaf.generateBoundBlockContentList(states, usedSpace, maxTxs);
+        return leaf.generateBoundContentListList(states, usedSpace, maxTxs);
     }
 
     @Override

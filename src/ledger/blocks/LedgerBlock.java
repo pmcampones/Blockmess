@@ -1,5 +1,6 @@
 package ledger.blocks;
 
+import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
 import main.ProtoPojo;
 import sybilResistantElection.SybilElectionProof;
@@ -15,7 +16,7 @@ import java.util.UUID;
  * @param <C> The type of the content used in the application running the Distributed Ledger.
  * @param <P> The type of the SybilElectionProof used in these Blocks.
  */
-public interface LedgerBlock<C extends BlockContent<?>, P extends SybilElectionProof>
+public interface LedgerBlock<C extends ContentList<?>, P extends SybilElectionProof>
         extends SizeAccountable, ProtoPojo {
 
     /**
@@ -51,7 +52,7 @@ public interface LedgerBlock<C extends BlockContent<?>, P extends SybilElectionP
      * <p>This content needs to be serializable in order to allow us to compute its hash without
      * needing to know the specifics of its implementation.</p>
      */
-    C getBlockContent();
+    C getContentList();
 
     /**
      * Retrieves the proof that the Sybil election was performed correctly.

@@ -5,10 +5,10 @@ import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
+import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverIndexableContentNotification;
 import catecoin.txs.IndexableContent;
 import catecoin.txs.SlimTransaction;
-import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
@@ -37,7 +37,7 @@ import java.util.Properties;
  *      Doing a verification of the ProtoPojo type here is important but not necessary.
  *      Verifying here ensures malformed content is discarded without upsetting the logic of the more complex upper protocols.
  */
-public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends BlockContent<? extends IndexableContent>, P extends SybilElectionProof> extends GenericProtocol {
+public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends ContentList<? extends IndexableContent>, P extends SybilElectionProof> extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(ValueDispatcher.class);
 

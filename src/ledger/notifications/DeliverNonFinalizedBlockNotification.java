@@ -1,14 +1,14 @@
 package ledger.notifications;
 
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
-import ledger.blocks.BlockContent;
 import ledger.blocks.LedgerBlock;
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import sybilResistantElection.SybilElectionProof;
 import utils.IDGenerator;
 
 public class DeliverNonFinalizedBlockNotification<B extends LedgerBlock<
-        ? extends BlockContent<? extends IndexableContent>,? extends SybilElectionProof>>
+        ? extends ContentList<? extends IndexableContent>,? extends SybilElectionProof>>
         extends ProtoNotification {
 
     public static final short ID = IDGenerator.genId();

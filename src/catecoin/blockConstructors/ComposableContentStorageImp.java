@@ -27,22 +27,22 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @Override
-    public List<StructuredValue<E>> generateBlockContentList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         try {
             innerLock.readLock().lock();
-            return inner.generateBlockContentList(states, usedSpace);
+            return inner.generateContentListList(states, usedSpace);
         } finally {
             innerLock.readLock().unlock();
         }
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundBlockContentList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
         try {
             innerLock.readLock().lock();
-            return inner.generateBoundBlockContentList(states, usedSpace, maxTxs);
+            return inner.generateBoundContentListList(states, usedSpace, maxTxs);
         } finally {
           innerLock.readLock().unlock();
         }

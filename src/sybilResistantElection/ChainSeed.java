@@ -1,7 +1,7 @@
 package sybilResistantElection;
 
+import catecoin.blocks.ContentList;
 import catecoin.txs.IndexableContent;
-import ledger.blocks.BlockContent;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import utils.CryptographicUtils;
@@ -9,7 +9,7 @@ import utils.CryptographicUtils;
 import java.nio.ByteBuffer;
 import java.util.UUID;
 
-public class ChainSeed<E extends IndexableContent, C extends BlockContent<StructuredValue<E>>> {
+public class ChainSeed<E extends IndexableContent, C extends ContentList<StructuredValue<E>>> {
 
     private final UUID chainId;
 
@@ -33,7 +33,7 @@ public class ChainSeed<E extends IndexableContent, C extends BlockContent<Struct
         return computeChainSeed(chainId, currContent, prevBlock);
     }
 
-    public static <C extends BlockContent<? extends IndexableContent>> byte[] computeChainSeed(UUID ChainId, C currContent, UUID prevBlock) {
+    public static <C extends ContentList<? extends IndexableContent>> byte[] computeChainSeed(UUID ChainId, C currContent, UUID prevBlock) {
         byte[] contentHash = currContent.getContentHash();
         ByteBuffer byteBuffer = ByteBuffer.allocate(4 * Long.BYTES + contentHash.length * Byte.BYTES);
         byteBuffer.putLong(ChainId.getMostSignificantBits());

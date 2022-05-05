@@ -24,7 +24,7 @@ import java.util.UUID;
 /**
  * Transaction used to exchange coins between two blocks.
  * All collections in this class are unmodifiable, as any change in the instance renders the signature invalid.
- *  The same logic applies to BlockContent.
+ *  The same logic applies to ContentList.
  * However it assigns more responsibilities to the application validator class (by default {@link ContextObliviousValidator})
  */
 public class SlimTransaction extends ProtoPojoAbstract implements IndexableContent {
