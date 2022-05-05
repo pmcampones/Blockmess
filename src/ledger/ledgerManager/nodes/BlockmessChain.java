@@ -14,12 +14,12 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BlockmessChain<E extends IndexableContent, P extends SybilResistantElectionProof>
-        extends Ledger<BlockmessBlock<ContentList<StructuredValue<E>>,P>>, ComposableContentStorage<E> {
+public interface BlockmessChain<E extends IndexableContent>
+        extends Ledger<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>, ComposableContentStorage<E> {
 
     UUID getChainId();
 
-    void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,P> parent);
+    void replaceParent(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent);
 
     void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException;
 
@@ -41,14 +41,14 @@ public interface BlockmessChain<E extends IndexableContent, P extends SybilResis
      * Gets the first finalized block in the Chain that is yet to be delivered to the application.
      * @return The first block or null if no block was finalized.
      */
-    BlockmessBlock<ContentList<StructuredValue<E>>,P> peekFinalized();
+    BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> peekFinalized();
 
     /**
      * Removes the first finalized block in the Chain that is yet to be delivered to the application.
      * <p>Processes the block delivery.</p>
      * @return The block removed or null if no block was finalized.
      */
-    BlockmessBlock<ContentList<StructuredValue<E>>,P> deliverChainBlock();
+    BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof> deliverChainBlock();
 
     /**
      * Queries whether this Chain should spawn two sub-Chains to alleviate its load.
@@ -77,13 +77,13 @@ public interface BlockmessChain<E extends IndexableContent, P extends SybilResis
      */
     long getMinimumRank();
 
-    Set<BlockmessBlock<ContentList<StructuredValue<E>>,P>> getBlocks(Set<UUID> blockIds);
+    Set<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds);
 
     void resetSamples();
 
     long getRankFromRefs(Set<UUID> refs);
 
-    Set<BlockmessChain<E,P>> getPriorityChains();
+    Set<BlockmessChain<E>> getPriorityChains();
 
     void lowerLeafDepth();
 

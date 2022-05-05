@@ -24,7 +24,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>All operations concerning the Chain are executed by the inner implementations of the {@link BlockmessChain}.</p>
  */
 public class ReferenceNode<E extends IndexableContent>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, BlockmessChain<E,SybilResistantElectionProof> {
+        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, BlockmessChain<E> {
 
     /**
      * Reference to the lead node in this Chain.
@@ -35,7 +35,7 @@ public class ReferenceNode<E extends IndexableContent>
      * Uses the State design pattern to modify its behaviour
      * depending on whether it is a leaf node or an inner node.
      */
-    private BlockmessChain<E,SybilResistantElectionProof> nodeState;
+    private BlockmessChain<E> nodeState;
     /**
      * References the inner node from a parent Chain that spawned this.
      * <p>It could also be a reference to the LedgerManager itself.</p>
@@ -173,7 +173,7 @@ public class ReferenceNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
+    public Set<BlockmessChain<E>> getPriorityChains() {
         return union(Set.of(this), nodeState.getPriorityChains());
     }
 
@@ -204,7 +204,7 @@ public class ReferenceNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,SybilResistantElectionProof> newChild) {
+    public void replaceChild(BlockmessChain<E> newChild) {
         this.nodeState = newChild;
     }
 
@@ -214,7 +214,7 @@ public class ReferenceNode<E extends IndexableContent>
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,SybilResistantElectionProof>> createdChains) {
+    public void createChains(List<BlockmessChain<E>> createdChains) {
         parent.createChains(createdChains);
     }
 

@@ -38,7 +38,7 @@ import static java.util.stream.Collectors.toSet;
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
 public class LeafNode<E extends IndexableContent>
-        implements BlockmessChain<E,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> {
+        implements BlockmessChain<E>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -312,7 +312,7 @@ public class LeafNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
+    public Set<BlockmessChain<E>> getPriorityChains() {
         return emptySet();
     }
 

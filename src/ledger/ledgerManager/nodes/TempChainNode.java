@@ -30,7 +30,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
 public class TempChainNode<E extends IndexableContent>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>, BlockmessChain<E,SybilResistantElectionProof> {
+        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<E>>,SybilResistantElectionProof>>, BlockmessChain<E> {
 
     private final Properties props;
 
@@ -42,7 +42,7 @@ public class TempChainNode<E extends IndexableContent>
 
     private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
 
-    private BlockmessChain<E,SybilResistantElectionProof> inner;
+    private BlockmessChain<E> inner;
 
     private final int finalizedWeight;
 
@@ -57,7 +57,7 @@ public class TempChainNode<E extends IndexableContent>
             ComposableContentStorage<E>> contentStoragePair;
 
     public TempChainNode(
-            Properties props, BlockmessChain<E,SybilResistantElectionProof> inner, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
+            Properties props, BlockmessChain<E> inner, ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent,
             UUID ChainOriginatorBlockId, int ChainDepth,
             Pair<ComposableContentStorage<E>, ComposableContentStorage<E>> contentStoragePair)
             throws PrototypeHasNotBeenDefinedException {
@@ -80,7 +80,7 @@ public class TempChainNode<E extends IndexableContent>
         parent.createChains(getTentative());
     }
 
-    private List<BlockmessChain<E,SybilResistantElectionProof>> getTentative() {
+    private List<BlockmessChain<E>> getTentative() {
         return tentativeChains.values().stream()
                 .map(pair -> List.of(pair.getLeft(), pair.getRight()))
                 .flatMap(Collection::stream)
@@ -165,7 +165,7 @@ public class TempChainNode<E extends IndexableContent>
         inner.resetSamples();
         inner.lowerLeafDepth();
         inner.doubleChainThroughput();
-        List<BlockmessChain<E,SybilResistantElectionProof>> toMerge =  tentativeChains.values().stream()
+        List<BlockmessChain<E>> toMerge =  tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
@@ -257,7 +257,7 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
+    public Set<BlockmessChain<E>> getPriorityChains() {
         var priorityChainsOpt = getPreferableTemp();
         if (priorityChainsOpt.isEmpty())
             return inner.getPriorityChains();
@@ -316,12 +316,12 @@ public class TempChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,SybilResistantElectionProof> newChild) {
+    public void replaceChild(BlockmessChain<E> newChild) {
         this.inner = newChild;
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,SybilResistantElectionProof>> createdChains) {
+    public void createChains(List<BlockmessChain<E>> createdChains) {
         parent.createChains(createdChains);
     }
 

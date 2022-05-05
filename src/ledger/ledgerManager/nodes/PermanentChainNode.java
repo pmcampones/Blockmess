@@ -29,13 +29,13 @@ import static org.apache.commons.collections4.SetUtils.union;
  * the later were the referenced Chains spawned.</p>
  */
 public class PermanentChainNode<E extends IndexableContent>
-        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, BlockmessChain<E,SybilResistantElectionProof>{
+        implements InnerNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof>, BlockmessChain<E>{
 
     private final ReferenceNode<E> lft, rgt;
     private ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent;
-    private BlockmessChain<E,SybilResistantElectionProof> inner;
+    private BlockmessChain<E> inner;
 
-    public PermanentChainNode(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent, BlockmessChain<E,SybilResistantElectionProof> inner,
+    public PermanentChainNode(ParentTreeNode<E,ContentList<StructuredValue<E>>,SybilResistantElectionProof> parent, BlockmessChain<E> inner,
                                ReferenceNode<E> lft, ReferenceNode<E> rgt) {
         this.parent = parent;
         this.inner = inner;
@@ -148,7 +148,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public Set<BlockmessChain<E,SybilResistantElectionProof>> getPriorityChains() {
+    public Set<BlockmessChain<E>> getPriorityChains() {
         return union(inner.getPriorityChains(), union(lft.getPriorityChains(), rgt.getPriorityChains()));
     }
 
@@ -179,7 +179,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void replaceChild(BlockmessChain<E,SybilResistantElectionProof> newChild) {
+    public void replaceChild(BlockmessChain<E> newChild) {
         inner = newChild;
     }
 
@@ -189,7 +189,7 @@ public class PermanentChainNode<E extends IndexableContent>
     }
 
     @Override
-    public void createChains(List<BlockmessChain<E,SybilResistantElectionProof>> createdChains) {
+    public void createChains(List<BlockmessChain<E>> createdChains) {
         parent.createChains(createdChains);
     }
 
