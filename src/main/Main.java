@@ -66,15 +66,21 @@ public class Main {
     public static void main(String[] args) throws Exception {
         startTime = System.currentTimeMillis();
         Babel babel = Babel.getInstance();
-        Properties props = Babel.loadConfig(args, DEFAULT_CONF);
-        redirectOutput(props);
+        Properties props = initializeProperties(args);
+        GlobalProperties.setProps(props);
         babel.registerChannelInitializer("SharedTCP", new MultiLoggerChannelInitializer());
-        InterfaceToIp.addInterfaceIp(props);
         int port = getNodePort(props);
         Host myself = new Host(InetAddress.getByName(props.getProperty("address")), port);
         logger.info("Hello, I am {} and my contact is {}.", myself, props.getProperty("contact"));
         launchBlockmess(props, myself, babel);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
+    }
+
+    private static Properties initializeProperties(String[] args) throws Exception {
+        Properties props = Babel.loadConfig(args, DEFAULT_CONF);
+        redirectOutput(props);
+        InterfaceToIp.addInterfaceIp(props);
+        return props;
     }
 
     private static void redirectOutput(Properties props) {
