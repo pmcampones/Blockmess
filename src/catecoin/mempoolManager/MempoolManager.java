@@ -9,6 +9,7 @@ import catecoin.utxos.StorageUTXO;
 import ledger.blocks.LedgerBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
+import main.GlobalProperties;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -56,12 +57,14 @@ public class MempoolManager extends GenericProtocol {
 
     private final StructuredValueChunkCreator mempoolChunkCreator;
 
-    public MempoolManager(Properties props) throws Exception {
+    private static MempoolManager singleton;
+
+    private MempoolManager() throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
         this.mempoolChunkCreator = new StructuredValueChunkCreator();
-        this.recordModule = new MinimalistRecordModule(props);
-        loadInitialUtxos(props);
-        bootstrapDL(props);
+        this.recordModule = new MinimalistRecordModule();
+        loadInitialUtxos();
+        bootstrapDL();
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
                 (DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<SlimTransaction>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
@@ -69,7 +72,8 @@ public class MempoolManager extends GenericProtocol {
         ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
     }
 
-    private void loadInitialUtxos(Properties props) throws Exception {
+    private void loadInitialUtxos() throws Exception {
+        Properties props = GlobalProperties.getProps();
         PublicKey originalPublic = CryptographicUtils.readECDSAPublicKey(props.getProperty("originalPublic"));
         int numberCoins = parseInt(props.getProperty("numberCoins", String.valueOf(NUMBER_COINS)));
         List<StorageUTXO> utxos = IntStream.range(0, numberCoins)
@@ -78,15 +82,26 @@ public class MempoolManager extends GenericProtocol {
         UTXOCollection.updateUtxos(utxos, Collections.emptyList());
     }
 
-    private void bootstrapDL(Properties props) {
+    private void bootstrapDL() {
         logger.info("Bootstrapping DL");
-        List<MempoolChunk> chunks = BootstrapModule.getStoredChunks(props);
+        List<MempoolChunk> chunks = BootstrapModule.getStoredChunks();
         List<StorageUTXO> addedUtxos = chunks.stream()
                 .flatMap(chunk -> chunk.getAddedUtxos().stream()).collect(toList());
         List<UUID> removedUtxos = chunks.stream()
                 .flatMap(chunk -> chunk.getRemovedUtxos().stream()).collect(toList());
         UTXOCollection.updateUtxos(addedUtxos, removedUtxos);
         logger.info("Successfully bootstrapped {} blocks.", chunks.size());
+    }
+
+    public static MempoolManager getSingleton() {
+        if (singleton == null) {
+            try {
+                singleton = new MempoolManager();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return singleton;
     }
 
     @Override

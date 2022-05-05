@@ -4,6 +4,7 @@ import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.blocks.chunks.MinimalistMempoolChunk;
 import catecoin.blocks.chunks.MinimalistSerializableChunk;
 import com.google.gson.Gson;
+import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -22,7 +23,8 @@ public class MinimalistRecordModule {
 
     private final Optional<Path> recordFile;
 
-    public MinimalistRecordModule(Properties props) throws IOException {
+    public MinimalistRecordModule() throws IOException {
+        Properties props = GlobalProperties.getProps();
         boolean isRecordingBlocks = props.getProperty("isRecordingBlocks", "F").equals("T");
         recordFile = isRecordingBlocks ? Optional.of(MinimalistRecordModule.generateRecordFile(props)) : Optional.empty();
     }

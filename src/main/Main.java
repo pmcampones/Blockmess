@@ -120,7 +120,7 @@ public class Main {
 
     private static void launchBlockmess(Properties props, Host myself, Babel babel) throws Exception {
         var protocols = new LinkedList<>(addNetworkProtocols(props, myself));
-        var mempoolManager = new MempoolManager(props);
+        var mempoolManager = MempoolManager.getSingleton();
         protocols.add(mempoolManager);
         setUpLedgerPrototype(props);
         setUpContentStoragePrototype(props, mempoolManager);

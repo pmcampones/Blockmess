@@ -97,7 +97,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
         this.finalizedWeight = computeFinalizedWeight(props);
         this.validator = validator;
         createGenesisBlock(genesisUUID);
-        bootstrapBlockchain(BootstrapModule.getStoredChunks(props));
+        bootstrapBlockchain(BootstrapModule.getStoredChunks());
         this.delayVerifier = generateDelayVerifier(props);
         int expectedTimeBetweenBlocks = Integer.parseInt(props.getProperty("expectedTimeBetweenBlocks"));
         this.task = pool.scheduleAtFixedRate(new QueuePoller(), expectedTimeBetweenBlocks / 5, expectedTimeBetweenBlocks / 5, TimeUnit.MILLISECONDS);
