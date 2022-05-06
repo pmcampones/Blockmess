@@ -165,7 +165,7 @@ public class MempoolManager extends GenericProtocol {
     private void recordBlocks(List<MempoolChunk> finalized) {
         try {
             recordModule.recordBlocks(finalized);
-        } catch (IOException | UnexpectedChunkTypeException e) {
+        } catch (IOException e) {
             logger.error("Unable to write to file because: {}", e.getMessage());
             e.printStackTrace();
         }

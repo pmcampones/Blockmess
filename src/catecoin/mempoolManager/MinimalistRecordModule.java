@@ -40,15 +40,12 @@ public class MinimalistRecordModule {
         return recordFile;
     }
 
-    public void recordBlocks(List<MempoolChunk> finalized) throws UnexpectedChunkTypeException, IOException {
+    public void recordBlocks(List<MempoolChunk> finalized) throws IOException {
         if (recordFile.isPresent()) {
             logger.info("Recording finalized blocks: {}", finalized);
             Gson gson = new Gson();
-            for (MempoolChunk f : finalized) {
-                if (!(f instanceof MempoolChunk))
-                    throw new UnexpectedChunkTypeException(MempoolChunk.class.getSimpleName());
-                MempoolChunk min = (MempoolChunk) f;
-                SerializableChunk content = new SerializableChunk(min);
+            for (MempoolChunk chunk : finalized) {
+                SerializableChunk content = new SerializableChunk(chunk);
                 String contentJson = gson.toJson(content);
                 Files.writeString(recordFile.get(), contentJson + ", ", APPEND);
             }
