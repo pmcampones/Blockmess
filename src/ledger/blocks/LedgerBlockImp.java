@@ -3,8 +3,10 @@ package ledger.blocks;
 import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
 import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import ledger.ledgerManager.StructuredValue;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -17,8 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P extends ProtoPojo & SizeAccountable> extends ProtoPojoAbstract
-        implements LedgerBlock<C, P> {
+public class LedgerBlockImp extends ProtoPojoAbstract
+        implements LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> {
 
     public static final short ID = 9888;
 
@@ -59,35 +61,35 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
             out.writeShort(validatorSignatures.size());
             ISerializer<ValidatorSignature> serializer = ValidatorSignature.serializer;
             for (ValidatorSignature validatorSignature : validatorSignatures)
-                serializer.serialize((ValidatorSignature) validatorSignature, out);
+                serializer.serialize(validatorSignature, out);
         }
 
         @Override
         public ProtoPojo deserialize(ByteBuf in) throws IOException {
             int inherentWeight = in.readInt();
             List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
-            ContentList ContentList = (ContentList) deserializeInnerPojo(in);
+            ContentList contentList = (ContentList) deserializeInnerPojo(in);
             SybilResistantElectionProof proof = (SybilResistantElectionProof) deserializeInnerPojo(in);
             List<ValidatorSignature> validatorSignatures = deserializeValidatorSignatures(in);
-            return new LedgerBlockImp<>(inherentWeight, prevRefs,
-                    ContentList, proof, validatorSignatures);
+            return new LedgerBlockImp(inherentWeight, prevRefs,
+                    contentList, proof, validatorSignatures);
         }
 
     };
 
-    private final P proof;
-    private final C ContentList;
+    private final SybilResistantElectionProof proof;
+    private final ContentList<StructuredValue<Transaction>> contentList;
     private final List<ValidatorSignature> validatorSignatures;
 
     /**
      * This constructor is meant to be used by nodes receiving the Block and called during the deserialization.
      */
-    private LedgerBlockImp(int inherentWeight, List<UUID> prevRefs, C ContentList,
-                           P proof, List<ValidatorSignature> validatorSignatures) throws IOException {
+    private LedgerBlockImp(int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+                           SybilResistantElectionProof proof, List<ValidatorSignature> validatorSignatures) throws IOException {
         super(ID);
         this.inherentWeight = inherentWeight;
         this.prevRefs = prevRefs;
-        this.ContentList = ContentList;
+        this.contentList = contentList;
         this.proof = proof;
         this.blockId = computeBlockId();
         this.validatorSignatures = validatorSignatures;
@@ -98,36 +100,25 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
      * <p>An example of this is when a block class extends this and the computation of the blockId changes because
      * of some extra parameters.</p>
      */
-    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, C ContentList,
-                   P proof, KeyPair proposer, short classId)
+    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+                   SybilResistantElectionProof proof, KeyPair proposer, short classId)
             throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
         super(classId);
         this.blockId = blockId;
         this.inherentWeight = inherentWeight;
         this.prevRefs = prevRefs;
-        this.ContentList = ContentList;
+        this.contentList = contentList;
         this.proof = proof;
         this.validatorSignatures = genValidatorSignaturesFromProposer(blockId, proposer);
     }
 
-    public LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, C ContentList,
-                           P proof, List<ValidatorSignature> validatorSignatures) {
-        super(ID);
-        this.blockId = blockId;
-        this.inherentWeight = inherentWeight;
-        this.prevRefs = prevRefs;
-        this.ContentList = ContentList;
-        this.proof = proof;
-        this.validatorSignatures = validatorSignatures;
-    }
-
-    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, C ContentList,
-                   P proof, List<ValidatorSignature> validatorSignatures, short classId) {
+    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+                   SybilResistantElectionProof proof, List<ValidatorSignature> validatorSignatures, short classId) {
         super(classId);
         this.blockId = blockId;
         this.inherentWeight = inherentWeight;
         this.prevRefs = prevRefs;
-        this.ContentList = ContentList;
+        this.contentList = contentList;
         this.proof = proof;
         this.validatorSignatures = validatorSignatures;
     }
@@ -140,14 +131,14 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
     private byte[] computeBlockBytes() throws IOException {
         int bufferSize = Integer.BYTES
                 + prevRefs.size() * 2 * Long.BYTES
-                + ContentList.getSerializedSize()
+                + contentList.getSerializedSize()
                 + proof.getSerializedSize();
-        ByteBuf in = getLedgerBlockByteBuf(bufferSize, inherentWeight, prevRefs, ContentList, proof);
+        ByteBuf in = getLedgerBlockByteBuf(bufferSize, inherentWeight, prevRefs, contentList, proof);
         return in.array();
     }
 
-    static <C extends ContentList, P extends ProtoPojo & SizeAccountable> ByteBuf getLedgerBlockByteBuf(
-            int bufferSize, int inherentWeight, List<UUID> prevRefs, C ContentList, P proof)
+    static <P extends SybilResistantElectionProof> ByteBuf getLedgerBlockByteBuf(
+            int bufferSize, int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> ContentList, P proof)
             throws IOException {
         ByteBuf in = Unpooled.buffer(bufferSize);
         in.writeInt(inherentWeight);
@@ -176,12 +167,12 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
     }
 
     @Override
-    public C getContentList() {
-        return ContentList;
+    public ContentList<StructuredValue<Transaction>> getContentList() {
+        return contentList;
     }
 
     @Override
-    public P getSybilElectionProof() {
+    public SybilResistantElectionProof getSybilElectionProof() {
         return proof;
     }
 
@@ -216,7 +207,7 @@ public class LedgerBlockImp<C extends ContentList<? extends IndexableContent>, P
         return Integer.BYTES
                 + Short.BYTES
                 + prevRefs.size() * 2 * Long.BYTES
-                + ContentList.getSerializedSize()
+                + contentList.getSerializedSize()
                 + proof.getSerializedSize()
                 + computeValidatorSignaturesSize();
     }

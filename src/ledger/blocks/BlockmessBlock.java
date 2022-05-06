@@ -98,7 +98,7 @@ public class BlockmessBlock
                           SybilResistantElectionProof proof, KeyPair proposer, UUID destinationChain, long currentRank, long nextRank)
             throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
         UUID blockId = computeBlockId(inherentWeight, prevRefs, contentList, proof, destinationChain);
-        this.ledgerBlock = new LedgerBlockImp<>(blockId,inherentWeight, prevRefs, contentList, proof, proposer, ID);
+        this.ledgerBlock = new LedgerBlockImp(blockId,inherentWeight, prevRefs, contentList, proof, proposer, ID);
         this.destinationChain = destinationChain;
         this.currentRank = currentRank;
         this.nextRank = nextRank;
@@ -130,7 +130,7 @@ public class BlockmessBlock
             throws IOException {
         UUID blockId = computeBlockId(inherentWeight, prevRefs, contentList, proof, destinationChain);
         this.ledgerBlock =
-                new LedgerBlockImp<>(blockId, inherentWeight, prevRefs, contentList, proof, validatorSignatures, ID);
+                new LedgerBlockImp(blockId, inherentWeight, prevRefs, contentList, proof, validatorSignatures, ID);
         this.destinationChain = destinationChain;
         this.currentRank = currentRank;
         this.nextRank = nextRank;

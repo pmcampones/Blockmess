@@ -204,20 +204,6 @@ public class MempoolManager extends GenericProtocol {
                 .collect(toSet());
     }
 
-    private Set<StorageUTXO> getRemovedUtxos(Set<UUID> removedIds, Map<UUID, StorageUTXO> addedUtxos) {
-        Set<StorageUTXO> removedUtxos = new HashSet<>(removedIds.size());
-        Collection<Optional<StorageUTXO>> storedUtxos = UTXOCollection.getUtxos(removedIds);
-        Iterator<Optional<StorageUTXO>> storedUtxosIt = storedUtxos.iterator();
-        Iterator<UUID> removedIdsIt = removedIds.iterator();
-        while (storedUtxosIt.hasNext()) {
-            Optional<StorageUTXO> utxo = storedUtxosIt.next();
-            UUID id = removedIdsIt.next();
-            StorageUTXO toRem = utxo.orElseGet(() -> addedUtxos.get(id));
-            removedUtxos.add(toRem);
-        }
-        return removedUtxos;
-    }
-
     public Set<UUID> getInvalidTxsFromChunk(UUID previousState, Set<UUID> visited) {
         MempoolChunk chunk = mempool.get(previousState);
         if (visited.contains(previousState) || chunk == null) return Collections.emptySet();
