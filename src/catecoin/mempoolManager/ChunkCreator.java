@@ -32,7 +32,7 @@ public class ChunkCreator {
         return new MinimalistMempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()),
                 unmodifiableSet(addedUtxos), usedUtxos, usedTxs, cumulativeWeight);
     }
-    
+
     private Set<StorageUTXO> extractAddedUtxos(List<Transaction> ContentList) {
         return ContentList.parallelStream().flatMap(tx -> Stream.concat(
                         tx.getOutputsDestination().stream()
