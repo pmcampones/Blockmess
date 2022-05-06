@@ -55,13 +55,13 @@ public class MempoolManager extends GenericProtocol {
      */
     private final MinimalistRecordModule recordModule;
 
-    private final StructuredValueChunkCreator mempoolChunkCreator;
+    private final ChunkCreator mempoolChunkCreator;
 
     private static MempoolManager singleton;
 
     private MempoolManager() throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
-        this.mempoolChunkCreator = new StructuredValueChunkCreator();
+        this.mempoolChunkCreator = new ChunkCreator();
         this.recordModule = new MinimalistRecordModule();
         loadInitialUtxos();
         bootstrapDL();
