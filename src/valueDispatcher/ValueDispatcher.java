@@ -7,9 +7,9 @@ import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
 import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverIndexableContentNotification;
-import catecoin.txs.IndexableContent;
 import catecoin.txs.Transaction;
 import ledger.blocks.LedgerBlock;
+import ledger.ledgerManager.StructuredValue;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -37,7 +37,7 @@ import java.util.Properties;
  *      Doing a verification of the ProtoPojo type here is important but not necessary.
  *      Verifying here ensures malformed content is discarded without upsetting the logic of the more complex upper protocols.
  */
-public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends ContentList<? extends IndexableContent>, P extends SybilResistantElectionProof> extends GenericProtocol {
+public class ValueDispatcher extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(ValueDispatcher.class);
 
@@ -86,14 +86,14 @@ public class ValueDispatcher<B extends LedgerBlock<C,P>, C extends ContentList<?
                 break;
             case SIGNED_BLOCK:
                 if (val instanceof LedgerBlock)
-                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock<C, P>) val));
+                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>) val));
                 break;
             default:
                 logger.debug("Received unknown value type");
         }
     }
 
-    private void uponDisseminateBlockRequest(DisseminateSignedBlockRequest<B> req, short source) {
+    private void uponDisseminateBlockRequest(DisseminateSignedBlockRequest<LedgerBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> req, short source) {
         try {
             logger.info("Protocol {} requested the dissemination of a {}",
                     source, ValType.SIGNED_BLOCK);

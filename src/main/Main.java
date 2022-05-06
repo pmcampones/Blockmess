@@ -205,7 +205,7 @@ public class Main {
         HyparView peerSamplingProtocol = new HyparView(props, myself);;
         protocols.add(peerSamplingProtocol);
         protocols.addAll(addBroadcastProtocols(props, myself, peerSamplingProtocol));
-        protocols.add(new ValueDispatcher<>());
+        protocols.add(new ValueDispatcher());
         return protocols;
     }
 
