@@ -27,10 +27,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.lang.Integer.parseInt;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.*;
 
 public class MempoolManager extends GenericProtocol {
 
@@ -55,13 +56,10 @@ public class MempoolManager extends GenericProtocol {
      */
     private final MinimalistRecordModule recordModule;
 
-    private final ChunkCreator mempoolChunkCreator;
-
     private static MempoolManager singleton;
 
     private MempoolManager() throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
-        this.mempoolChunkCreator = new ChunkCreator();
         this.recordModule = new MinimalistRecordModule();
         loadInitialUtxos();
         bootstrapDL();
@@ -111,8 +109,43 @@ public class MempoolManager extends GenericProtocol {
             DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif) {
         LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block = notif.getNonFinalizedBlock();
         logger.debug("Received non finalized block with id {}", block.getBlockId());
-        MempoolChunk chunk = mempoolChunkCreator.createChunk(block, notif.getCumulativeWeight());
+        MempoolChunk chunk = createChunk(block, notif.getCumulativeWeight());
         mempool.put(chunk.getId(), chunk);
+    }
+
+    private MempoolChunk createChunk(LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block, int cumulativeWeight) {
+        List<Transaction> unwrappedContent = block.getContentList()
+                .getContentList()
+                .stream()
+                .map(StructuredValue::getInnerValue)
+                .collect(toList());
+        Set<StorageUTXO> addedUtxos = extractAddedUtxos(unwrappedContent);
+        Set<UUID> usedUtxos = extractRemovedUtxos(unwrappedContent);
+        Set<UUID> usedTxs = extractUsedTxs(unwrappedContent);
+        return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()),
+                unmodifiableSet(addedUtxos), usedUtxos, usedTxs, cumulativeWeight);
+    }
+
+    private Set<StorageUTXO> extractAddedUtxos(List<Transaction> ContentList) {
+        return ContentList.parallelStream().flatMap(tx -> Stream.concat(
+                        tx.getOutputsDestination().stream()
+                                .map(u -> new StorageUTXO(u.getId(), u.getAmount(), tx.getDestination())),
+                        tx.getOutputsOrigin().stream()
+                                .map(u -> new StorageUTXO(u.getId(), u.getAmount(), tx.getOrigin()))
+                )
+        ).collect(toUnmodifiableSet());
+    }
+
+    private Set<UUID> extractRemovedUtxos(List<Transaction> ContentList) {
+        return ContentList.stream()
+                .flatMap(tx -> tx.getInputs().stream())
+                .collect(toUnmodifiableSet());
+    }
+
+    private Set<UUID> extractUsedTxs(List<Transaction> ContentList) {
+        return ContentList.stream()
+                .map(Transaction::getId)
+                .collect(toUnmodifiableSet());
     }
 
     private void uponDeliverFinalizedBlockNotification(DeliverFinalizedBlockIdentifiersNotification notif) {
@@ -152,9 +185,7 @@ public class MempoolManager extends GenericProtocol {
     private void tryToFinalizeBlocks(List<MempoolChunk> finalized) {
         Set<UUID> removedUtxoIds = extractRemovedUtxosFromBlock(finalized);
         Set<StorageUTXO> addedUtxos = extractStorageUtxosFromBlock(finalized);
-        Map<UUID, StorageUTXO> mapAddedUtxos = new HashMap<>();
-        triggerNotification(new DeliverFinalizedBlocksContentNotification(
-        ));
+        triggerNotification(new DeliverFinalizedBlocksContentNotification());
         UTXOCollection.updateUtxos(addedUtxos, removedUtxoIds);
         finalized.stream().map(MempoolChunk::getId).forEach(mempool::remove);
     }

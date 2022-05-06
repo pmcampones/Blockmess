@@ -1,8 +1,7 @@
 package catecoin.mempoolManager;
 
 import catecoin.blocks.chunks.MempoolChunk;
-import catecoin.blocks.chunks.MinimalistMempoolChunk;
-import catecoin.blocks.chunks.MinimalistSerializableChunk;
+import catecoin.blocks.chunks.SerializableChunk;
 import com.google.gson.Gson;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
@@ -46,10 +45,10 @@ public class MinimalistRecordModule {
             logger.info("Recording finalized blocks: {}", finalized);
             Gson gson = new Gson();
             for (MempoolChunk f : finalized) {
-                if (!(f instanceof MinimalistMempoolChunk))
-                    throw new UnexpectedChunkTypeException(MinimalistMempoolChunk.class.getSimpleName());
-                MinimalistMempoolChunk min = (MinimalistMempoolChunk) f;
-                MinimalistSerializableChunk content = new MinimalistSerializableChunk(min);
+                if (!(f instanceof MempoolChunk))
+                    throw new UnexpectedChunkTypeException(MempoolChunk.class.getSimpleName());
+                MempoolChunk min = (MempoolChunk) f;
+                SerializableChunk content = new SerializableChunk(min);
                 String contentJson = gson.toJson(content);
                 Files.writeString(recordFile.get(), contentJson + ", ", APPEND);
             }

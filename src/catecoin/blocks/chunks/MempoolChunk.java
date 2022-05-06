@@ -2,24 +2,58 @@ package catecoin.blocks.chunks;
 
 import catecoin.utxos.StorageUTXO;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public interface MempoolChunk {
+import static java.util.stream.Collectors.toMap;
 
-    UUID getId();
+public class MempoolChunk {
 
-    Set<UUID> getPreviousChunksIds();
+    private final UUID stateID;
 
-    Set<UUID> getRemovedUtxos();
+    private final Set<UUID> previous;
 
-    Set<UUID> getUsedTxs();
+    private final Map<UUID, StorageUTXO> addedUtxos;
 
-    Set<StorageUTXO> getAddedUtxos();
+    private final Set<UUID> removedUtxos;
 
-    /**
-     * Retrieves the weight of the block, independent of its placement in the Ledger.
-     */
-    int getInherentWeight();
+    private final Set<UUID> usedTxs;
+
+    private final int weight;
+
+    public MempoolChunk(UUID stateID, Set<UUID> previous, Set<StorageUTXO> addedUtxos,
+                        Set<UUID> removedUtxos, Set<UUID> usedTxs, int weight) {
+        this.stateID = stateID;
+        this.previous = previous;
+        this.addedUtxos = addedUtxos.stream().collect(toMap(StorageUTXO::getId, u -> u));
+        this.removedUtxos = removedUtxos;
+        this.usedTxs = usedTxs;
+        this.weight = weight;
+    }
+
+    public UUID getId() {
+        return stateID;
+    }
+
+    public Set<UUID> getPreviousChunksIds() {
+        return previous;
+    }
+
+    public Set<UUID> getRemovedUtxos() {
+        return removedUtxos;
+    }
+
+    public Set<UUID> getUsedTxs() {
+        return usedTxs;
+    }
+
+    public Set<StorageUTXO> getAddedUtxos() {
+        return Set.copyOf(addedUtxos.values());
+    }
+
+    public int getInherentWeight() {
+        return weight;
+    }
 
 }
