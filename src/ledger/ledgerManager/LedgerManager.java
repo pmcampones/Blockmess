@@ -2,7 +2,6 @@ package ledger.ledgerManager;
 
 import catecoin.blockConstructors.ComposableContentStorageImp;
 import catecoin.blockConstructors.ContentStorage;
-import catecoin.blocks.ContentList;
 import catecoin.txs.Transaction;
 import ledger.Ledger;
 import ledger.LedgerObserver;
@@ -17,7 +16,6 @@ import logsGenerators.ChangesInNumberOfChainsLog;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;
 import java.util.*;
@@ -32,7 +30,7 @@ import static java.util.stream.Collectors.toSet;
 
 public class LedgerManager
         implements ParentTreeNode,
-        Ledger<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, ContentStorage<StructuredValue<Transaction>> {
+        Ledger<BlockmessBlock>, LedgerObserver<BlockmessBlock>, ContentStorage<StructuredValue<Transaction>> {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 
@@ -42,7 +40,7 @@ public class LedgerManager
 
     private final BlockingQueue<UUID> toRemoveChains = new LinkedBlockingQueue<>();
 
-    private final List<LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>> observers = new LinkedList<>();
+    private final List<LedgerObserver<BlockmessBlock>> observers = new LinkedList<>();
 
     private final int finalizedWeight;
 
@@ -133,7 +131,7 @@ public class LedgerManager
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
+    public void submitBlock(BlockmessBlock block) {
         UUID destinationChain = block.getDestinationChain();
         chains.get(destinationChain).submitBlock(block);
     }
@@ -164,7 +162,7 @@ public class LedgerManager
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
         this.observers.add(observer);
     }
 
@@ -187,8 +185,8 @@ public class LedgerManager
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> nonFinalized, int weight) {
-        for (LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> observer : observers)
+    public void deliverNonFinalizedBlock(BlockmessBlock nonFinalized, int weight) {
+        for (LedgerObserver<BlockmessBlock> observer : observers)
             observer.deliverNonFinalizedBlock(nonFinalized, weight);
     }
 
@@ -219,14 +217,14 @@ public class LedgerManager
             logger.debug("Chain {} has {} finalized blocks pending, minNextRank is {}, next block has rank {}",
                     chain.getChainId(), chain.getNumFinalizedPending(), chain.getNextRank(),
                     chain.hasFinalized() ? chain.peekFinalized().getBlockRank() : -1);
-        List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> linearizedFinalized = linearizeFinalizedBlocksInChains();
+        List<BlockmessBlock> linearizedFinalized = linearizeFinalizedBlocksInChains();
         assert linearizedFinalized != null;
         List<UUID> linearizedUUID = linearizedFinalized.stream().map(BlockmessBlock::getBlockId).collect(toList());
         for (var observer : observers)
             observer.deliverFinalizedBlocks(linearizedUUID, emptySet());
     }
 
-    private List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> linearizeFinalizedBlocksInChains() {
+    private List<BlockmessBlock> linearizeFinalizedBlocksInChains() {
         try {
             return tryToLinearizeFinalizedBlocksInChains();
         } catch (LedgerTreeNodeDoesNotExistException | PrototypeHasNotBeenDefinedException e) {
@@ -245,10 +243,10 @@ public class LedgerManager
         }
     }
 
-    private List<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> tryToLinearizeFinalizedBlocksInChains()
+    private List<BlockmessBlock> tryToLinearizeFinalizedBlocksInChains()
             throws LedgerTreeNodeDoesNotExistException, PrototypeHasNotBeenDefinedException {
-        List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> res = new LinkedList<>();
-        List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> confirmed;
+        List<BlockmessBlock> res = new LinkedList<>();
+        List<BlockmessBlock> confirmed;
         do {
             confirmBar = computeNextConfirmBar();
             confirmed = confirmBlocksWithRankEqualToConfirmationBar();
@@ -257,15 +255,15 @@ public class LedgerManager
         return res;
     }
 
-    private List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> confirmBlocksWithRankEqualToConfirmationBar()
+    private List<BlockmessBlock> confirmBlocksWithRankEqualToConfirmationBar()
             throws PrototypeHasNotBeenDefinedException, LedgerTreeNodeDoesNotExistException {
-        List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> res = new LinkedList<>();
+        List<BlockmessBlock> res = new LinkedList<>();
         Iterator<BlockmessChain> chainIterator = chains.values().iterator();
         while (chainIterator.hasNext()) {
             Optional<BlockmessChain> chainOp = findNextChainToDeliver(chainIterator);
             if (chainOp.isPresent()) {
                 BlockmessChain chain = chainOp.get();
-                BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> nextDeliver = chain.deliverChainBlock();
+                BlockmessBlock nextDeliver = chain.deliverChainBlock();
                 res.add(nextDeliver);
                 logger.info("Finalizing block {} in Chain {}", nextDeliver.getBlockId(), chain.getChainId());
                 logger.debug("Number overloaded recent finalized blocks: {}", chain.getNumOverloaded());
@@ -344,7 +342,7 @@ public class LedgerManager
     private Optional<BlockmessChain> findNextChainToDeliver(Iterator<BlockmessChain> chainIterator) {
         while (chainIterator.hasNext()) {
             BlockmessChain chain = chainIterator.next();
-            BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> headBlock = chain.peekFinalized();
+            BlockmessBlock headBlock = chain.peekFinalized();
             if (headBlock != null && headBlock.getBlockRank() < confirmBar)
                 return Optional.of(chain);
         }

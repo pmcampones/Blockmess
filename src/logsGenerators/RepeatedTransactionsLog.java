@@ -2,14 +2,12 @@ package logsGenerators;
 
 import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
-import catecoin.txs.Transaction;
 import com.google.common.collect.Sets;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilResistantElectionProof;
 import utils.IDGenerator;
 
 import java.io.IOException;
@@ -31,7 +29,7 @@ public class RepeatedTransactionsLog extends GenericProtocol {
 
     private final Set<UUID> finalizedTxs = Sets.newConcurrentHashSet();
 
-    private final Map<UUID, BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> nonFinalizedBlocks = new ConcurrentHashMap<>();
+    private final Map<UUID, BlockmessBlock> nonFinalizedBlocks = new ConcurrentHashMap<>();
 
     public RepeatedTransactionsLog(Properties props) throws HandlerRegistrationException, IOException {
         super(RepeatedTransactionsLog.class.getSimpleName(), ID);
@@ -42,7 +40,7 @@ public class RepeatedTransactionsLog extends GenericProtocol {
         Files.createFile(txRepetitionOutputFile);
         Files.writeString(txRepetitionOutputFile, "", APPEND);
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<BlockmessBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockIdentifiers(notif));
     }
@@ -51,8 +49,8 @@ public class RepeatedTransactionsLog extends GenericProtocol {
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif) {
-        BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block = notif.getNonFinalizedBlock();
+            DeliverNonFinalizedBlockNotification<BlockmessBlock> notif) {
+        BlockmessBlock block = notif.getNonFinalizedBlock();
         nonFinalizedBlocks.put(block.getBlockId(), block);
     }
 

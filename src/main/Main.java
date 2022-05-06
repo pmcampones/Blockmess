@@ -12,7 +12,7 @@ import catecoin.txs.Transaction;
 import catecoin.validators.BlockmessGPoETValidator;
 import ledger.BabelLedger;
 import ledger.blockchain.Blockchain;
-import ledger.blocks.BlockmessBlockImp;
+import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
 import ledger.prototype.LedgerPrototype;
@@ -219,7 +219,7 @@ public class Main {
     }
 
     private static void initializeSerializers() {
-        ProtoPojo.pojoSerializers.put(BlockmessBlockImp.ID, BlockmessBlockImp.serializer);
+        ProtoPojo.pojoSerializers.put(BlockmessBlock.ID, BlockmessBlock.serializer);
         ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
         ProtoPojo.pojoSerializers.put(Transaction.ID, Transaction.serializer);
         ProtoPojo.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);

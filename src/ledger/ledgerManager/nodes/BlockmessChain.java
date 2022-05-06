@@ -1,21 +1,19 @@
 package ledger.ledgerManager.nodes;
 
 import catecoin.blockConstructors.ComposableContentStorage;
-import catecoin.blocks.ContentList;
 import catecoin.txs.Transaction;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
-import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
 public interface BlockmessChain
-        extends Ledger<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, ComposableContentStorage<Transaction> {
+        extends Ledger<BlockmessBlock>, ComposableContentStorage<Transaction> {
 
     UUID getChainId();
 
@@ -41,14 +39,14 @@ public interface BlockmessChain
      * Gets the first finalized block in the Chain that is yet to be delivered to the application.
      * @return The first block or null if no block was finalized.
      */
-    BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> peekFinalized();
+    BlockmessBlock peekFinalized();
 
     /**
      * Removes the first finalized block in the Chain that is yet to be delivered to the application.
      * <p>Processes the block delivery.</p>
      * @return The block removed or null if no block was finalized.
      */
-    BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> deliverChainBlock();
+    BlockmessBlock deliverChainBlock();
 
     /**
      * Queries whether this Chain should spawn two sub-Chains to alleviate its load.
@@ -77,7 +75,7 @@ public interface BlockmessChain
      */
     long getMinimumRank();
 
-    Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds);
+    Set<BlockmessBlock> getBlocks(Set<UUID> blockIds);
 
     void resetSamples();
 

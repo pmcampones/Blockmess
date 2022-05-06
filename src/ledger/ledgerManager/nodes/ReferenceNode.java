@@ -3,7 +3,6 @@ package ledger.ledgerManager.nodes;
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValueMask;
-import catecoin.blocks.ContentList;
 import catecoin.txs.Transaction;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -11,7 +10,6 @@ import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
-import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;
 import java.util.*;
@@ -80,12 +78,12 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
+    public void submitBlock(BlockmessBlock block) {
         leaf.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
         leaf.attachObserver(observer);
     }
 
@@ -124,7 +122,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> peekFinalized() {
+    public BlockmessBlock peekFinalized() {
         return leaf.peekFinalized();
     }
 
@@ -132,7 +130,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
      *  Must not send directly to the leaf node
      */
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> deliverChainBlock() {
+    public BlockmessBlock deliverChainBlock() {
         return nodeState.deliverChainBlock();
     }
 
@@ -157,7 +155,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock> getBlocks(Set<UUID> blockIds) {
         return leaf.getBlocks(blockIds);
     }
 

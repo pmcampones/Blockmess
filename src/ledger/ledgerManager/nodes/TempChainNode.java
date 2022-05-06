@@ -3,7 +3,6 @@ package ledger.ledgerManager.nodes;
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValueMask;
-import catecoin.blocks.ContentList;
 import catecoin.txs.Transaction;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -11,7 +10,6 @@ import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
-import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
 
 import java.io.IOException;
@@ -29,7 +27,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>, BlockmessChain {
+public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>, BlockmessChain {
 
     private final Properties props;
 
@@ -70,8 +68,8 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<C
 
     private void fillChainMap(UUID ChainOriginatorBlockId) throws PrototypeHasNotBeenDefinedException {
         Set<UUID> rootIds = inner.getFollowing(ChainOriginatorBlockId, finalizedWeight + 3);
-        Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> roots = inner.getBlocks(rootIds);
-        for (BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> root : roots)
+        Set<BlockmessBlock> roots = inner.getBlocks(rootIds);
+        for (BlockmessBlock root : roots)
             tentativeChains.put(root.getBlockId(), computeChains(root));
         parent.createChains(getTentative());
     }
@@ -83,7 +81,7 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<C
                 .collect(toList());
     }
 
-    private Pair<ReferenceNode, ReferenceNode> computeChains(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> root)
+    private Pair<ReferenceNode, ReferenceNode> computeChains(BlockmessBlock root)
             throws PrototypeHasNotBeenDefinedException {
         ParentTreeNode treeRoot = parent.getTreeRoot();
         UUID lftId = computeChainId(root.getBlockId(), "lft".getBytes());
@@ -109,12 +107,12 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<C
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
+    public void submitBlock(BlockmessBlock block) {
         inner.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
         inner.attachObserver(observer);
     }
 
@@ -185,13 +183,13 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<C
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> peekFinalized() {
+    public BlockmessBlock peekFinalized() {
         return inner.peekFinalized();
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> deliverChainBlock() {
-        BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> delivered = inner.deliverChainBlock();
+    public BlockmessBlock deliverChainBlock() {
+        BlockmessBlock delivered = inner.deliverChainBlock();
         Pair<ReferenceNode, ReferenceNode> confirmedChains =
                 tentativeChains.get(delivered.getBlockId());
         if (confirmedChains != null) {
@@ -238,7 +236,7 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<C
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock> getBlocks(Set<UUID> blockIds) {
         return inner.getBlocks(blockIds);
     }
 
@@ -327,7 +325,7 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<C
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
         if (weight == rootWeight + finalizedWeight + 3)
             tryToInsertNewChainRoot(block);
     }
@@ -338,7 +336,7 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock<C
         // ledger manager has linearized the blocks.
     }
 
-    private void tryToInsertNewChainRoot(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> root) {
+    private void tryToInsertNewChainRoot(BlockmessBlock root) {
         try {
             Pair<ReferenceNode, ReferenceNode> createdChains = computeChains(root);
             tentativeChains.put(root.getBlockId(), createdChains);

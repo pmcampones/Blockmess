@@ -4,7 +4,6 @@ import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.txs.Transaction;
 import ledger.blocks.BlockmessBlock;
-import ledger.blocks.BlockmessBlockImp;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
@@ -85,7 +84,7 @@ public class SybilResistantElection extends GenericProtocol {
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<BlockmessBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification());
     }
@@ -118,18 +117,14 @@ public class SybilResistantElection extends GenericProtocol {
         }
     }
 
-    private void tryToProposeBlock(byte[] solution) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
-        logger.info("Found valid solution with nonce {}, with {} leading zeros",
-                nonce, difficultyComputer.getSolutionLeadingZeros(solution));
-        ChainSeed placementChain = multiplexChain(solution);
-        List<Pair<UUID, byte[]>> chainSeeds = computeChainSeedsList();
-        SybilResistantElectionProof proof = new SybilResistantElectionProof(chainSeeds, nonce);
-        BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block =
-                new BlockmessBlockImp<>(1, List.of(placementChain.getPrevBlock()),
-                        placementChain.getCurrContent(), proof, self, placementChain.getChainId(),
-                        placementChain.getChain().getRankFromRefs(Set.of(placementChain.getPrevBlock())),
-                        blockmessRoot.getHighestSeenRank() + 1);
-        sendRequest(new DisseminateSignedBlockRequest<>(block), ValueDispatcher.ID);
+    private void uponDeliverNonFinalizedBlockNotification(
+            DeliverNonFinalizedBlockNotification<BlockmessBlock> notif) {
+        try {
+            lock.lock();
+            updateMetaContentList(notif);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private byte[] computeSolution() {
@@ -171,17 +166,7 @@ public class SybilResistantElection extends GenericProtocol {
         return byteBuffer.getInt();
     }
 
-    private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif) {
-        try {
-            lock.lock();
-            updateMetaContentList(notif);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    private void updateMetaContentList(DeliverNonFinalizedBlockNotification<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> notif) {
+    private void updateMetaContentList(DeliverNonFinalizedBlockNotification<BlockmessBlock> notif) {
         try {
             Thread.sleep(100);  //Enough time for the mempool manager to process the block.
         } catch (InterruptedException e) {
@@ -190,8 +175,16 @@ public class SybilResistantElection extends GenericProtocol {
         List<BlockmessChain> chains = blockmessRoot.getAvailableChains();
         if (wereChainsChanged(chains))
             reactToChangeInNumberOfChains(chains);
-        BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> updatedChain = notif.getNonFinalizedBlock();
+        BlockmessBlock updatedChain = notif.getNonFinalizedBlock();
         replaceChainIfNecessary(updatedChain);
+    }
+
+    private void replaceChainIfNecessary(BlockmessBlock newBlock) {
+        try {
+            tryToReplaceChainIfNecessary(newBlock);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void reactToChangeInNumberOfChains(List<BlockmessChain> chains) {
@@ -250,15 +243,7 @@ public class SybilResistantElection extends GenericProtocol {
         }
     }
 
-    private void replaceChainIfNecessary(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> newBlock) {
-        try {
-            tryToReplaceChainIfNecessary(newBlock);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void tryToReplaceChainIfNecessary(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> newBlock)
+    private void tryToReplaceChainIfNecessary(BlockmessBlock newBlock)
             throws IOException {
         ChainSeed oldSeed = chainSeeds.get(newBlock.getDestinationChain());
         if (oldSeed != null) {
@@ -266,6 +251,19 @@ public class SybilResistantElection extends GenericProtocol {
             if (!newPrevs.contains(oldSeed.getPrevBlock()))
                 replaceChain(oldSeed, newPrevs);
         }
+    }
+
+    private void tryToProposeBlock(byte[] solution) throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
+        logger.info("Found valid solution with nonce {}, with {} leading zeros",
+                nonce, difficultyComputer.getSolutionLeadingZeros(solution));
+        ChainSeed placementChain = multiplexChain(solution);
+        List<Pair<UUID, byte[]>> chainSeeds = computeChainSeedsList();
+        SybilResistantElectionProof proof = new SybilResistantElectionProof(chainSeeds, nonce);
+        BlockmessBlock block = new BlockmessBlock(1, List.of(placementChain.getPrevBlock()),
+                        placementChain.getCurrContent(), proof, self, placementChain.getChainId(),
+                        placementChain.getChain().getRankFromRefs(Set.of(placementChain.getPrevBlock())),
+                        blockmessRoot.getHighestSeenRank() + 1);
+        sendRequest(new DisseminateSignedBlockRequest<>(block), ValueDispatcher.ID);
     }
 
     private void replaceChain(ChainSeed oldSeed, Set<UUID> newPrevs) throws IOException {

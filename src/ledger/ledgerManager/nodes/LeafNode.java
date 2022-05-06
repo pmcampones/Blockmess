@@ -13,7 +13,6 @@ import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;
 import java.util.*;
@@ -37,7 +36,7 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> {
+public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -45,9 +44,9 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
 
     private final UUID ChainId;
 
-    private final Ledger<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> ledger;
+    private final Ledger<BlockmessBlock> ledger;
 
-    private final List<LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>>> observers = new LinkedList<>();
+    private final List<LedgerObserver<BlockmessBlock>> observers = new LinkedList<>();
 
     private final ReadWriteLock observersLock = new ReentrantReadWriteLock();
     /**
@@ -57,14 +56,14 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
      * <p>Shouldn't need to be concurrent if the inner {@link Ledger} is a {@link ledger.blockchain.Blockchain},
      * however, in case the ledger implementation is changed, this will be kept as concurrent.</p>
      */
-    private final Map<UUID, BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> blocks = new ConcurrentHashMap<>();
+    private final Map<UUID, BlockmessBlock> blocks = new ConcurrentHashMap<>();
 
     private final ComposableContentStorage<Transaction> contentStorage;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
      */
-    private final Queue<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> finalizedBuffer = new ConcurrentLinkedQueue<>();
+    private final Queue<BlockmessBlock> finalizedBuffer = new ConcurrentLinkedQueue<>();
     private ParentTreeNode parent;
 
     /** Ledger<BlockmessBlock<C,P>> ledger
@@ -147,12 +146,12 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
     }
 
     @Override
-    public void submitBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
+    public void submitBlock(BlockmessBlock block) {
         ledger.submitBlock(block);
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
         try {
             observersLock.writeLock().lock();
             observers.add(observer);
@@ -203,13 +202,13 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> peekFinalized() {
+    public BlockmessBlock peekFinalized() {
         return finalizedBuffer.peek();
     }
 
     @Override
-    public BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> deliverChainBlock() {
-        BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block = finalizedBuffer.poll();
+    public BlockmessBlock deliverChainBlock() {
+        BlockmessBlock block = finalizedBuffer.poll();
         if (block != null) {
             computeBlockSizeStatistics(block);
             updateNextRank();
@@ -232,7 +231,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
         return true;
     }
 
-    private void computeBlockSizeStatistics(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block) {
+    private void computeBlockSizeStatistics(BlockmessBlock block) {
         if (blocksBeforeResumingMetrics > 0)
             blocksBeforeResumingMetrics--;
         else {
@@ -250,7 +249,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
         }
     }
 
-    private int getContentSerializedSize(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
+    private int getContentSerializedSize(BlockmessBlock block) {
         try {
             return block.getContentList().getSerializedSize();
         } catch (IOException e) {
@@ -259,7 +258,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
         }
     }
 
-    private int getBlockSerializedSize(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
+    private int getBlockSerializedSize(BlockmessBlock block) {
         try {
             return block.getSerializedSize();
         } catch (IOException e) {
@@ -291,7 +290,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
         return !finalizedBuffer.isEmpty();
     }
 
-    private int getProofSize(BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> block) {
+    private int getProofSize(BlockmessBlock block) {
         try {
             return block.getSybilElectionProof().getSerializedSize();
         } catch (IOException e) {
@@ -301,7 +300,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
     }
 
     @Override
-    public Set<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> getBlocks(Set<UUID> blockIds) {
+    public Set<BlockmessBlock> getBlocks(Set<UUID> blockIds) {
         return blockIds.stream().map(blocks::get).filter(Objects::nonNull).collect(toSet());
     }
 
@@ -338,13 +337,13 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
     }
 
     private void updateNextRank() {
-        BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> nextFinalized = finalizedBuffer.peek();
+        BlockmessBlock nextFinalized = finalizedBuffer.peek();
         if (nextFinalized != null && nextFinalized.getNextRank() > minNextRank)
             minNextRank = nextFinalized.getNextRank();
     }
 
     @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
         blocks.put(block.getBlockId(), block);
         logger.debug("Delivering non finalized block {} in Chain {}",
                 block.getBlockId(), ChainId);
@@ -395,7 +394,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
         return minRank;
     }
 
-    private void deliverNonFinalizedBlockToObservers(BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> block, int weight) {
+    private void deliverNonFinalizedBlockToObservers(BlockmessBlock block, int weight) {
         try {
             observersLock.readLock().lock();
             for (var observer : observers)
@@ -425,7 +424,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
     @Override
     public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
         if (finalized.isEmpty() && discarded.isEmpty()) return;
-        List<BlockmessBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
+        List<BlockmessBlock> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
         finalizedBuffer.addAll(finalizedBlocks);
         updateNextRank();
         contentStorage.deleteContent(getFinalizedContent(finalized));
@@ -491,7 +490,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock<C
                 ).collect(toSet());
     }
 
-    private Stream<StructuredValue<Transaction>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>> stream) {
+    private Stream<StructuredValue<Transaction>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock> stream) {
         return stream
                 .map(BlockmessBlock::getContentList)
                 .map(ContentList::getContentList)
