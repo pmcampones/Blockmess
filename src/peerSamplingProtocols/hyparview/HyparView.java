@@ -1,5 +1,6 @@
 package peerSamplingProtocols.hyparview;
 
+import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import peerSamplingProtocols.hyparview.messages.*;
@@ -56,8 +57,9 @@ public class HyparView extends GenericProtocol {
 
     private final short joinTimeout; //param: timeout for retry join
 
-    public HyparView(Properties props, Host myself) throws IOException, HandlerRegistrationException {
+    public HyparView(Host myself) throws IOException, HandlerRegistrationException {
         super(PROTOCOL_NAME, PROTOCOL_ID);
+        Properties props = GlobalProperties.getProps();
         this.myself = myself;
 
         this.ARWL = Short.parseShort(props.getProperty("ARWL", "4")); //param: active random walk length

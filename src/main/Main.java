@@ -118,30 +118,28 @@ public class Main {
     }
 
     private static void launchBlockmess(Properties props, Host myself, Babel babel) throws Exception {
-        var protocols = new LinkedList<>(addNetworkProtocols(props, myself));
-        var mempoolManager = MempoolManager.getSingleton();
+        List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
+        MempoolManager mempoolManager = MempoolManager.getSingleton();
         protocols.add(mempoolManager);
-        setUpLedgerPrototype(props);
+        setUpLedgerPrototype();
         setUpContentStoragePrototype();
-        var ledgerManager = setUpLedgerManager(props, protocols);
+        LedgerManager ledgerManager = setUpLedgerManager(protocols);
         bootstrapContent(props, ledgerManager);
-        setUpSybilElection(props, protocols, ledgerManager);
-        recordMetricsBlockmess(props, protocols, ledgerManager);
+        setUpSybilElection(protocols);
+        recordMetricsBlockmess(protocols);
         initializeSerializers();
         initializeProtocols(props, babel, protocols);
     }
 
-    private static void setUpSybilElection(Properties props, List<GenericProtocol> protocols, LedgerManager ledgerManager) throws Exception {
-        KeyPair myKeys = CryptographicUtils.getNodeKeys(props);
-        protocols.add(new SybilResistantElection(props, myKeys, ledgerManager));
+    private static void setUpSybilElection(List<GenericProtocol> protocols) throws Exception {
+        KeyPair myKeys = CryptographicUtils.getNodeKeys();
+        protocols.add(new SybilResistantElection(myKeys));
     }
 
     @NotNull
-    private static LedgerManager setUpLedgerManager(
-            Properties props, List<GenericProtocol> protocols)
+    private static LedgerManager setUpLedgerManager(List<GenericProtocol> protocols)
             throws PrototypeHasNotBeenDefinedException, HandlerRegistrationException {
-        LedgerManager ledgerManager =
-                new LedgerManager();
+        LedgerManager ledgerManager = LedgerManager.getSingleton();
         var babelLedger = new BabelLedger<>(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
@@ -152,24 +150,24 @@ public class Main {
         ContentStoragePrototype.setPrototype(contentStorage);
     }
 
-    private static void setUpLedgerPrototype(Properties props) throws PrototypeAlreadyDefinedException {
+    private static void setUpLedgerPrototype() throws PrototypeAlreadyDefinedException {
         var protoLedger = new Blockchain(new BootstrapModule());
         protoLedger.close();
         LedgerPrototype.setPrototype(protoLedger);
     }
 
-    private static void bootstrapContent(Properties props, LedgerManager ledgerManager) {
+    private static void bootstrapContent(Properties props, LedgerManager ledgerManager) throws PrototypeHasNotBeenDefinedException {
         var txsLoader = new StructuredValuesTxLoader(ledgerManager);
         if (props.getProperty("allowCommonTransactionsAmongChains", "F").equals("F")) {
-            loadTxsForBlockmess(props, txsLoader);
-            assert(areAllTxsDistinctAmongChains(ledgerManager));
+            loadTxsForBlockmess(txsLoader);
+            assert(areAllTxsDistinctAmongChains());
         } else {
-            loadTxsCommon(props, ledgerManager);
+            loadTxsCommon();
         }
     }
 
-    private static boolean areAllTxsDistinctAmongChains(LedgerManager ledgerManager) {
-        List<UUID> allTxsIds = ledgerManager.getAvailableChains().stream()
+    private static boolean areAllTxsDistinctAmongChains() throws PrototypeHasNotBeenDefinedException {
+        List<UUID> allTxsIds = LedgerManager.getSingleton().getAvailableChains().stream()
                 .map(ContentStorage::getStoredContent)
                 .flatMap(Collection::stream)
                 .map(StructuredValue::getId)
@@ -177,17 +175,29 @@ public class Main {
         return allTxsIds.size() == new HashSet<>(allTxsIds).size();
     }
 
-    private static void loadTxsCommon(
-            Properties props, LedgerManager ledgerManager) {
+    private static void loadTxsCommon() throws PrototypeHasNotBeenDefinedException {
+        Properties props = GlobalProperties.getProps();
         int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
         var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
         var structuredValues = txs.stream()
                 .map(StructuredValueSlimTransactionWrapper::wrapTx)
                 .collect(Collectors.toList());
-        ledgerManager.getAvailableChains().forEach(b -> b.submitContentDirectly(structuredValues));
+        LedgerManager.getSingleton().getAvailableChains().forEach(b -> b.submitContentDirectly(structuredValues));
     }
 
-    private static void recordMetricsBlockmess(Properties props, List<GenericProtocol> protocols, LedgerManager ledgerManager) throws IOException, HandlerRegistrationException {
+    private static void loadTxsForBlockmess(StructuredValuesTxLoader txsLoader) {
+        Properties props = GlobalProperties.getProps();
+        int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
+        var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
+        var structuredValues = txs.stream()
+                .map(StructuredValueSlimTransactionWrapper::wrapTx)
+                .collect(Collectors.toList());
+        txsLoader.loadTxs(structuredValues);
+    }
+
+    private static void recordMetricsBlockmess(List<GenericProtocol> protocols) throws Exception {
+        LedgerManager ledgerManager = LedgerManager.getSingleton();
+        Properties props = GlobalProperties.getProps();
         if (props.getProperty("recordUnfinalized", "T").equals("T"))
             ledgerManager.attachObserver(new UnfinalizedBlocksLog(props));
         if (props.getProperty("recordFinalized", "T").equals("T"))
@@ -198,21 +208,12 @@ public class Main {
             ledgerManager.changesLog.add(new ChangesInNumberOfChainsLog(props));
     }
 
-    private static List<GenericProtocol> addNetworkProtocols(Properties props, Host myself) throws Exception {
+    private static List<GenericProtocol> addNetworkProtocols(Host myself) throws Exception {
         List<GenericProtocol> protocols = new LinkedList<>();
-        HyparView peerSamplingProtocol = new HyparView(props, myself);;
+        HyparView peerSamplingProtocol = new HyparView(myself);;
         protocols.add(peerSamplingProtocol);
-        protocols.addAll(addBroadcastProtocols(props, myself, peerSamplingProtocol));
+        protocols.addAll(addBroadcastProtocols(myself, peerSamplingProtocol));
         protocols.add(new ValueDispatcher());
-        return protocols;
-    }
-
-    private static List<GenericProtocol> addBroadcastProtocols(Properties props, Host myself,
-                                                               HyparView peerSamplingProtocol)
-            throws HandlerRegistrationException, IOException {
-        List<GenericProtocol> protocols = new LinkedList<>();
-        protocols.add(new LazyPushBroadcast(props, myself));
-        protocols.add(new EagerPushBroadcast(peerSamplingProtocol));
         return protocols;
     }
 
@@ -224,13 +225,12 @@ public class Main {
         ProtoPojo.pojoSerializers.put(StructuredValue.ID, StructuredValue.serializer);
     }
 
-    private static void loadTxsForBlockmess(Properties props, StructuredValuesTxLoader txsLoader) {
-        int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
-        var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
-        var structuredValues = txs.stream()
-                .map(StructuredValueSlimTransactionWrapper::wrapTx)
-                .collect(Collectors.toList());
-        txsLoader.loadTxs(structuredValues);
+    private static List<GenericProtocol> addBroadcastProtocols(Host myself, HyparView peerSamplingProtocol)
+            throws HandlerRegistrationException, IOException {
+        List<GenericProtocol> protocols = new LinkedList<>();
+        protocols.add(new LazyPushBroadcast(myself));
+        protocols.add(new EagerPushBroadcast(peerSamplingProtocol));
+        return protocols;
     }
 
     private static void initializeProtocols(Properties props, Babel babel, List<GenericProtocol> protocols)

@@ -1,6 +1,7 @@
 package utils;
 
 import io.netty.buffer.ByteBuf;
+import main.GlobalProperties;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 
@@ -192,8 +193,23 @@ public class CryptographicUtils {
         }
     }
 
-    public static PrivateKey readECDSASecretKey(Properties props) throws IOException,
+    public static KeyPair getNodeKeys() throws Exception {
+        Properties props = GlobalProperties.getProps();
+        boolean generateKeys = props.getProperty("generateKeys", "T").equals("T");
+        return generateKeys ? generateECDSAKeyPair() : readECDSAKeyPair();
+    }
+
+    public static KeyPair readECDSAKeyPair() throws IOException,
             NoSuchAlgorithmException, InvalidKeySpecException {
+        Properties props = GlobalProperties.getProps();
+        PublicKey pub = readECDSAPublicKey(props.getProperty("myPublic"));
+        PrivateKey sec = readECDSASecretKey();
+        return new KeyPair(pub, sec);
+    }
+
+    public static PrivateKey readECDSASecretKey() throws IOException,
+            NoSuchAlgorithmException, InvalidKeySpecException {
+        Properties props = GlobalProperties.getProps();
         String fileLocation = props.getProperty("mySecret");
         try (FileReader keyReader = new FileReader(fileLocation);
              PemReader pemReader = new PemReader(keyReader)) {
@@ -203,17 +219,5 @@ public class CryptographicUtils {
             PKCS8EncodedKeySpec secretKeySpec = new PKCS8EncodedKeySpec(content);
             return factory.generatePrivate(secretKeySpec);
         }
-    }
-
-    public static KeyPair readECDSAKeyPair(Properties props) throws IOException,
-            NoSuchAlgorithmException, InvalidKeySpecException {
-        PublicKey pub = readECDSAPublicKey(props.getProperty("myPublic"));
-        PrivateKey sec = readECDSASecretKey(props);
-        return new KeyPair(pub, sec);
-    }
-
-    public static KeyPair getNodeKeys(Properties props) throws Exception {
-        boolean generateKeys = props.getProperty("generateKeys", "T").equals("T");
-        return generateKeys ? generateECDSAKeyPair() : readECDSAKeyPair(props);
     }
 }

@@ -29,9 +29,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class LedgerManager
-        implements ParentTreeNode,
-        Ledger<BlockmessBlock>, LedgerObserver<BlockmessBlock>, ContentStorage<StructuredValue<Transaction>> {
+public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, LedgerObserver<BlockmessBlock>, ContentStorage<StructuredValue<Transaction>> {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 
@@ -54,19 +52,14 @@ public class LedgerManager
     private final BlockingQueue<Object> deliverFinalizedRequests = new LinkedBlockingQueue<>();
 
     public final List<ChangesInNumberOfChainsLog> changesLog = new LinkedList<>();
-    
-    public LedgerManager() throws PrototypeHasNotBeenDefinedException {
+
+    private static LedgerManager singleton;
+
+    private LedgerManager() throws PrototypeHasNotBeenDefinedException {
         this(computeOgChainId());
     }
-
-    private static UUID computeOgChainId() {
-        Properties props = GlobalProperties.getProps();
-        String ogChainIdStr = props.getProperty("ogChainId",
-                "00000000-0000-0000-0000-000000000000");
-        return UUID.fromString(ogChainIdStr);
-    }
-
-    public LedgerManager(UUID ogChainId) throws PrototypeHasNotBeenDefinedException {
+    
+    private LedgerManager(UUID ogChainId) throws PrototypeHasNotBeenDefinedException {
         Properties props = GlobalProperties.getProps();
         var originChain = new ReferenceNode(props, ogChainId, this, 0, 1, 0,
                 new ComposableContentStorageImp<>());
@@ -77,6 +70,19 @@ public class LedgerManager
         initializeChains(originChain, initialNumChains);
         this.finalizedWeight = parseInt(props.getProperty("finalizedWeight", String.valueOf(Blockchain.FINALIZED_WEIGHT)));
         new Thread(this::processBlockDeliveries).start();
+    }
+
+    private static UUID computeOgChainId() {
+        Properties props = GlobalProperties.getProps();
+        String ogChainIdStr = props.getProperty("ogChainId",
+                "00000000-0000-0000-0000-000000000000");
+        return UUID.fromString(ogChainIdStr);
+    }
+
+    public static LedgerManager getSingleton() throws PrototypeHasNotBeenDefinedException {
+        if (singleton == null)
+            singleton = new LedgerManager();
+        return singleton;
     }
 
     private void initializeChains(BlockmessChain origin, int initialNumChains)

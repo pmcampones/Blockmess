@@ -8,6 +8,7 @@ import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
+import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import main.Main;
 import main.ProtoPojo;
 import org.apache.commons.lang3.tuple.Pair;
@@ -62,10 +63,10 @@ public class SybilResistantElection extends GenericProtocol {
 
     private int nonce = 0;
 
-    public SybilResistantElection(Properties props, KeyPair self, LedgerManager blockmessRoot) throws HandlerRegistrationException {
+    public SybilResistantElection(KeyPair self) throws HandlerRegistrationException, PrototypeHasNotBeenDefinedException {
         super(SybilResistantElection.class.getSimpleName(), ID);
         this.self = self;
-        this.blockmessRoot = blockmessRoot;
+        this.blockmessRoot = LedgerManager.getSingleton();
         this.difficultyComputer = new ConcurrentDifficultyComputer(
                 blockmessRoot.getAvailableChains().size());
         this.chainSeeds = replaceChainSeeds(blockmessRoot.getAvailableChains());

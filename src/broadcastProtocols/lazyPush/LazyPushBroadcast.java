@@ -13,6 +13,7 @@ import broadcastProtocols.notifications.DeliverVal;
 import broadcastProtocols.notifications.PeerUnreachableNotification;
 import catecoin.notifications.AnswerMessageValidationNotification;
 import com.google.common.collect.Sets;
+import main.GlobalProperties;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;
@@ -75,7 +76,6 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
 
     /**
      * Maps the identifiers of objects that block in the broadcast
-     * (see {@link BlockingBroadcast})
      *  to the identifiers of the messages that encapsulated them.
      *  <p>This is used to resume the broadcast of an object after it has been successfully validated.</p>
      */
@@ -90,22 +90,24 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
      * <p>Upon the conclusion of these steps, node B will repeat the process from step 1 to transmit the information to some other node C.</p>
      * <p>This execution occurs for every value proposed until there are no nodes unaware of the value proposed.</p>
      **/
-    public LazyPushBroadcast(Properties props, Host self)
+    public LazyPushBroadcast(Host self)
             throws HandlerRegistrationException, IOException {
         super(LazyPushBroadcast.class.getSimpleName(), ID);
         this.self = self;
         this.messageBuffer = new PeriodicPrunableHashMap<>();
+        Properties props = GlobalProperties.getProps();
         this.delayedValueTimer = parseLong(props.getProperty("delayedValueTimer",
                 String.valueOf(DELAYED_VALUE_TIMER)));
-        channelId = createTCPChannel(props);
+        channelId = createTCPChannel();
         registerRequestHandler(LazyBroadcastRequest.ID, (LazyBroadcastRequest request, short sourceProto) -> uponBroadcastRequest(request));
         registerTimerHandler(DelayedResponsesTimer.ID, (DelayedResponsesTimer t, long timerId) -> uponDelayedResponseTimer());
         subscribeNotifications();
         registerMessageConfigs();
-        registerRecoveryMechanism(props);
+        registerRecoveryMechanism();
     }
 
-    private int createTCPChannel(Properties props) throws IOException {
+    private int createTCPChannel() throws IOException {
+        Properties props = GlobalProperties.getProps();
         // Create a properties object to setup channel-specific properties. See the
         // channel description for more details.
         Properties channelProps = new Properties();
@@ -149,8 +151,8 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
                 (RequestValMessage msg, Host from, short sourceProto, int channelId1) -> uponRequestValMessage(msg, from, channelId1), (msg1, to, destProto, throwable, channelId2) -> uponMsgFail(msg1, to, throwable));
     }
 
-    private void registerRecoveryMechanism(Properties props)
-            throws HandlerRegistrationException {
+    private void registerRecoveryMechanism() throws HandlerRegistrationException {
+        Properties props = GlobalProperties.getProps();
         String useRecovery = props.getProperty("lazyBroadcastStateRecovery", "T");
         if (useRecovery.equals("T")) {
             logger.info("Lazy push broadcast protocol initialized with a state recovery mechanism");
