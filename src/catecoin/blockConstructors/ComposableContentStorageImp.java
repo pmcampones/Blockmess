@@ -1,6 +1,6 @@
 package catecoin.blockConstructors;
 
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import ledger.ledgerManager.StructuredValue;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
@@ -11,23 +11,22 @@ import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ComposableContentStorageImp<E extends IndexableContent>
-        implements ComposableContentStorage<E> {
+public class ComposableContentStorageImp implements ComposableContentStorage<Transaction> {
 
-    private final ContentStorage<StructuredValue<E>> inner;
+    private final ContentStorage<StructuredValue<Transaction>> inner;
 
     private final ReadWriteLock innerLock = new ReentrantReadWriteLock();
 
     public ComposableContentStorageImp() throws PrototypeHasNotBeenDefinedException {
-        this.inner = ContentStoragePrototype.getPrototype();
+        this.inner = new BaseContentStorage();
     }
 
-    public ComposableContentStorageImp(ContentStorage<StructuredValue<E>> inner) {
+    public ComposableContentStorageImp(ContentStorage<StructuredValue<Transaction>> inner) {
         this.inner = inner;
     }
 
     @Override
-    public List<StructuredValue<E>> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         try {
             innerLock.readLock().lock();
@@ -38,7 +37,7 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @Override
-    public List<StructuredValue<E>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
+    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
             throws IOException {
         try {
             innerLock.readLock().lock();
@@ -49,7 +48,7 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<E>> content) {
+    public void submitContent(Collection<StructuredValue<Transaction>> content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -59,7 +58,7 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @Override
-    public void submitContent(StructuredValue<E> content) {
+    public void submitContent(StructuredValue<Transaction> content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -79,7 +78,7 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @Override
-    public Collection<StructuredValue<E>> getStoredContent() {
+    public Collection<StructuredValue<Transaction>> getStoredContent() {
         try {
             innerLock.readLock().lock();
             return inner.getStoredContent();
@@ -109,14 +108,14 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @Override
-    public Pair<ComposableContentStorage<E>, ComposableContentStorage<E>>
+    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>>
     separateContent(StructuredValueMask mask,
-                    ContentStorage<StructuredValue<E>> innerLft,
-                    ContentStorage<StructuredValue<E>> innerRgt) {
-        ComposableContentStorage<E> lft =
-                new ComposableContentStorageImp<>(innerLft);
-        ComposableContentStorage<E> rgt =
-                new ComposableContentStorageImp<>(innerRgt);
+                    ContentStorage<StructuredValue<Transaction>> innerLft,
+                    ContentStorage<StructuredValue<Transaction>> innerRgt) {
+        ComposableContentStorage<Transaction> lft =
+                new ComposableContentStorageImp(innerLft);
+        ComposableContentStorage<Transaction> rgt =
+                new ComposableContentStorageImp(innerRgt);
         try {
             innerLock.writeLock().lock();
             Set<UUID> migrated = redistributeContent(mask, lft, rgt);
@@ -130,10 +129,10 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @NotNull
-    private Set<UUID> redistributeContent(StructuredValueMask mask, ComposableContentStorage<E> lft, ComposableContentStorage<E> rgt) {
-        Collection<StructuredValue<E>> allValues = inner.getStoredContent();
+    private Set<UUID> redistributeContent(StructuredValueMask mask, ComposableContentStorage<Transaction> lft, ComposableContentStorage<Transaction> rgt) {
+        Collection<StructuredValue<Transaction>> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
-        for (StructuredValue<E> val : inner.getStoredContent()) {
+        for (StructuredValue<Transaction> val : inner.getStoredContent()) {
             StructuredValueMask.MaskResult res = mask.matchIds(val.getMatch1(), val.getMatch2());
             if (res.equals(StructuredValueMask.MaskResult.LEFT)) {
                 migrated.add(val.getId());
@@ -147,8 +146,7 @@ public class ComposableContentStorageImp<E extends IndexableContent>
     }
 
     @Override
-    public void aggregateContent(
-            Collection<ComposableContentStorage<E>> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> composableBlockConstructors) {
         try {
             innerLock.writeLock().lock();
             for (var blockConstructor : composableBlockConstructors)

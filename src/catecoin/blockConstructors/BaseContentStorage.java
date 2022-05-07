@@ -18,8 +18,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toMap;
 import static sybilResistantElection.SybilResistantElection.INITIALIZATION_TIME;
 
-public class BaseContentStorage
-        implements PrototypicalContentStorage<StructuredValue<Transaction>> {
+public class BaseContentStorage implements ContentStorage<StructuredValue<Transaction>> {
 
     public static final int MAX_THRESHOLD_THROUGHPUT = Integer.MAX_VALUE;
     public static final int MAX_BLOCK_SIZE = 40000;
@@ -172,11 +171,6 @@ public class BaseContentStorage
     @Override
     public void deleteContent(Set<UUID> contentIds) {
         contentIds.forEach(contentMap::remove);
-    }
-
-    @Override
-    public PrototypicalContentStorage<StructuredValue<Transaction>> clonePrototype() {
-        return new BaseContentStorage();
     }
 
     @Override

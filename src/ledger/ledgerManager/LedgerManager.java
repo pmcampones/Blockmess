@@ -62,7 +62,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
     private LedgerManager(UUID ogChainId) throws PrototypeHasNotBeenDefinedException {
         Properties props = GlobalProperties.getProps();
         var originChain = new ReferenceNode(props, ogChainId, this, 0, 1, 0,
-                new ComposableContentStorageImp<>());
+                new ComposableContentStorageImp());
         originChain.attachObserver(this);
         this.minNumChains = parseInt(props.getProperty("minNumChains", "1"));
         this.maxNumChains = parseInt(props.getProperty("maxNumChains", String.valueOf(Integer.MAX_VALUE)));

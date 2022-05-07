@@ -2,7 +2,8 @@ package main;
 
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
-import catecoin.blockConstructors.*;
+import catecoin.blockConstructors.ContentStorage;
+import catecoin.blockConstructors.StructuredValuesTxLoader;
 import catecoin.blocks.ContentList;
 import catecoin.mempoolManager.BootstrapModule;
 import catecoin.mempoolManager.MempoolManager;
@@ -122,7 +123,6 @@ public class Main {
         MempoolManager mempoolManager = MempoolManager.getSingleton();
         protocols.add(mempoolManager);
         setUpLedgerPrototype();
-        setUpContentStoragePrototype();
         LedgerManager ledgerManager = setUpLedgerManager(protocols);
         bootstrapContent(props, ledgerManager);
         setUpSybilElection(protocols);
@@ -143,11 +143,6 @@ public class Main {
         var babelLedger = new BabelLedger<>(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
-    }
-
-    private static void setUpContentStoragePrototype() throws PrototypeAlreadyDefinedException {
-        PrototypicalContentStorage<StructuredValue<Transaction>> contentStorage = new BaseContentStorage();
-        ContentStoragePrototype.setPrototype(contentStorage);
     }
 
     private static void setUpLedgerPrototype() throws PrototypeAlreadyDefinedException {

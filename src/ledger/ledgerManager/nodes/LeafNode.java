@@ -188,8 +188,8 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     @Override
     public void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException {
         StructuredValueMask mask = new StructuredValueMask(depth);
-        ContentStorage<StructuredValue<Transaction>> lft = ContentStoragePrototype.getPrototype();
-        ContentStorage<StructuredValue<Transaction>> rgt = ContentStoragePrototype.getPrototype();
+        ContentStorage<StructuredValue<Transaction>> lft = new BaseContentStorage();
+        ContentStorage<StructuredValue<Transaction>> rgt = new BaseContentStorage();
         depth++;
         contentStorage.halveChainThroughput();
         Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> spawnedChainDirectors =
@@ -316,10 +316,10 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
         contentStorage.halveChainThroughput();
         ParentTreeNode treeRoot = parent.getTreeRoot();
         ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
-                0, 1, depth, new ComposableContentStorageImp<>(),
+                0, 1, depth, new ComposableContentStorageImp(),
                 new UUID(0,0));
         ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
-                0, 1, depth, new ComposableContentStorageImp<>(),
+                0, 1, depth, new ComposableContentStorageImp(),
                 new UUID(0,0));
         lft.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
         rgt.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
