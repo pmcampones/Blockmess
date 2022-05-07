@@ -1,5 +1,7 @@
 package sybilResistantElection.difficultyComputers;
 
+import main.GlobalProperties;
+
 import java.util.Properties;
 
 import static java.lang.Integer.parseInt;
@@ -13,7 +15,8 @@ public class MultiChainDifficultyComputerImp implements MultiChainDifficultyComp
 
     private DifficultyComputer inner;
 
-    public MultiChainDifficultyComputerImp(Properties props, int numChains) {
+    public MultiChainDifficultyComputerImp(int numChains) {
+        Properties props = GlobalProperties.getProps();
         int expectedNumNodes = parseInt(props.getProperty("expectedNumNodes", EXPECTED_NUM_NODES));
         int timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
         int expectedTimeBetweenBlocks = parseInt(props.getProperty("expectedTimeBetweenBlocks",

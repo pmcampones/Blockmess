@@ -2,11 +2,12 @@ package ledger.blockchain;
 
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.mempoolManager.BootstrapModule;
-import catecoin.validators.BlockmessGPoETValidator;
+import catecoin.validators.ApplicationObliviousValidator;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.PrototypicalLedger;
 import ledger.blocks.BlockmessBlock;
+import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -28,7 +29,7 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
 
     private static final long VERIFICATION_INTERVAL = WAIT_DELAY_REORDER * 5;
 
-    private static final int FINALIZED_WEIGHT = 6;
+    public static final int FINALIZED_WEIGHT = 6;
 
     private static final ScheduledThreadPoolExecutor pool = initPool();
 
@@ -38,15 +39,7 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
         return pool;
     }
 
-    private final BlockmessGPoETValidator validator;
-
-
     public final int finalizedWeight;
-
-    /**
-     * Properties are kept to be issued in the cloning process of the Ledger prototype.
-     */
-    private final Properties props;
 
     private final BootstrapModule bootstrapModule;
 
@@ -75,23 +68,22 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public Blockchain(Properties props, BlockmessGPoETValidator validator,
-                      BootstrapModule bootstrapModule)  {
-        this(props, validator, bootstrapModule, computeGenesisUUID(props));
+    public Blockchain(BootstrapModule bootstrapModule)  {
+        this(bootstrapModule, computeGenesisUUID());
     }
 
-    private static UUID computeGenesisUUID(Properties props) {
+    private static UUID computeGenesisUUID() {
+        Properties props = GlobalProperties.getProps();
         String genesisUUIDStr = props.getProperty("genesisUUID",
                 "00000000-0000-0000-0000-000000000000");
         return UUID.fromString(genesisUUIDStr);
     }
 
-    public Blockchain(Properties props, BlockmessGPoETValidator validator,
-                      BootstrapModule bootstrapModule, UUID genesisUUID) {
-        this.props = props;
+    public Blockchain(BootstrapModule bootstrapModule, UUID genesisUUID) {
+        Properties props = GlobalProperties.getProps();
         this.bootstrapModule = bootstrapModule;
-        this.finalizedWeight = computeFinalizedWeight(props);
-        this.validator = validator;
+        this.finalizedWeight = parseInt(props.getProperty("finalizedWeight",
+                String.valueOf(FINALIZED_WEIGHT)));;
         createGenesisBlock(genesisUUID);
         bootstrapBlockchain(BootstrapModule.getStoredChunks());
         this.delayVerifier = generateDelayVerifier(props);
@@ -100,9 +92,8 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
 
     }
 
-    public static int computeFinalizedWeight(Properties props) {
-        return parseInt(props.getProperty("finalizedWeight",
-                String.valueOf(FINALIZED_WEIGHT)));
+    public int getFinalizedWeight() {
+        return finalizedWeight;
     }
 
     private DelayVerifier generateDelayVerifier(Properties props) {
@@ -154,12 +145,7 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
 
     @Override
     public PrototypicalLedger<BlockmessBlock> clonePrototype(UUID genesisId) {
-        return new Blockchain(props, validator, bootstrapModule, genesisId);
-    }
-
-    @Override
-    public int getFinalizedWeight() {
-        return finalizedWeight;
+        return new Blockchain(bootstrapModule, genesisId);
     }
 
     @Override
@@ -220,7 +206,7 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
             logger.info("Received unordered block with id: {}, referencing {}",
                     block.getBlockId(), block.getPrevRefs().get(0));
             delayVerifier.submitUnordered(block);
-        } else if (validator.isBlockValid(block)) {
+        } else if (ApplicationObliviousValidator.getSingleton().isBlockValid(block)) {
             processValidBlock(block, prev);
         } else {
             logger.info("Received invalid block {} referencing {}",

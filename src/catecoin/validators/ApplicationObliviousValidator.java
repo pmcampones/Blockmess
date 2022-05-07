@@ -21,15 +21,20 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-public class BlockmessGPoETValidator extends GenericProtocol {
+public class ApplicationObliviousValidator extends GenericProtocol {
 
     public static final short ID = IDGenerator.genId();
 
-    private final Properties props;
+    private static ApplicationObliviousValidator singleton;
 
-    public BlockmessGPoETValidator(Properties props) {
-        super(BlockmessGPoETValidator.class.getSimpleName(), ID);
-        this.props = props;
+    private ApplicationObliviousValidator() {
+        super(ApplicationObliviousValidator.class.getSimpleName(), ID);
+    }
+
+    public static ApplicationObliviousValidator getSingleton() {
+        if (singleton == null)
+            singleton = new ApplicationObliviousValidator();
+        return singleton;
     }
 
     @Override
@@ -57,7 +62,7 @@ public class BlockmessGPoETValidator extends GenericProtocol {
             return false;
         MerkleTree randomSeed = computeRandomSeed(block);
         byte[] solution = computeSolution(randomSeed, proof.getNonce());
-        return new MultiChainDifficultyComputerImp(props, proof.getChainSeeds().size())
+        return new MultiChainDifficultyComputerImp(proof.getChainSeeds().size())
                 .hasEnoughLeadingZeros(solution);
     }
 

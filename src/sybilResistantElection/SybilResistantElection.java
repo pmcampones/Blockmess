@@ -66,7 +66,7 @@ public class SybilResistantElection extends GenericProtocol {
         super(SybilResistantElection.class.getSimpleName(), ID);
         this.self = self;
         this.blockmessRoot = blockmessRoot;
-        this.difficultyComputer = new ConcurrentDifficultyComputer(props,
+        this.difficultyComputer = new ConcurrentDifficultyComputer(
                 blockmessRoot.getAvailableChains().size());
         this.chainSeeds = replaceChainSeeds(blockmessRoot.getAvailableChains());
         this.randomSeed = computeRandomSeed();

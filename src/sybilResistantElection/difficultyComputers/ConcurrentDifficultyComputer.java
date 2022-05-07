@@ -1,6 +1,5 @@
 package sybilResistantElection.difficultyComputers;
 
-import java.util.Properties;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -10,8 +9,8 @@ public class ConcurrentDifficultyComputer implements MultiChainDifficultyCompute
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public ConcurrentDifficultyComputer(Properties props, int numChains) {
-        this.inner = new MultiChainDifficultyComputerImp(props, numChains);
+    public ConcurrentDifficultyComputer(int numChains) {
+        this.inner = new MultiChainDifficultyComputerImp(numChains);
     }
 
     @Override

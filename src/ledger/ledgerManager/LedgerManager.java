@@ -13,6 +13,7 @@ import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
 import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import logsGenerators.ChangesInNumberOfChainsLog;
+import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -54,27 +55,27 @@ public class LedgerManager
 
     public final List<ChangesInNumberOfChainsLog> changesLog = new LinkedList<>();
     
-    public LedgerManager(Properties props) throws PrototypeHasNotBeenDefinedException {
-        this(props, computeOgChainId(props));
+    public LedgerManager() throws PrototypeHasNotBeenDefinedException {
+        this(computeOgChainId());
     }
 
-    private static UUID computeOgChainId(Properties props) {
+    private static UUID computeOgChainId() {
+        Properties props = GlobalProperties.getProps();
         String ogChainIdStr = props.getProperty("ogChainId",
                 "00000000-0000-0000-0000-000000000000");
         return UUID.fromString(ogChainIdStr);
     }
 
-    public LedgerManager(Properties props, UUID ogChainId) throws PrototypeHasNotBeenDefinedException {
+    public LedgerManager(UUID ogChainId) throws PrototypeHasNotBeenDefinedException {
+        Properties props = GlobalProperties.getProps();
         var originChain = new ReferenceNode(props, ogChainId, this, 0, 1, 0,
                 new ComposableContentStorageImp<>());
         originChain.attachObserver(this);
         this.minNumChains = parseInt(props.getProperty("minNumChains", "1"));
-        this.maxNumChains = parseInt(props.getProperty("maxNumChains",
-                String.valueOf(Integer.MAX_VALUE)));
-        int initialNumChains = parseInt(props.getProperty("initialNumChains",
-                String.valueOf(minNumChains)));
+        this.maxNumChains = parseInt(props.getProperty("maxNumChains", String.valueOf(Integer.MAX_VALUE)));
+        int initialNumChains = parseInt(props.getProperty("initialNumChains", String.valueOf(minNumChains)));
         initializeChains(originChain, initialNumChains);
-        this.finalizedWeight = Blockchain.computeFinalizedWeight(props);
+        this.finalizedWeight = parseInt(props.getProperty("finalizedWeight", String.valueOf(Blockchain.FINALIZED_WEIGHT)));
         new Thread(this::processBlockDeliveries).start();
     }
 

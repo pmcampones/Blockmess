@@ -9,7 +9,6 @@ import catecoin.mempoolManager.MempoolManager;
 import catecoin.transactionGenerators.FakeTxsGenerator;
 import catecoin.txs.StructuredValueSlimTransactionWrapper;
 import catecoin.txs.Transaction;
-import catecoin.validators.BlockmessGPoETValidator;
 import ledger.BabelLedger;
 import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
@@ -142,7 +141,7 @@ public class Main {
             Properties props, List<GenericProtocol> protocols)
             throws PrototypeHasNotBeenDefinedException, HandlerRegistrationException {
         LedgerManager ledgerManager =
-                new LedgerManager(props);
+                new LedgerManager();
         var babelLedger = new BabelLedger<>(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
@@ -154,8 +153,7 @@ public class Main {
     }
 
     private static void setUpLedgerPrototype(Properties props) throws PrototypeAlreadyDefinedException {
-        var blockValidator = new BlockmessGPoETValidator(props);
-        var protoLedger = new Blockchain(props, blockValidator, new BootstrapModule());
+        var protoLedger = new Blockchain(new BootstrapModule());
         protoLedger.close();
         LedgerPrototype.setPrototype(protoLedger);
     }
