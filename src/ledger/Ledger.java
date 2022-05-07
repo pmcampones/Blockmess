@@ -25,7 +25,7 @@ public interface Ledger<B extends LedgerBlock<? extends ContentList<? extends In
      * Adds a subscriber to changes of state in the Ledger according with the Observer design pattern.
      * @param observer The object implementing LedgerObserver that will be notified upon state modifications.
      */
-    void attachObserver(LedgerObserver<B> observer);
+    void attachObserver(LedgerObserver observer);
 
     /**
      * Retrieves the identifiers of blocks in a Ledger at a given distance (in weight) from a parameter block.

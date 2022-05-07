@@ -55,7 +55,7 @@ public class Blockchain implements Ledger<BlockmessBlock> {
     //Only used in the unit tests
     public final Map<UUID, BlockchainNode> finalized = new HashMap<>();
 
-    private final List<LedgerObserver<BlockmessBlock>> observers = new LinkedList<>();
+    private final List<LedgerObserver> observers = new LinkedList<>();
 
     private final DelayVerifier delayVerifier;
 
@@ -135,7 +135,7 @@ public class Blockchain implements Ledger<BlockmessBlock> {
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
+    public void attachObserver(LedgerObserver observer) {
         this.observers.add(observer);
     }
 
@@ -217,7 +217,7 @@ public class Blockchain implements Ledger<BlockmessBlock> {
     }
 
     private void deliverNonFinalizedBlocks(BlockmessBlock block, int weight) {
-        for (LedgerObserver<BlockmessBlock> observer : this.observers)
+        for (LedgerObserver observer : this.observers)
             observer.deliverNonFinalizedBlock(block, weight);
     }
 
@@ -240,7 +240,7 @@ public class Blockchain implements Ledger<BlockmessBlock> {
     }
 
     private void deliverFinalizedBlocks(List<UUID> finalizedIds, Set<UUID> deleted) {
-        for (LedgerObserver<BlockmessBlock> observer : this.observers)
+        for (LedgerObserver observer : this.observers)
             observer.deliverFinalizedBlocks(finalizedIds, deleted);
     }
 

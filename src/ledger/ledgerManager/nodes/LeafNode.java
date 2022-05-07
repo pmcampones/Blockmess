@@ -35,7 +35,7 @@ import static java.util.stream.Collectors.toSet;
  * and maintains a buffer of finalized blocks to aid the delivered block linearization process
  * undertook by the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> {
+public class LeafNode implements BlockmessChain, LedgerObserver {
 
     private static final Logger logger = LogManager.getLogger(LeafNode.class);
 
@@ -45,7 +45,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
 
     private final Ledger<BlockmessBlock> ledger;
 
-    private final List<LedgerObserver<BlockmessBlock>> observers = new LinkedList<>();
+    private final List<LedgerObserver> observers = new LinkedList<>();
 
     private final ReadWriteLock observersLock = new ReentrantReadWriteLock();
     /**
@@ -148,7 +148,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
+    public void attachObserver(LedgerObserver observer) {
         try {
             observersLock.writeLock().lock();
             observers.add(observer);

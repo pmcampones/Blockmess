@@ -1,9 +1,7 @@
 package ledger;
 
-import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
-import catecoin.txs.IndexableContent;
-import ledger.blocks.LedgerBlock;
+import ledger.blocks.BlockmessBlock;
 import ledger.blocks.LedgerBlockImp;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.ProtoPojo;
@@ -11,7 +9,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilResistantElectionProof;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
 
@@ -21,9 +18,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
-public class BabelLedger<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilResistantElectionProof>>
-        extends GenericProtocol
-        implements LedgerObserver<B> {
+public class BabelLedger extends GenericProtocol implements LedgerObserver {
 
     private static final Logger logger = LogManager.getLogger(BabelLedger.class);
 
@@ -33,16 +28,16 @@ public class BabelLedger<B extends LedgerBlock<? extends ContentList<? extends I
      * This Ledger is simultaneously a strategy to handle block submission according to the Strategy pattern,
      * as well as a subject to listen to changes in the Observer pattern.
      */
-    private final Ledger<B> ledger;
+    private final Ledger<BlockmessBlock> ledger;
 
-    public BabelLedger(Ledger<B> ledger) throws HandlerRegistrationException {
+    public BabelLedger(Ledger<BlockmessBlock> ledger) throws HandlerRegistrationException {
         super(BabelLedger.class.getSimpleName(), ID);
         this.ledger = attachToSubjectLedger(ledger);
-        subscribeNotification(DeliverSignedBlockNotification.ID, (DeliverSignedBlockNotification<B> notif, short id) -> uponDeliverSignedBlockNotification(notif));
+        subscribeNotification(DeliverSignedBlockNotification.ID, (DeliverSignedBlockNotification<BlockmessBlock> notif, short id) -> uponDeliverSignedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(LedgerBlockImp.ID, LedgerBlockImp.serializer);
     }
 
-    private Ledger<B> attachToSubjectLedger(Ledger<B> ledger) {
+    private Ledger<BlockmessBlock> attachToSubjectLedger(Ledger<BlockmessBlock> ledger) {
         ledger.attachObserver(this);
         return ledger;
     }
@@ -50,14 +45,14 @@ public class BabelLedger<B extends LedgerBlock<? extends ContentList<? extends I
     @Override
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
-    private void uponDeliverSignedBlockNotification (DeliverSignedBlockNotification<B> notif) {
-        B block = notif.getBlock();
+    private void uponDeliverSignedBlockNotification (DeliverSignedBlockNotification<BlockmessBlock> notif) {
+        BlockmessBlock block = notif.getBlock();
         logger.info("Ledger received block: {}", block.getBlockId());
         ledger.submitBlock(block);
     }
 
     @Override
-    public void deliverNonFinalizedBlock(B block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
         triggerNotification(new DeliverNonFinalizedBlockNotification<>(block, weight));
     }
 

@@ -26,7 +26,7 @@ import static org.apache.commons.collections4.SetUtils.union;
  * <p>This node monitors the flux of blocks from the inner nodes
  * and communicates changes to the {@link ledger.ledgerManager.LedgerManager}.</p>
  */
-public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>, BlockmessChain {
+public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain {
 
     private final Properties props;
 
@@ -108,7 +108,7 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>,
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
+    public void attachObserver(LedgerObserver observer) {
         inner.attachObserver(observer);
     }
 

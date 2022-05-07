@@ -134,7 +134,7 @@ public class Main {
     private static LedgerManager setUpLedgerManager(List<GenericProtocol> protocols)
             throws HandlerRegistrationException {
         LedgerManager ledgerManager = LedgerManager.getSingleton();
-        var babelLedger = new BabelLedger<>(ledgerManager);
+        var babelLedger = new BabelLedger(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
     }

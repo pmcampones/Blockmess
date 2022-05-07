@@ -2,7 +2,7 @@ package logsGenerators;
 
 import catecoin.blocks.ContentList;
 import ledger.LedgerObserver;
-import ledger.blocks.LedgerBlock;
+import ledger.blocks.BlockmessBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -36,10 +36,9 @@ public class FinalizedBlocksLog implements LedgerObserver {
     }
 
     @Override
-    public void deliverNonFinalizedBlock(LedgerBlock block, int weight) {
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
         long receiveTime = System.currentTimeMillis();
-        ContentList content =
-                (ContentList) block.getContentList();
+        ContentList content = block.getContentList();
         logger.debug("Recording arrival of block {} at time {}.",
                 block.getBlockId(), receiveTime);
         blockArrival.put(block.getBlockId(),

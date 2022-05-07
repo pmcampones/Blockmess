@@ -1,7 +1,7 @@
 package logsGenerators;
 
 import ledger.LedgerObserver;
-import ledger.blocks.LedgerBlock;
+import ledger.blocks.BlockmessBlock;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,7 +28,10 @@ public class UnfinalizedBlocksLog implements LedgerObserver {
     }
 
     @Override
-    public void deliverNonFinalizedBlock(LedgerBlock block, int weight) {
+    public void deliverFinalizedBlocks(List finalized, Set discarded) {}
+
+    @Override
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
         UUID blockId = block.getBlockId();
         if (repeats.contains(blockId))
             return;
@@ -42,7 +45,4 @@ public class UnfinalizedBlocksLog implements LedgerObserver {
             e.printStackTrace();
         }
     }
-
-    @Override
-    public void deliverFinalizedBlocks(List finalized, Set discarded) {}
 }

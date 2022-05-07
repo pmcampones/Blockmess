@@ -28,7 +28,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, LedgerObserver<BlockmessBlock>, ContentStorage {
+public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, LedgerObserver, ContentStorage {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 
@@ -38,7 +38,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
 
     private final BlockingQueue<UUID> toRemoveChains = new LinkedBlockingQueue<>();
 
-    private final List<LedgerObserver<BlockmessBlock>> observers = new LinkedList<>();
+    private final List<LedgerObserver> observers = new LinkedList<>();
 
     private final int finalizedWeight;
 
@@ -167,7 +167,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
+    public void attachObserver(LedgerObserver observer) {
         this.observers.add(observer);
     }
 
@@ -191,7 +191,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
 
     @Override
     public void deliverNonFinalizedBlock(BlockmessBlock nonFinalized, int weight) {
-        for (LedgerObserver<BlockmessBlock> observer : observers)
+        for (LedgerObserver observer : observers)
             observer.deliverNonFinalizedBlock(nonFinalized, weight);
     }
 

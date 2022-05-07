@@ -80,7 +80,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
+    public void attachObserver(LedgerObserver observer) {
         leaf.attachObserver(observer);
     }
 
