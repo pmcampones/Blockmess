@@ -1,17 +1,14 @@
 package ledger.blockchain;
 
-import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.mempoolManager.BootstrapModule;
-import catecoin.txs.IndexableContent;
-import catecoin.validators.BlockValidator;
+import catecoin.validators.BlockmessGPoETValidator;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.PrototypicalLedger;
-import ledger.blocks.LedgerBlock;
+import ledger.blocks.BlockmessBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -21,8 +18,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.*;
 
-public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>, ? extends SybilResistantElectionProof>>
-        implements PrototypicalLedger<B>, Ledger<B> {
+public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<BlockmessBlock> {
 
     private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());
 
@@ -42,7 +38,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
         return pool;
     }
 
-    private final BlockValidator<B> validator;
+    private final BlockmessGPoETValidator validator;
 
 
     public final int finalizedWeight;
@@ -57,7 +53,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
     //Blocks that have arrived but are yet to be processed.
     //This Blockchain implementation is fundamentally serial.
     //Blocks are kept in this queue and a single thread will process each individually in a FIFO order.
-    private final BlockingQueue<B> toProcess = new LinkedBlockingQueue<>();
+    private final BlockingQueue<BlockmessBlock> toProcess = new LinkedBlockingQueue<>();
 
     //Collection containing the blocks that have no other block referencing them.
     //Effectively being the tips of their forks.
@@ -69,9 +65,9 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
     //Only used in the unit tests
     public final Map<UUID, BlockchainNode> finalized = new HashMap<>();
 
-    private final List<LedgerObserver<B>> observers = new LinkedList<>();
+    private final List<LedgerObserver<BlockmessBlock>> observers = new LinkedList<>();
 
-    private final DelayVerifier<B> delayVerifier;
+    private final DelayVerifier delayVerifier;
 
     private BlockchainNode lastFinalized;
 
@@ -79,7 +75,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public Blockchain(Properties props, BlockValidator<B> validator,
+    public Blockchain(Properties props, BlockmessGPoETValidator validator,
                       BootstrapModule bootstrapModule)  {
         this(props, validator, bootstrapModule, computeGenesisUUID(props));
     }
@@ -90,7 +86,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
         return UUID.fromString(genesisUUIDStr);
     }
 
-    public Blockchain(Properties props, BlockValidator<B> validator,
+    public Blockchain(Properties props, BlockmessGPoETValidator validator,
                       BootstrapModule bootstrapModule, UUID genesisUUID) {
         this.props = props;
         this.bootstrapModule = bootstrapModule;
@@ -109,12 +105,12 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
                 String.valueOf(FINALIZED_WEIGHT)));
     }
 
-    private DelayVerifier<B> generateDelayVerifier(Properties props) {
+    private DelayVerifier generateDelayVerifier(Properties props) {
         long waitDelayReorder = parseLong(props.getProperty("waitDelayReorder",
                 String.valueOf(WAIT_DELAY_REORDER)));
         long verificationDelay = parseLong(props.getProperty("verificationDelay",
                 String.valueOf(VERIFICATION_INTERVAL)));
-        return new DelayVerifier<>(waitDelayReorder, verificationDelay, this);
+        return new DelayVerifier(waitDelayReorder, verificationDelay, this);
     }
 
     private void createGenesisBlock(UUID genesisUUID) {
@@ -146,19 +142,19 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
     }
 
     @Override
-    public void submitBlock(B block) {
+    public void submitBlock(BlockmessBlock block) {
         toProcess.add(block);
         processBlocks();
     }
 
     @Override
-    public void attachObserver(LedgerObserver<B> observer) {
+    public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
         this.observers.add(observer);
     }
 
     @Override
-    public PrototypicalLedger<B> clonePrototype(UUID genesisId) {
-        return new Blockchain<>(props, validator, bootstrapModule, genesisId);
+    public PrototypicalLedger<BlockmessBlock> clonePrototype(UUID genesisId) {
+        return new Blockchain(props, validator, bootstrapModule, genesisId);
     }
 
     @Override
@@ -215,7 +211,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
         }
     }
 
-    private void processBlock(B block) {
+    private void processBlock(BlockmessBlock block) {
         long start = System.currentTimeMillis();
         List<UUID> prev = block.getPrevRefs();
         if (prev.size() != 1) {
@@ -235,7 +231,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
                 block.getBlockId(), (end - start));
     }
 
-    private void processValidBlock(B block, List<UUID> prev) {
+    private void processValidBlock(BlockmessBlock block, List<UUID> prev) {
         logger.debug("Processing valid block {}", block.getBlockId());
         int weight = blocks.get(prev.get(0)).getWeight() + block.getInherentWeight();
         deliverNonFinalizedBlocks(block, weight);
@@ -243,8 +239,8 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
                 new HashSet<>(prev), weight));
     }
 
-    private void deliverNonFinalizedBlocks(B block, int weight) {
-        for (LedgerObserver<B> observer : this.observers)
+    private void deliverNonFinalizedBlocks(BlockmessBlock block, int weight) {
+        for (LedgerObserver<BlockmessBlock> observer : this.observers)
             observer.deliverNonFinalizedBlock(block, weight);
     }
 
@@ -267,7 +263,7 @@ public class Blockchain<B extends LedgerBlock<? extends ContentList<? extends In
     }
 
     private void deliverFinalizedBlocks(List<UUID> finalizedIds, Set<UUID> deleted) {
-        for (LedgerObserver<B> observer : this.observers)
+        for (LedgerObserver<BlockmessBlock> observer : this.observers)
             observer.deliverFinalizedBlocks(finalizedIds, deleted);
     }
 

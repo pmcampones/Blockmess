@@ -1,10 +1,8 @@
 package ledger.blockchain;
 
-import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
+import ledger.blocks.BlockmessBlock;
 import ledger.blocks.LedgerBlock;
 import org.jetbrains.annotations.NotNull;
-import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -15,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
-public class DelayVerifier<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilResistantElectionProof>> extends Thread implements AutoCloseable {
+public class DelayVerifier extends Thread implements AutoCloseable {
 
     //Tasks are simple, so the pool should be small.
     private static final int POOL_SIZE = 1;
@@ -30,23 +28,23 @@ public class DelayVerifier<B extends LedgerBlock<? extends ContentList<? extends
 
     private final long waitDelayReorder;
 
-    private final Blockchain<B> blockchain;
+    private final Blockchain blockchain;
 
     //Blocks received out of order are kept in this queue until they can be processed appropriately.
-    private List<ArrivalTimeBlocks<B>> unorderedBlocks = new LinkedList<>();
+    private List<ArrivalTimeBlocks<BlockmessBlock>> unorderedBlocks = new LinkedList<>();
 
     private ReentrantLock lock = new ReentrantLock();
 
     private final ScheduledFuture<?> task;
 
-    public DelayVerifier(long waitDelayReorder, long verificationInterval, Blockchain<B> blockchain) {
+    public DelayVerifier(long waitDelayReorder, long verificationInterval, Blockchain blockchain) {
         this.waitDelayReorder = waitDelayReorder;
         this.blockchain = blockchain;
         task = pool.scheduleAtFixedRate(this, verificationInterval, verificationInterval, TimeUnit.MILLISECONDS);
     }
 
-    void submitUnordered(B block) {
-        ArrivalTimeBlocks<B> arrivalBlock = new ArrivalTimeBlocks<>(block);
+    void submitUnordered(BlockmessBlock block) {
+        ArrivalTimeBlocks<BlockmessBlock> arrivalBlock = new ArrivalTimeBlocks<>(block);
         try {
             lock.lock();
             unorderedBlocks.add(arrivalBlock);
@@ -69,7 +67,7 @@ public class DelayVerifier<B extends LedgerBlock<? extends ContentList<? extends
         }
     }
 
-    public List<B> getOrderedBlocks() {
+    public List<BlockmessBlock> getOrderedBlocks() {
         try {
             lock.lock();
             return tryToGetOrderedBlocks();
@@ -79,8 +77,8 @@ public class DelayVerifier<B extends LedgerBlock<? extends ContentList<? extends
     }
 
     @NotNull
-    private List<B> tryToGetOrderedBlocks() {
-        List<B> ordered = unorderedBlocks.stream()
+    private List<BlockmessBlock> tryToGetOrderedBlocks() {
+        List<BlockmessBlock> ordered = unorderedBlocks.stream()
                 .map(pair -> pair.block)
                 .filter(this::isOrdered)
                 .collect(Collectors.toList());
@@ -90,7 +88,7 @@ public class DelayVerifier<B extends LedgerBlock<? extends ContentList<? extends
         return ordered;
     }
 
-    private boolean isOrdered(B block) {
+    private boolean isOrdered(BlockmessBlock block) {
         return block.getPrevRefs()
                 .stream().allMatch(blockchain::hasBlock);
     }

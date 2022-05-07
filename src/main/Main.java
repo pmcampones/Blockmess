@@ -155,7 +155,7 @@ public class Main {
 
     private static void setUpLedgerPrototype(Properties props) throws PrototypeAlreadyDefinedException {
         var blockValidator = new BlockmessGPoETValidator(props);
-        var protoLedger = new Blockchain<>(props, blockValidator, new BootstrapModule());
+        var protoLedger = new Blockchain(props, blockValidator, new BootstrapModule());
         protoLedger.close();
         LedgerPrototype.setPrototype(protoLedger);
     }

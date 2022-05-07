@@ -21,8 +21,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-public class BlockmessGPoETValidator extends GenericProtocol
-        implements BlockValidator<BlockmessBlock> {
+public class BlockmessGPoETValidator extends GenericProtocol {
 
     public static final short ID = IDGenerator.genId();
 
@@ -36,7 +35,6 @@ public class BlockmessGPoETValidator extends GenericProtocol
     @Override
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
-    @Override
     public boolean isBlockValid(BlockmessBlock block) {
         boolean isValid = isProofValid(block)
                 && block.getContentList().hasValidSemantics();
