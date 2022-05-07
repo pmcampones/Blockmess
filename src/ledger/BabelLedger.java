@@ -28,16 +28,16 @@ public class BabelLedger extends GenericProtocol implements LedgerObserver {
      * This Ledger is simultaneously a strategy to handle block submission according to the Strategy pattern,
      * as well as a subject to listen to changes in the Observer pattern.
      */
-    private final Ledger<BlockmessBlock> ledger;
+    private final Ledger ledger;
 
-    public BabelLedger(Ledger<BlockmessBlock> ledger) throws HandlerRegistrationException {
+    public BabelLedger(Ledger ledger) throws HandlerRegistrationException {
         super(BabelLedger.class.getSimpleName(), ID);
         this.ledger = attachToSubjectLedger(ledger);
         subscribeNotification(DeliverSignedBlockNotification.ID, (DeliverSignedBlockNotification<BlockmessBlock> notif, short id) -> uponDeliverSignedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(LedgerBlockImp.ID, LedgerBlockImp.serializer);
     }
 
-    private Ledger<BlockmessBlock> attachToSubjectLedger(Ledger<BlockmessBlock> ledger) {
+    private Ledger attachToSubjectLedger(Ledger ledger) {
         ledger.attachObserver(this);
         return ledger;
     }

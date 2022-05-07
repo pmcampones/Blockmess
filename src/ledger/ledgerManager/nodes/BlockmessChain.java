@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BlockmessChain extends Ledger<BlockmessBlock>, ComposableContentStorage {
+public interface BlockmessChain extends Ledger, ComposableContentStorage {
 
     UUID getChainId();
 

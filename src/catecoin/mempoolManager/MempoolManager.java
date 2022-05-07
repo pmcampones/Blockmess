@@ -15,7 +15,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
 import utils.IDGenerator;
 
@@ -64,7 +63,7 @@ public class MempoolManager extends GenericProtocol {
         loadInitialUtxos();
         bootstrapDL();
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList, SybilResistantElectionProof>> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
+                (DeliverNonFinalizedBlockNotification<LedgerBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
         ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
@@ -106,14 +105,14 @@ public class MempoolManager extends GenericProtocol {
     public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock<ContentList, SybilResistantElectionProof>> notif) {
-        LedgerBlock<ContentList, SybilResistantElectionProof> block = notif.getNonFinalizedBlock();
+            DeliverNonFinalizedBlockNotification<LedgerBlock> notif) {
+        LedgerBlock block = notif.getNonFinalizedBlock();
         logger.debug("Received non finalized block with id {}", block.getBlockId());
         MempoolChunk chunk = createChunk(block, notif.getCumulativeWeight());
         mempool.put(chunk.getId(), chunk);
     }
 
-    private MempoolChunk createChunk(LedgerBlock<ContentList, SybilResistantElectionProof> block, int cumulativeWeight) {
+    private MempoolChunk createChunk(LedgerBlock block, int cumulativeWeight) {
         List<Transaction> unwrappedContent = block.getContentList()
                 .getContentList()
                 .stream()

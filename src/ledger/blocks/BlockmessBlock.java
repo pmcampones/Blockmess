@@ -14,8 +14,7 @@ import java.security.*;
 import java.util.List;
 import java.util.UUID;
 
-public class BlockmessBlock
-        implements LedgerBlock<ContentList, SybilResistantElectionProof> {
+public class BlockmessBlock implements LedgerBlock {
 
     public static final short ID = 11037;
     public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
@@ -87,7 +86,7 @@ public class BlockmessBlock
         }
 
     };
-    private final LedgerBlock<ContentList,SybilResistantElectionProof> ledgerBlock;
+    private final LedgerBlock ledgerBlock;
     private final UUID destinationChain;
     private final long currentRank;
     private final long nextRank;

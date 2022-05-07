@@ -18,7 +18,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.*;
 
-public class Blockchain implements Ledger<BlockmessBlock> {
+public class Blockchain implements Ledger {
 
     private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());
 

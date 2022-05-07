@@ -16,8 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LedgerBlockImp extends ProtoPojoAbstract
-        implements LedgerBlock<ContentList, SybilResistantElectionProof> {
+public class LedgerBlockImp extends ProtoPojoAbstract implements LedgerBlock {
 
     public static final short ID = 9888;
 
@@ -31,7 +30,7 @@ public class LedgerBlockImp extends ProtoPojoAbstract
 
         @Override
         public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
-            LedgerBlock<ContentList, SybilResistantElectionProof> block = (LedgerBlock) protoPojo;
+            LedgerBlock block = (LedgerBlock) protoPojo;
             out.writeInt(block.getInherentWeight());
             serializePrevs(block.getPrevRefs(), out);
             serializePojo(block.getContentList(), out);

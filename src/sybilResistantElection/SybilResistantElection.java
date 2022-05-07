@@ -263,7 +263,7 @@ public class SybilResistantElection extends GenericProtocol {
                         placementChain.getCurrContent(), proof, self, placementChain.getChainId(),
                         placementChain.getChain().getRankFromRefs(Set.of(placementChain.getPrevBlock())),
                         blockmessRoot.getHighestSeenRank() + 1);
-        sendRequest(new DisseminateSignedBlockRequest<>(block), ValueDispatcher.ID);
+        sendRequest(new DisseminateSignedBlockRequest(block), ValueDispatcher.ID);
     }
 
     private void replaceChain(ChainSeed oldSeed, Set<UUID> newPrevs) throws IOException {

@@ -1,13 +1,11 @@
 package ledger;
 
-import catecoin.blocks.ContentList;
-import ledger.blocks.LedgerBlock;
-import sybilResistantElection.SybilResistantElectionProof;
+import ledger.blocks.BlockmessBlock;
 
 import java.util.Set;
 import java.util.UUID;
 
-public interface Ledger<B extends LedgerBlock<? extends ContentList,? extends SybilResistantElectionProof>> {
+public interface Ledger {
 
     /**
      * Retrieves the references to the previous blocks in the ledger.
@@ -18,7 +16,7 @@ public interface Ledger<B extends LedgerBlock<? extends ContentList,? extends Sy
      * Submits a block to the Ledger instance
      * @param block A signed block ready to be accepted by the application.
      */
-    void submitBlock(B block);
+    void submitBlock(BlockmessBlock block);
 
     /**
      * Adds a subscriber to changes of state in the Ledger according with the Observer design pattern.

@@ -3,6 +3,7 @@ package ledger.blocks;
 import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
 import main.ProtoPojo;
+import sybilResistantElection.SybilResistantElectionProof;
 
 import java.security.PublicKey;
 import java.util.List;
@@ -12,11 +13,8 @@ import java.util.UUID;
  * Generic block used in the Ledger protocol of a Distributed Ledger.
  * It is slightly more general than what is specified in <a href=https://bitcoin.org/bitcoin.pdf>Bitcoin</a>
  * for their use in Blockchains.
- * @param <C> The type of the content used in the application running the Distributed Ledger.
- * @param <P> The type of the SybilElectionProof used in these Blocks.
  */
-public interface LedgerBlock<C extends ContentList, P extends ProtoPojo & SizeAccountable>
-        extends SizeAccountable, ProtoPojo {
+public interface LedgerBlock extends SizeAccountable, ProtoPojo {
 
     /**
      * Used as the hash of the block in Bitcoin.
@@ -51,14 +49,14 @@ public interface LedgerBlock<C extends ContentList, P extends ProtoPojo & SizeAc
      * <p>This content needs to be serializable in order to allow us to compute its hash without
      * needing to know the specifics of its implementation.</p>
      */
-    C getContentList();
+    ContentList getContentList();
 
     /**
      * Retrieves the proof that the Sybil election was performed correctly.
      * <p>Validation of the proof rests on the Application protocols,
      * as such the Ledger protocol has no information on the internal structure of the proof.</p>
      */
-    P getSybilElectionProof();
+    SybilResistantElectionProof getSybilElectionProof();
 
     /**
      * Retrieves the signatures of the validators of this block.

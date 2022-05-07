@@ -5,7 +5,6 @@ import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
-import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverIndexableContentNotification;
 import catecoin.txs.Transaction;
 import ledger.blocks.LedgerBlock;
@@ -14,7 +13,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import sybilResistantElection.SybilResistantElectionProof;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
 import valueDispatcher.pojos.DispatcherWrapper;
@@ -85,14 +83,14 @@ public class ValueDispatcher extends GenericProtocol {
                 break;
             case SIGNED_BLOCK:
                 if (val instanceof LedgerBlock)
-                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock<ContentList, SybilResistantElectionProof>) val));
+                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock) val));
                 break;
             default:
                 logger.debug("Received unknown value type");
         }
     }
 
-    private void uponDisseminateBlockRequest(DisseminateSignedBlockRequest<LedgerBlock<ContentList,SybilResistantElectionProof>> req, short source) {
+    private void uponDisseminateBlockRequest(DisseminateSignedBlockRequest req, short source) {
         try {
             logger.info("Protocol {} requested the dissemination of a {}",
                     source, ValType.SIGNED_BLOCK);

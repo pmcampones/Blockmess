@@ -99,7 +99,7 @@ public class DelayVerifier extends Thread implements AutoCloseable {
             B_(i+1) cannot be processed before B_i arrives, and so it is kept waiting.
             If B_i takes too long to arrive, B_(i+1) is discarded.
     */
-    private static class ArrivalTimeBlocks<B extends LedgerBlock<?,?>> {
+    private static class ArrivalTimeBlocks<B extends LedgerBlock> {
 
         //Arrival time for the block.
         private final long arrival;

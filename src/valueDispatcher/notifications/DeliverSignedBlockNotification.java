@@ -4,7 +4,7 @@ import ledger.blocks.LedgerBlock;
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import utils.IDGenerator;
 
-public class DeliverSignedBlockNotification<B extends LedgerBlock<?,?>>
+public class DeliverSignedBlockNotification<B extends LedgerBlock>
         extends ProtoNotification {
 
     public static final short ID = IDGenerator.genId();

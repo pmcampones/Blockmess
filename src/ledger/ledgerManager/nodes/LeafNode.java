@@ -43,7 +43,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     private final UUID chainId;
 
-    private final Ledger<BlockmessBlock> ledger;
+    private final Ledger ledger;
 
     private final List<LedgerObserver> observers = new LinkedList<>();
 
