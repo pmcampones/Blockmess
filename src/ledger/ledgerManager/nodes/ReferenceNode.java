@@ -40,7 +40,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
 
     public ReferenceNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage) {
+            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage) {
         this.leaf = new LeafNode(props, chainId, this, minRank, minNextRank, depth, contentStorage);
         this.nodeState = leaf;
         this.parent = parent;
@@ -48,7 +48,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
 
     public ReferenceNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock) {
+            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage, UUID prevBlock) {
         this.leaf = new LeafNode(props, chainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
         this.nodeState = leaf;
         this.parent = parent;
@@ -268,14 +268,13 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> separateContent(
-            StructuredValueMask mask, ContentStorage<StructuredValue<Transaction>> innerLft,
-            ContentStorage<StructuredValue<Transaction>> innerRgt) {
+    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
+            StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
         return leaf.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> blockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage> blockConstructors) {
         leaf.aggregateContent(blockConstructors);
     }
 

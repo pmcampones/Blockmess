@@ -5,8 +5,6 @@ import catecoin.txs.IndexableContent;
 import catecoin.txs.Transaction;
 import ledger.ledgerManager.StructuredValue;
 import main.GlobalProperties;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -15,9 +13,7 @@ import java.util.*;
 import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toMap;
 
-public class BaseContentStorage implements ContentStorage<StructuredValue<Transaction>> {
-
-    private static final Logger logger = LogManager.getLogger(BaseContentStorage.class.getName());
+public class BaseContentStorage implements ContentStorage {
 
     public static final int MAX_BLOCK_SIZE = 40000;
 

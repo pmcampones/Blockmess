@@ -288,14 +288,13 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> separateContent(
-            StructuredValueMask mask, ContentStorage<StructuredValue<Transaction>> innerLft,
-            ContentStorage<StructuredValue<Transaction>> innerRgt) {
+    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
+            StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }

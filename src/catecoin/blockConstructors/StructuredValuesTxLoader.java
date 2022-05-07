@@ -7,9 +7,9 @@ import java.util.Collection;
 
 public class StructuredValuesTxLoader {
 
-    private final ContentStorage<StructuredValue<Transaction>> contentStorage;
+    private final ContentStorage contentStorage;
 
-    public StructuredValuesTxLoader(ContentStorage<StructuredValue<Transaction>> contentStorage) {
+    public StructuredValuesTxLoader(ContentStorage contentStorage) {
         this.contentStorage = contentStorage;
     }
 

@@ -35,8 +35,7 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>,
      * <p>Eventually, one and only one of the root blocks in this DS will originate a valid Chain.</p>
      */
     private final Map<UUID, Pair<ReferenceNode, ReferenceNode>> tentativeChains = new HashMap<>();
-    private final Pair<ComposableContentStorage<Transaction>,
-            ComposableContentStorage<Transaction>> contentStoragePair;
+    private final Pair<ComposableContentStorage, ComposableContentStorage> contentStoragePair;
     private ParentTreeNode parent;
 
     private final int finalizedWeight;
@@ -52,7 +51,7 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>,
     public TempChainNode(
             Properties props, BlockmessChain inner, ParentTreeNode parent,
             UUID ChainOriginatorBlockId, int chainDepth,
-            Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> contentStoragePair) {
+            Pair<ComposableContentStorage, ComposableContentStorage> contentStoragePair) {
         this.props = props;
         this.inner = inner;
         inner.attachObserver(this);
@@ -401,14 +400,13 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>,
     }
 
     @Override
-    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> separateContent(
-            StructuredValueMask mask, ContentStorage<StructuredValue<Transaction>> innerLft,
-            ContentStorage<StructuredValue<Transaction>> innerRgt) {
+    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
+            StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }

@@ -28,7 +28,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, LedgerObserver<BlockmessBlock>, ContentStorage<StructuredValue<Transaction>> {
+public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, LedgerObserver<BlockmessBlock>, ContentStorage {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 

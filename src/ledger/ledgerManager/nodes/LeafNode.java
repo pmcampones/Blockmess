@@ -57,7 +57,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
      */
     private final Map<UUID, BlockmessBlock> blocks = new ConcurrentHashMap<>();
 
-    private final ComposableContentStorage<Transaction> contentStorage;
+    private final ComposableContentStorage contentStorage;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
@@ -110,13 +110,13 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
 
     public LeafNode(
             Properties props, UUID ChainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage) {
+            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage) {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock) {
+            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage, UUID prevBlock) {
         this.props = props;
         this.chainId = chainId;
         this.ledger = new Blockchain(chainId);
@@ -185,10 +185,10 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     @Override
     public void spawnChildren(UUID originator) {
         StructuredValueMask mask = new StructuredValueMask(depth);
-        ContentStorage<StructuredValue<Transaction>> lft = new BaseContentStorage();
-        ContentStorage<StructuredValue<Transaction>> rgt = new BaseContentStorage();
+        ContentStorage lft = new BaseContentStorage();
+        ContentStorage rgt = new BaseContentStorage();
         depth++;
-        Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> spawnedChainDirectors =
+        Pair<ComposableContentStorage, ComposableContentStorage> spawnedChainDirectors =
                 contentStorage.separateContent(mask, lft, rgt);
         TempChainNode encapsulating =
                 new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
@@ -484,15 +484,15 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     }
 
     @Override
-    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> separateContent(
+    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
             StructuredValueMask mask,
-            ContentStorage<StructuredValue<Transaction>> innerLft,
-            ContentStorage<StructuredValue<Transaction>> innerRgt) {
+            ContentStorage innerLft,
+            ContentStorage innerRgt) {
         return contentStorage.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> blockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage> blockConstructors) {
         contentStorage.aggregateContent(blockConstructors);
     }
 

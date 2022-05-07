@@ -10,9 +10,9 @@ import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ComposableContentStorageImp implements ComposableContentStorage<Transaction> {
+public class ComposableContentStorageImp implements ComposableContentStorage {
 
-    private final ContentStorage<StructuredValue<Transaction>> inner;
+    private final ContentStorage inner;
 
     private final ReadWriteLock innerLock = new ReentrantReadWriteLock();
 
@@ -20,7 +20,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
         this.inner = new BaseContentStorage();
     }
 
-    public ComposableContentStorageImp(ContentStorage<StructuredValue<Transaction>> inner) {
+    public ComposableContentStorageImp(ContentStorage inner) {
         this.inner = inner;
     }
 
@@ -76,14 +76,10 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
     }
 
     @Override
-    public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>>
-    separateContent(StructuredValueMask mask,
-                    ContentStorage<StructuredValue<Transaction>> innerLft,
-                    ContentStorage<StructuredValue<Transaction>> innerRgt) {
-        ComposableContentStorage<Transaction> lft =
-                new ComposableContentStorageImp(innerLft);
-        ComposableContentStorage<Transaction> rgt =
-                new ComposableContentStorageImp(innerRgt);
+    public Pair<ComposableContentStorage, ComposableContentStorage>
+    separateContent(StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
+        ComposableContentStorage lft = new ComposableContentStorageImp(innerLft);
+        ComposableContentStorage rgt = new ComposableContentStorageImp(innerRgt);
         try {
             innerLock.writeLock().lock();
             Set<UUID> migrated = redistributeContent(mask, lft, rgt);
@@ -95,7 +91,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
     }
 
     @NotNull
-    private Set<UUID> redistributeContent(StructuredValueMask mask, ComposableContentStorage<Transaction> lft, ComposableContentStorage<Transaction> rgt) {
+    private Set<UUID> redistributeContent(StructuredValueMask mask, ComposableContentStorage lft, ComposableContentStorage rgt) {
         Collection<StructuredValue<Transaction>> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
         for (StructuredValue<Transaction> val : inner.getStoredContent()) {
@@ -112,7 +108,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage<Transaction>> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentStorage> composableBlockConstructors) {
         try {
             innerLock.writeLock().lock();
             for (var blockConstructor : composableBlockConstructors)
