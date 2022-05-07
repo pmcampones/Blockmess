@@ -204,7 +204,6 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
             skipThisNode();
             //inner.resetSamples();
             inner.lowerLeafDepth();
-            inner.doubleChainThroughput();
             inner.submitContent(lft.getStoredContent());
             inner.submitContent(rgt.getStoredContent());
             return Set.of(lft.getChainId(), rgt.getChainId());
@@ -256,12 +255,6 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
-            throws IOException {
-        return inner.generateBoundContentListList(states, usedSpace, maxTxs);
-    }
-
-    @Override
     public void submitContent(Collection<StructuredValue<Transaction>> content) {
         content.forEach(this::submitContent);
     }
@@ -292,26 +285,6 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     @Override
     public Collection<StructuredValue<Transaction>> getStoredContent() {
         return inner.getStoredContent();
-    }
-
-    @Override
-    public void halveChainThroughput() {
-        inner.halveChainThroughput();
-    }
-
-    @Override
-    public void doubleChainThroughput() {
-        inner.doubleChainThroughput();
-    }
-
-    @Override
-    public int getThroughputReduction() {
-        return inner.getThroughputReduction();
-    }
-
-    @Override
-    public void setChainThroughputReduction(int reduction) {
-        inner.setChainThroughputReduction(reduction);
     }
 
     @Override

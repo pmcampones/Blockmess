@@ -36,17 +36,6 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
-            throws IOException {
-        try {
-            innerLock.readLock().lock();
-            return inner.generateBoundContentListList(states, usedSpace, maxTxs);
-        } finally {
-          innerLock.readLock().unlock();
-        }
-    }
-
-    @Override
     public void submitContent(Collection<StructuredValue<Transaction>> content) {
         try {
             innerLock.writeLock().lock();
@@ -87,26 +76,6 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
     }
 
     @Override
-    public void halveChainThroughput() {
-        inner.halveChainThroughput();
-    }
-
-    @Override
-    public void doubleChainThroughput() {
-        inner.doubleChainThroughput();
-    }
-
-    @Override
-    public int getThroughputReduction() {
-        return inner.getThroughputReduction();
-    }
-
-    @Override
-    public void setChainThroughputReduction(int reduction) {
-        inner.setChainThroughputReduction(reduction);
-    }
-
-    @Override
     public Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>>
     separateContent(StructuredValueMask mask,
                     ContentStorage<StructuredValue<Transaction>> innerLft,
@@ -122,8 +91,6 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
         } finally {
             innerLock.writeLock().unlock();
         }
-        lft.setChainThroughputReduction(getThroughputReduction() * 2);
-        rgt.setChainThroughputReduction(getThroughputReduction() * 2);
         return Pair.of(lft, rgt);
     }
 

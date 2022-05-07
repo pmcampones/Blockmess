@@ -12,8 +12,6 @@ public interface ContentStorage<E extends IndexableContent> {
 
     List<E> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException;
 
-    List<E> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs) throws IOException;
-
     void submitContent(Collection<E> content);
 
     void submitContent(E content);
@@ -21,15 +19,5 @@ public interface ContentStorage<E extends IndexableContent> {
     void deleteContent(Set<UUID> contentIds);
 
     Collection<E> getStoredContent();
-
-    //THESE LOWER TWO ARE ONLY USED FOR TESTS: REMOVE WHEN DOING HIGH LOAD TESTS
-
-    void halveChainThroughput();
-
-    void doubleChainThroughput();
-
-    int getThroughputReduction();
-
-    void setChainThroughputReduction(int reduction);
 
 }

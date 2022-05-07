@@ -155,7 +155,6 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>,
         skipThisNode();
         inner.resetSamples();
         inner.lowerLeafDepth();
-        inner.doubleChainThroughput();
         List<BlockmessChain> toMerge =  tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
@@ -367,12 +366,6 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>,
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
-            throws IOException {
-        return inner.generateBoundContentListList(states, usedSpace, maxTxs);
-    }
-
-    @Override
     public void submitContent(Collection<StructuredValue<Transaction>> content) {
         content.forEach(this::submitContent);
     }
@@ -405,26 +398,6 @@ public class TempChainNode implements InnerNode, LedgerObserver<BlockmessBlock>,
     @Override
     public Collection<StructuredValue<Transaction>> getStoredContent() {
         return inner.getStoredContent();
-    }
-
-    @Override
-    public void halveChainThroughput() {
-        inner.halveChainThroughput();
-    }
-
-    @Override
-    public void doubleChainThroughput() {
-        inner.doubleChainThroughput();
-    }
-
-    @Override
-    public int getThroughputReduction() {
-        return inner.getThroughputReduction();
-    }
-
-    @Override
-    public void setChainThroughputReduction(int reduction) {
-        inner.setChainThroughputReduction(reduction);
     }
 
     @Override

@@ -368,12 +368,6 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
-            throws IOException {
-        return getOrigin().generateBoundContentListList(states, usedSpace, maxTxs);
-    }
-
-    @Override
     public void submitContent(Collection<StructuredValue<Transaction>> content) {
         getOrigin().submitContent(content);
     }
@@ -395,20 +389,6 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
                 .flatMap(Collection::stream)
                 .collect(toList());
     }
-
-    @Override
-    public void halveChainThroughput() {}
-
-    @Override
-    public void doubleChainThroughput() {}
-
-    @Override
-    public int getThroughputReduction() {
-        return 0;
-    }
-
-    @Override
-    public void setChainThroughputReduction(int reduction) {}
 
     private int countReferencedPermanent() {
         return chains.values().stream().mapToInt(BlockmessChain::countReferencedPermanent).sum() + 1;

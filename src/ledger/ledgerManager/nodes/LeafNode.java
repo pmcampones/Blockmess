@@ -188,7 +188,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
         ContentStorage<StructuredValue<Transaction>> lft = new BaseContentStorage();
         ContentStorage<StructuredValue<Transaction>> rgt = new BaseContentStorage();
         depth++;
-        contentStorage.halveChainThroughput();
         Pair<ComposableContentStorage<Transaction>, ComposableContentStorage<Transaction>> spawnedChainDirectors =
                 contentStorage.separateContent(mask, lft, rgt);
         TempChainNode encapsulating =
@@ -309,7 +308,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     @Override
     public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
         depth++;
-        contentStorage.halveChainThroughput();
         ParentTreeNode treeRoot = parent.getTreeRoot();
         ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
                 0, 1, depth, new ComposableContentStorageImp(),
@@ -317,8 +315,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
         ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
                 0, 1, depth, new ComposableContentStorageImp(),
                 new UUID(0,0));
-        lft.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
-        rgt.setChainThroughputReduction(2 * contentStorage.getThroughputReduction());
         PermanentChainNode encapsulating =
                 new PermanentChainNode(this.parent, this, lft, rgt);
         parent.replaceChild(encapsulating);
@@ -458,12 +454,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
-            throws IOException {
-        return contentStorage.generateBoundContentListList(states, usedSpace, maxTxs);
-    }
-
-    @Override
     public void submitContent(Collection<StructuredValue<Transaction>> content) {
         contentStorage.submitContent(content);
     }
@@ -491,26 +481,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
                 .map(BlockmessBlock::getContentList)
                 .map(ContentList::getContentList)
                 .flatMap(Collection::stream);
-    }
-
-    @Override
-    public void halveChainThroughput() {
-        contentStorage.halveChainThroughput();
-    }
-
-    @Override
-    public void doubleChainThroughput() {
-        contentStorage.doubleChainThroughput();
-    }
-
-    @Override
-    public int getThroughputReduction() {
-        return contentStorage.getThroughputReduction();
-    }
-
-    @Override
-    public void setChainThroughputReduction(int reduction) {
-        contentStorage.setChainThroughputReduction(reduction);
     }
 
     @Override

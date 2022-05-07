@@ -248,12 +248,6 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateBoundContentListList(Collection<UUID> states, int usedSpace, int maxTxs)
-            throws IOException {
-        return leaf.generateBoundContentListList(states, usedSpace, maxTxs);
-    }
-
-    @Override
     public void submitContent(Collection<StructuredValue<Transaction>> content) {
         nodeState.submitContent(content);
     }
@@ -271,26 +265,6 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     @Override
     public Collection<StructuredValue<Transaction>> getStoredContent() {
         return leaf.getStoredContent();
-    }
-
-    @Override
-    public void halveChainThroughput() {
-        nodeState.halveChainThroughput();
-    }
-
-    @Override
-    public void doubleChainThroughput() {
-        nodeState.doubleChainThroughput();
-    }
-
-    @Override
-    public int getThroughputReduction() {
-        return leaf.getThroughputReduction();
-    }
-
-    @Override
-    public void setChainThroughputReduction(int reduction) {
-        leaf.setChainThroughputReduction(reduction);
     }
 
     @Override
