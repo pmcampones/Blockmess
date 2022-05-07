@@ -5,7 +5,6 @@ import catecoin.mempoolManager.BootstrapModule;
 import catecoin.validators.ApplicationObliviousValidator;
 import ledger.Ledger;
 import ledger.LedgerObserver;
-import ledger.PrototypicalLedger;
 import ledger.blocks.BlockmessBlock;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
@@ -19,7 +18,7 @@ import static java.lang.Integer.parseInt;
 import static java.lang.Long.parseLong;
 import static java.util.stream.Collectors.*;
 
-public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<BlockmessBlock> {
+public class Blockchain implements Ledger<BlockmessBlock> {
 
     private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());
 
@@ -40,8 +39,6 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
     }
 
     public final int finalizedWeight;
-
-    private final BootstrapModule bootstrapModule;
 
     //Blocks that have arrived but are yet to be processed.
     //This Blockchain implementation is fundamentally serial.
@@ -68,8 +65,8 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
 
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    public Blockchain(BootstrapModule bootstrapModule)  {
-        this(bootstrapModule, computeGenesisUUID());
+    public Blockchain()  {
+        this(computeGenesisUUID());
     }
 
     private static UUID computeGenesisUUID() {
@@ -79,9 +76,8 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
         return UUID.fromString(genesisUUIDStr);
     }
 
-    public Blockchain(BootstrapModule bootstrapModule, UUID genesisUUID) {
+    public Blockchain(UUID genesisUUID) {
         Properties props = GlobalProperties.getProps();
-        this.bootstrapModule = bootstrapModule;
         this.finalizedWeight = parseInt(props.getProperty("finalizedWeight",
                 String.valueOf(FINALIZED_WEIGHT)));;
         createGenesisBlock(genesisUUID);
@@ -141,11 +137,6 @@ public class Blockchain implements PrototypicalLedger<BlockmessBlock>, Ledger<Bl
     @Override
     public void attachObserver(LedgerObserver<BlockmessBlock> observer) {
         this.observers.add(observer);
-    }
-
-    @Override
-    public PrototypicalLedger<BlockmessBlock> clonePrototype(UUID genesisId) {
-        return new Blockchain(bootstrapModule, genesisId);
     }
 
     @Override

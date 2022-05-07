@@ -8,7 +8,6 @@ import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
-import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -160,9 +159,8 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId)
-            throws PrototypeHasNotBeenDefinedException {
-        this.inner.spawnPermanentChildren(lftId, rgtId);
+    public void spawnChildren(UUID originator) {
+        inner.spawnChildren(originator);
     }
 
     @Override
@@ -196,8 +194,8 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException {
-        inner.spawnChildren(originator);
+    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
+        this.inner.spawnPermanentChildren(lftId, rgtId);
     }
 
     @Override

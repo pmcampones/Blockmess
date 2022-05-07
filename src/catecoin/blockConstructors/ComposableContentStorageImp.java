@@ -2,7 +2,6 @@ package catecoin.blockConstructors;
 
 import catecoin.txs.Transaction;
 import ledger.ledgerManager.StructuredValue;
-import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,7 +16,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage<Tra
 
     private final ReadWriteLock innerLock = new ReentrantReadWriteLock();
 
-    public ComposableContentStorageImp() throws PrototypeHasNotBeenDefinedException {
+    public ComposableContentStorageImp() {
         this.inner = new BaseContentStorage();
     }
 

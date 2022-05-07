@@ -8,7 +8,6 @@ import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
-import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -40,25 +39,23 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     private ParentTreeNode parent;
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage)
-            throws PrototypeHasNotBeenDefinedException {
-        this.leaf = new LeafNode(props, ChainId, this, minRank, minNextRank, depth, contentStorage);
+            Properties props, UUID chainId, ParentTreeNode parent,
+            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage) {
+        this.leaf = new LeafNode(props, chainId, this, minRank, minNextRank, depth, contentStorage);
         this.nodeState = leaf;
         this.parent = parent;
     }
 
     public ReferenceNode(
-            Properties props, UUID ChainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock)
-            throws PrototypeHasNotBeenDefinedException {
-        this.leaf = new LeafNode(props, ChainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
+            Properties props, UUID chainId, ParentTreeNode parent,
+            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock) {
+        this.leaf = new LeafNode(props, chainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
         this.nodeState = leaf;
         this.parent = parent;
     }
 
     @Override
-    public void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException {
+    public void spawnChildren(UUID originator) {
         nodeState.spawnChildren(originator);
     }
 
@@ -185,8 +182,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId)
-            throws PrototypeHasNotBeenDefinedException {
+    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
         nodeState.spawnPermanentChildren(lftId, rgtId);
     }
 

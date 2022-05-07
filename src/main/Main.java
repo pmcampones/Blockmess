@@ -5,19 +5,14 @@ import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValuesTxLoader;
 import catecoin.blocks.ContentList;
-import catecoin.mempoolManager.BootstrapModule;
 import catecoin.mempoolManager.MempoolManager;
 import catecoin.transactionGenerators.FakeTxsGenerator;
 import catecoin.txs.StructuredValueSlimTransactionWrapper;
 import catecoin.txs.Transaction;
 import ledger.BabelLedger;
-import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
-import ledger.prototype.LedgerPrototype;
-import ledger.prototype.PrototypeAlreadyDefinedException;
-import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import logsGenerators.ChangesInNumberOfChainsLog;
 import logsGenerators.FinalizedBlocksLog;
 import logsGenerators.RepeatedTransactionsLog;
@@ -122,7 +117,6 @@ public class Main {
         List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
         MempoolManager mempoolManager = MempoolManager.getSingleton();
         protocols.add(mempoolManager);
-        setUpLedgerPrototype();
         LedgerManager ledgerManager = setUpLedgerManager(protocols);
         bootstrapContent(props, ledgerManager);
         setUpSybilElection(protocols);
@@ -138,20 +132,14 @@ public class Main {
 
     @NotNull
     private static LedgerManager setUpLedgerManager(List<GenericProtocol> protocols)
-            throws PrototypeHasNotBeenDefinedException, HandlerRegistrationException {
+            throws HandlerRegistrationException {
         LedgerManager ledgerManager = LedgerManager.getSingleton();
         var babelLedger = new BabelLedger<>(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
     }
 
-    private static void setUpLedgerPrototype() throws PrototypeAlreadyDefinedException {
-        var protoLedger = new Blockchain(new BootstrapModule());
-        protoLedger.close();
-        LedgerPrototype.setPrototype(protoLedger);
-    }
-
-    private static void bootstrapContent(Properties props, LedgerManager ledgerManager) throws PrototypeHasNotBeenDefinedException {
+    private static void bootstrapContent(Properties props, LedgerManager ledgerManager) {
         var txsLoader = new StructuredValuesTxLoader(ledgerManager);
         if (props.getProperty("allowCommonTransactionsAmongChains", "F").equals("F")) {
             loadTxsForBlockmess(txsLoader);
@@ -161,7 +149,7 @@ public class Main {
         }
     }
 
-    private static boolean areAllTxsDistinctAmongChains() throws PrototypeHasNotBeenDefinedException {
+    private static boolean areAllTxsDistinctAmongChains() {
         List<UUID> allTxsIds = LedgerManager.getSingleton().getAvailableChains().stream()
                 .map(ContentStorage::getStoredContent)
                 .flatMap(Collection::stream)
@@ -170,7 +158,7 @@ public class Main {
         return allTxsIds.size() == new HashSet<>(allTxsIds).size();
     }
 
-    private static void loadTxsCommon() throws PrototypeHasNotBeenDefinedException {
+    private static void loadTxsCommon() {
         Properties props = GlobalProperties.getProps();
         int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
         var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);

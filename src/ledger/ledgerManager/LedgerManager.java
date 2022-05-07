@@ -11,7 +11,6 @@ import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
-import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import logsGenerators.ChangesInNumberOfChainsLog;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
@@ -55,11 +54,11 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
 
     private static LedgerManager singleton;
 
-    private LedgerManager() throws PrototypeHasNotBeenDefinedException {
+    private LedgerManager() {
         this(computeOgChainId());
     }
     
-    private LedgerManager(UUID ogChainId) throws PrototypeHasNotBeenDefinedException {
+    private LedgerManager(UUID ogChainId) {
         Properties props = GlobalProperties.getProps();
         var originChain = new ReferenceNode(props, ogChainId, this, 0, 1, 0,
                 new ComposableContentStorageImp());
@@ -79,14 +78,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
         return UUID.fromString(ogChainIdStr);
     }
 
-    public static LedgerManager getSingleton() throws PrototypeHasNotBeenDefinedException {
-        if (singleton == null)
-            singleton = new LedgerManager();
-        return singleton;
-    }
-
-    private void initializeChains(BlockmessChain origin, int initialNumChains)
-            throws PrototypeHasNotBeenDefinedException {
+    private void initializeChains(BlockmessChain origin, int initialNumChains) {
         int seedCounter = 1;
         this.chains.put(origin.getChainId(), origin);
         List<BlockmessChain> prevRoundChains = List.of(origin);
@@ -100,6 +92,12 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
             prevRoundChains = new ArrayList<>(chains.values());
             addNewChains();
         }
+    }
+
+    public static LedgerManager getSingleton() {
+        if (singleton == null)
+            singleton = new LedgerManager();
+        return singleton;
     }
 
     private UUID getRandomUUIDFromSeed(int seed) {
@@ -234,7 +232,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
     private List<BlockmessBlock> linearizeFinalizedBlocksInChains() {
         try {
             return tryToLinearizeFinalizedBlocksInChains();
-        } catch (LedgerTreeNodeDoesNotExistException | PrototypeHasNotBeenDefinedException e) {
+        } catch (LedgerTreeNodeDoesNotExistException e) {
             e.printStackTrace();
         }
         return emptyList();
@@ -250,8 +248,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
         }
     }
 
-    private List<BlockmessBlock> tryToLinearizeFinalizedBlocksInChains()
-            throws LedgerTreeNodeDoesNotExistException, PrototypeHasNotBeenDefinedException {
+    private List<BlockmessBlock> tryToLinearizeFinalizedBlocksInChains() throws LedgerTreeNodeDoesNotExistException {
         List<BlockmessBlock> res = new LinkedList<>();
         List<BlockmessBlock> confirmed;
         do {
@@ -262,8 +259,7 @@ public class LedgerManager implements ParentTreeNode, Ledger<BlockmessBlock>, Le
         return res;
     }
 
-    private List<BlockmessBlock> confirmBlocksWithRankEqualToConfirmationBar()
-            throws PrototypeHasNotBeenDefinedException, LedgerTreeNodeDoesNotExistException {
+    private List<BlockmessBlock> confirmBlocksWithRankEqualToConfirmationBar() throws LedgerTreeNodeDoesNotExistException {
         List<BlockmessBlock> res = new LinkedList<>();
         Iterator<BlockmessChain> chainIterator = chains.values().iterator();
         while (chainIterator.hasNext()) {

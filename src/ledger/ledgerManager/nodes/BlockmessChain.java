@@ -6,7 +6,6 @@ import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
-import ledger.prototype.PrototypeHasNotBeenDefinedException;
 
 import java.util.Collection;
 import java.util.Set;
@@ -19,7 +18,7 @@ public interface BlockmessChain
 
     void replaceParent(ParentTreeNode parent);
 
-    void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException;
+    void spawnChildren(UUID originator);
 
     /**
      * Merges children in this Chain.
@@ -87,8 +86,7 @@ public interface BlockmessChain
 
     long getNextRank();
 
-    void spawnPermanentChildren(UUID lftId, UUID rgtId)
-            throws PrototypeHasNotBeenDefinedException;
+    void spawnPermanentChildren(UUID lftId, UUID rgtId);
 
     /**
      * Submits content to the Chain without multiplexing it to other Chains.

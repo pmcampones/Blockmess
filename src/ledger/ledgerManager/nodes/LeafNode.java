@@ -5,11 +5,10 @@ import catecoin.blocks.ContentList;
 import catecoin.txs.Transaction;
 import ledger.Ledger;
 import ledger.LedgerObserver;
+import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
-import ledger.prototype.LedgerPrototype;
-import ledger.prototype.PrototypeHasNotBeenDefinedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +41,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
 
     private final Properties props;
 
-    private final UUID ChainId;
+    private final UUID chainId;
 
     private final Ledger<BlockmessBlock> ledger;
 
@@ -111,18 +110,16 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
 
     public LeafNode(
             Properties props, UUID ChainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage)
-            throws PrototypeHasNotBeenDefinedException {
+            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage) {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
-            Properties props, UUID ChainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock)
-            throws PrototypeHasNotBeenDefinedException {
+            Properties props, UUID chainId, ParentTreeNode parent,
+            long minRank, long minNextRank, int depth, ComposableContentStorage<Transaction> contentStorage, UUID prevBlock) {
         this.props = props;
-        this.ChainId = ChainId;
-        this.ledger = LedgerPrototype.getLedgerCopy(prevBlock);
+        this.chainId = chainId;
+        this.ledger = new Blockchain(chainId);
         ledger.attachObserver(this);
         this.parent = parent;
         this.overloadThreshold = parseFloat(props.getProperty("overloadThreshold", "0.9f"));
@@ -137,7 +134,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
 
     @Override
     public UUID getChainId() {
-        return ChainId;
+        return chainId;
     }
 
     @Override
@@ -186,7 +183,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     }
 
     @Override
-    public void spawnChildren(UUID originator) throws PrototypeHasNotBeenDefinedException {
+    public void spawnChildren(UUID originator) {
         StructuredValueMask mask = new StructuredValueMask(depth);
         ContentStorage<StructuredValue<Transaction>> lft = new BaseContentStorage();
         ContentStorage<StructuredValue<Transaction>> rgt = new BaseContentStorage();
@@ -223,7 +220,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
 
     @Override
     public Set<UUID> mergeChildren() throws LedgerTreeNodeDoesNotExistException {
-        throw new LedgerTreeNodeDoesNotExistException(ChainId);
+        throw new LedgerTreeNodeDoesNotExistException(chainId);
     }
 
     @Override
@@ -310,8 +307,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     }
 
     @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId)
-            throws PrototypeHasNotBeenDefinedException {
+    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
         depth++;
         contentStorage.halveChainThroughput();
         ParentTreeNode treeRoot = parent.getTreeRoot();
@@ -346,7 +342,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
     public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
         blocks.put(block.getBlockId(), block);
         logger.debug("Delivering non finalized block {} in Chain {}",
-                block.getBlockId(), ChainId);
+                block.getBlockId(), chainId);
         deliverNonFinalizedBlockToObservers(block, weight);
     }
 
@@ -430,7 +426,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver<BlockmessBlock> 
         contentStorage.deleteContent(getFinalizedContent(finalized));
         finalized.forEach(blocks::remove);
         logger.info("Delivering finalized blocks {} in Chain {}",
-                finalized, ChainId);
+                finalized, chainId);
         logger.debug("Observed {} blocks over the size threshold",
                 overloadedBlocksSample.stream().filter(b -> b).count());
         deliverFinalizedBlocksToObservers(finalized, discarded);
