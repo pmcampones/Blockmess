@@ -1,7 +1,6 @@
 package ledger.blockchain;
 
 import ledger.blocks.BlockmessBlock;
-import ledger.blocks.LedgerBlock;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.LinkedList;
@@ -30,10 +29,9 @@ public class DelayVerifier extends Thread implements AutoCloseable {
 
     private final Blockchain blockchain;
 
+    private final ReentrantLock lock = new ReentrantLock();
     //Blocks received out of order are kept in this queue until they can be processed appropriately.
-    private List<ArrivalTimeBlocks<BlockmessBlock>> unorderedBlocks = new LinkedList<>();
-
-    private ReentrantLock lock = new ReentrantLock();
+    private List<ArrivalTimeBlocks> unorderedBlocks = new LinkedList<>();
 
     private final ScheduledFuture<?> task;
 
@@ -44,7 +42,7 @@ public class DelayVerifier extends Thread implements AutoCloseable {
     }
 
     void submitUnordered(BlockmessBlock block) {
-        ArrivalTimeBlocks<BlockmessBlock> arrivalBlock = new ArrivalTimeBlocks<>(block);
+        ArrivalTimeBlocks arrivalBlock = new ArrivalTimeBlocks(block);
         try {
             lock.lock();
             unorderedBlocks.add(arrivalBlock);
@@ -99,14 +97,14 @@ public class DelayVerifier extends Thread implements AutoCloseable {
             B_(i+1) cannot be processed before B_i arrives, and so it is kept waiting.
             If B_i takes too long to arrive, B_(i+1) is discarded.
     */
-    private static class ArrivalTimeBlocks<B extends LedgerBlock> {
+    private static class ArrivalTimeBlocks {
 
         //Arrival time for the block.
         private final long arrival;
 
-        private final B block;
+        private final BlockmessBlock block;
 
-        private ArrivalTimeBlocks(B block) {
+        private ArrivalTimeBlocks(BlockmessBlock block) {
             this.block = block;
             arrival = System.currentTimeMillis();
         }

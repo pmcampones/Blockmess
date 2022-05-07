@@ -1,21 +1,21 @@
 package catecoin.notifications;
 
-import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import utils.IDGenerator;
 
-public class DeliverIndexableContentNotification<E extends IndexableContent> extends ProtoNotification {
+public class DeliverIndexableContentNotification extends ProtoNotification {
 
     public static final short ID = IDGenerator.genId();
 
-    private final E content;
+    private final Transaction content;
 
-    public DeliverIndexableContentNotification(E content) {
+    public DeliverIndexableContentNotification(Transaction content) {
         super(ID);
         this.content = content;
     }
 
-    public E getContent() {
+    public Transaction getContent() {
         return content;
     }
 
