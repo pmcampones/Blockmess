@@ -23,7 +23,7 @@
         <Logger level="info" name="catecoin.mempoolManager"/>
         <Logger level="debug" name="ledger.ledgerManager.LedgerManager"/>
         <Logger level="debug" name="ledger"/>
-        <Logger level="error" name="sybilResistantElection.SybilResistantElection"/>
+        <Logger level="info" name="sybilResistantElection.SybilResistantElection"/>
         <Root level="error">
             <AppenderRef ref="Console" level="debug"/>
             <AppenderRef ref="MyFile" level="debug"/>

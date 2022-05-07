@@ -2,7 +2,6 @@ package catecoin.txs;
 
 import catecoin.utxos.SlimUTXOIndependentFields;
 import catecoin.utxos.UTXO;
-import catecoin.validators.ContextObliviousValidator;
 import io.netty.buffer.ByteBuf;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
