@@ -2,11 +2,8 @@ package ledger.blocks;
 
 import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
-import catecoin.txs.IndexableContent;
-import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import ledger.ledgerManager.StructuredValue;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -20,7 +17,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class LedgerBlockImp extends ProtoPojoAbstract
-        implements LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> {
+        implements LedgerBlock<ContentList, SybilResistantElectionProof> {
 
     public static final short ID = 9888;
 
@@ -34,7 +31,7 @@ public class LedgerBlockImp extends ProtoPojoAbstract
 
         @Override
         public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
-            LedgerBlock<ContentList<IndexableContent>, SybilResistantElectionProof> block = (LedgerBlock) protoPojo;
+            LedgerBlock<ContentList, SybilResistantElectionProof> block = (LedgerBlock) protoPojo;
             out.writeInt(block.getInherentWeight());
             serializePrevs(block.getPrevRefs(), out);
             serializePojo(block.getContentList(), out);
@@ -78,13 +75,13 @@ public class LedgerBlockImp extends ProtoPojoAbstract
     };
 
     private final SybilResistantElectionProof proof;
-    private final ContentList<StructuredValue<Transaction>> contentList;
+    private final ContentList contentList;
     private final List<ValidatorSignature> validatorSignatures;
 
     /**
      * This constructor is meant to be used by nodes receiving the Block and called during the deserialization.
      */
-    private LedgerBlockImp(int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+    private LedgerBlockImp(int inherentWeight, List<UUID> prevRefs, ContentList contentList,
                            SybilResistantElectionProof proof, List<ValidatorSignature> validatorSignatures) throws IOException {
         super(ID);
         this.inherentWeight = inherentWeight;
@@ -100,7 +97,7 @@ public class LedgerBlockImp extends ProtoPojoAbstract
      * <p>An example of this is when a block class extends this and the computation of the blockId changes because
      * of some extra parameters.</p>
      */
-    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, ContentList contentList,
                    SybilResistantElectionProof proof, KeyPair proposer, short classId)
             throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
         super(classId);
@@ -112,7 +109,7 @@ public class LedgerBlockImp extends ProtoPojoAbstract
         this.validatorSignatures = genValidatorSignaturesFromProposer(blockId, proposer);
     }
 
-    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+    LedgerBlockImp(UUID blockId, int inherentWeight, List<UUID> prevRefs, ContentList contentList,
                    SybilResistantElectionProof proof, List<ValidatorSignature> validatorSignatures, short classId) {
         super(classId);
         this.blockId = blockId;
@@ -138,7 +135,7 @@ public class LedgerBlockImp extends ProtoPojoAbstract
     }
 
     static <P extends SybilResistantElectionProof> ByteBuf getLedgerBlockByteBuf(
-            int bufferSize, int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> ContentList, P proof)
+            int bufferSize, int inherentWeight, List<UUID> prevRefs, ContentList ContentList, P proof)
             throws IOException {
         ByteBuf in = Unpooled.buffer(bufferSize);
         in.writeInt(inherentWeight);
@@ -167,7 +164,7 @@ public class LedgerBlockImp extends ProtoPojoAbstract
     }
 
     @Override
-    public ContentList<StructuredValue<Transaction>> getContentList() {
+    public ContentList getContentList() {
         return contentList;
     }
 

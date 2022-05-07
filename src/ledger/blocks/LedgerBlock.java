@@ -15,7 +15,7 @@ import java.util.UUID;
  * @param <C> The type of the content used in the application running the Distributed Ledger.
  * @param <P> The type of the SybilElectionProof used in these Blocks.
  */
-public interface LedgerBlock<C extends ContentList<?>, P extends ProtoPojo & SizeAccountable>
+public interface LedgerBlock<C extends ContentList, P extends ProtoPojo & SizeAccountable>
         extends SizeAccountable, ProtoPojo {
 
     /**

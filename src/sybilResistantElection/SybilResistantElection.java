@@ -221,7 +221,7 @@ public class SybilResistantElection extends GenericProtocol {
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
         List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(prevBlocks, getAproximateProofSize());
-        ContentList<StructuredValue<Transaction>> content = new ContentList<>(contentLst);
+        ContentList content = new ContentList(contentLst);
         return new ChainSeed(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
     }
 
@@ -270,7 +270,7 @@ public class SybilResistantElection extends GenericProtocol {
         UUID newPrev = newPrevs.iterator().next();
         BlockmessChain chain = oldSeed.getChain();
         List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(newPrevs, getAproximateProofSize());
-        ContentList<StructuredValue<Transaction>> newContent = new ContentList<>(contentLst);
+        ContentList newContent = new ContentList(contentLst);
         ChainSeed newChainSeed =
                 new ChainSeed(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
         chainSeeds.replace(oldSeed.getChainId(), newChainSeed);

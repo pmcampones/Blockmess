@@ -9,7 +9,6 @@ import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverIndexableContentNotification;
 import catecoin.txs.Transaction;
 import ledger.blocks.LedgerBlock;
-import ledger.ledgerManager.StructuredValue;
 import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -86,14 +85,14 @@ public class ValueDispatcher extends GenericProtocol {
                 break;
             case SIGNED_BLOCK:
                 if (val instanceof LedgerBlock)
-                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof>) val));
+                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock<ContentList, SybilResistantElectionProof>) val));
                 break;
             default:
                 logger.debug("Received unknown value type");
         }
     }
 
-    private void uponDisseminateBlockRequest(DisseminateSignedBlockRequest<LedgerBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof>> req, short source) {
+    private void uponDisseminateBlockRequest(DisseminateSignedBlockRequest<LedgerBlock<ContentList,SybilResistantElectionProof>> req, short source) {
         try {
             logger.info("Protocol {} requested the dissemination of a {}",
                     source, ValType.SIGNED_BLOCK);

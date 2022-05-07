@@ -1,7 +1,9 @@
 package catecoin.blocks;
 
 import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
+import ledger.ledgerManager.StructuredValue;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -12,18 +14,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ContentList<E extends IndexableContent>
-        extends ProtoPojoAbstract {
+public class ContentList extends ProtoPojoAbstract {
 
     public static final short ID = 3920;
-
-    private final List<E> contentLst;
 
     public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
 
         @Override
         public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
-            ContentList<IndexableContent> ContentListList = (ContentList) protoPojo;
+            ContentList ContentListList = (ContentList) protoPojo;
             out.writeInt(ContentListList.contentLst.size());
             for (IndexableContent elem : ContentListList.contentLst)
                 serializeElement(elem, out);
@@ -37,10 +36,10 @@ public class ContentList<E extends IndexableContent>
         @Override
         public ProtoPojo deserialize(ByteBuf in) throws IOException {
             int numElems = in.readInt();
-            List<IndexableContent> contentLst = new ArrayList<>(numElems);
+            List<StructuredValue<Transaction>> contentLst = new ArrayList<>(numElems);
             for (int i = 0; i < numElems; i++)
-                contentLst.add(deserializeElem(in));
-            return new ContentList<>(contentLst);
+                contentLst.add((StructuredValue<Transaction>) deserializeElem(in));
+            return new ContentList(contentLst);
         }
 
         private IndexableContent deserializeElem(ByteBuf in) throws IOException {
@@ -49,14 +48,16 @@ public class ContentList<E extends IndexableContent>
             return (IndexableContent) serializer.deserialize(in);
         }
     };
+    private final List<StructuredValue<Transaction>> contentLst;
 
     public boolean hasValidSemantics() {
         return contentLst.stream()
                 .allMatch(IndexableContent::hasValidSemantics);
     }
 
-    public List<E> getContentList() {
-        return contentLst;
+    public ContentList(List<StructuredValue<Transaction>> contentLst) {
+        super(ID);
+        this.contentLst = contentLst;
     }
 
     public byte[] getContentHash() {
@@ -66,11 +67,8 @@ public class ContentList<E extends IndexableContent>
         return new MerkleRoot(contentHashes).getHashValue();
     }
 
-    public int getSerializedSize() throws IOException {
-        int accum = 0;
-        for (E elem : contentLst)
-            accum += elem.getSerializedSize();
-        return accum;
+    public List<StructuredValue<Transaction>> getContentList() {
+        return contentLst;
     }
 
     @Override
@@ -78,9 +76,11 @@ public class ContentList<E extends IndexableContent>
         return serializer;
     }
 
-    public ContentList(List<E> contentLst) {
-        super(ID);
-        this.contentLst = contentLst;
+    public int getSerializedSize() throws IOException {
+        int accum = 0;
+        for (StructuredValue<Transaction> elem : contentLst)
+            accum += elem.getSerializedSize();
+        return accum;
     }
 
 }

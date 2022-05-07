@@ -1,14 +1,13 @@
 package ledger;
 
 import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
 import ledger.blocks.LedgerBlock;
 import sybilResistantElection.SybilResistantElectionProof;
 
 import java.util.Set;
 import java.util.UUID;
 
-public interface Ledger<B extends LedgerBlock<? extends ContentList<? extends IndexableContent>,? extends SybilResistantElectionProof>> {
+public interface Ledger<B extends LedgerBlock<? extends ContentList,? extends SybilResistantElectionProof>> {
 
     /**
      * Retrieves the references to the previous blocks in the ledger.

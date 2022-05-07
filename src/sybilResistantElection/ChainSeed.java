@@ -1,9 +1,6 @@
 package sybilResistantElection;
 
 import catecoin.blocks.ContentList;
-import catecoin.txs.IndexableContent;
-import catecoin.txs.Transaction;
-import ledger.ledgerManager.StructuredValue;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import utils.CryptographicUtils;
 
@@ -16,13 +13,13 @@ public class ChainSeed {
 
     private final UUID prevBlock;
 
-    private final ContentList<StructuredValue<Transaction>> currContent;
+    private final ContentList currContent;
 
     private final byte[] chainSeed;
 
     private final BlockmessChain chain;
 
-    public ChainSeed(UUID chainId, UUID prevBlock, ContentList<StructuredValue<Transaction>> currContent, BlockmessChain chain) {
+    public ChainSeed(UUID chainId, UUID prevBlock, ContentList currContent, BlockmessChain chain) {
         this.chainId = chainId;
         this.prevBlock = prevBlock;
         this.currContent = currContent;
@@ -34,7 +31,7 @@ public class ChainSeed {
         return computeChainSeed(chainId, currContent, prevBlock);
     }
 
-    public static <C extends ContentList<? extends IndexableContent>> byte[] computeChainSeed(UUID ChainId, C currContent, UUID prevBlock) {
+    public static byte[] computeChainSeed(UUID ChainId, ContentList currContent, UUID prevBlock) {
         byte[] contentHash = currContent.getContentHash();
         ByteBuffer byteBuffer = ByteBuffer.allocate(4 * Long.BYTES + contentHash.length * Byte.BYTES);
         byteBuffer.putLong(ChainId.getMostSignificantBits());
@@ -53,7 +50,7 @@ public class ChainSeed {
         return prevBlock;
     }
 
-    public ContentList<StructuredValue<Transaction>> getCurrContent() {
+    public ContentList getCurrContent() {
         return currContent;
     }
 

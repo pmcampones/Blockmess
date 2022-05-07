@@ -3,9 +3,7 @@ package ledger.blocks;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
-import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
-import ledger.ledgerManager.StructuredValue;
 import main.ProtoPojo;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import sybilResistantElection.SybilResistantElectionProof;
@@ -17,7 +15,7 @@ import java.util.List;
 import java.util.UUID;
 
 public class BlockmessBlock
-        implements LedgerBlock<ContentList<StructuredValue<Transaction>>, SybilResistantElectionProof> {
+        implements LedgerBlock<ContentList, SybilResistantElectionProof> {
 
     public static final short ID = 11037;
     public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
@@ -89,12 +87,12 @@ public class BlockmessBlock
         }
 
     };
-    private final LedgerBlock<ContentList<StructuredValue<Transaction>>,SybilResistantElectionProof> ledgerBlock;
+    private final LedgerBlock<ContentList,SybilResistantElectionProof> ledgerBlock;
     private final UUID destinationChain;
     private final long currentRank;
     private final long nextRank;
 
-    public BlockmessBlock(int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+    public BlockmessBlock(int inherentWeight, List<UUID> prevRefs, ContentList contentList,
                           SybilResistantElectionProof proof, KeyPair proposer, UUID destinationChain, long currentRank, long nextRank)
             throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
         UUID blockId = computeBlockId(inherentWeight, prevRefs, contentList, proof, destinationChain);
@@ -104,33 +102,32 @@ public class BlockmessBlock
         this.nextRank = nextRank;
     }
 
-    private UUID computeBlockId(int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+    private UUID computeBlockId(int inherentWeight, List<UUID> prevRefs, ContentList contentList,
                                 SybilResistantElectionProof proof, UUID destinationChain) throws IOException {
         byte[] blockBytes = computeBlockBytes(inherentWeight, prevRefs, contentList, proof, destinationChain);
         return CryptographicUtils.generateUUIDFromBytes(blockBytes);
     }
 
-    private byte[] computeBlockBytes(int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> ContentList,
+    private byte[] computeBlockBytes(int inherentWeight, List<UUID> prevRefs, ContentList contentList,
                                      SybilResistantElectionProof proof, UUID destinationChain) throws IOException {
         int bufferSize = Integer.BYTES
                 + prevRefs.size() * 2 * Long.BYTES
-                + ContentList.getSerializedSize()
+                + contentList.getSerializedSize()
                 + proof.getSerializedSize()
                 + 2 * Long.BYTES;
-        ByteBuf in = LedgerBlockImp.getLedgerBlockByteBuf(bufferSize, inherentWeight, prevRefs, ContentList, proof);
+        ByteBuf in = LedgerBlockImp.getLedgerBlockByteBuf(bufferSize, inherentWeight, prevRefs, contentList, proof);
         in.writeLong(destinationChain.getMostSignificantBits());
         in.writeLong(destinationChain.getLeastSignificantBits());
         return in.array();
     }
 
 
-    private BlockmessBlock(int inherentWeight, List<UUID> prevRefs, ContentList<StructuredValue<Transaction>> contentList,
+    private BlockmessBlock(int inherentWeight, List<UUID> prevRefs, ContentList contentList,
                            SybilResistantElectionProof proof, List<ValidatorSignature> validatorSignatures, UUID destinationChain,
                            long currentRank, long nextRank)
             throws IOException {
         UUID blockId = computeBlockId(inherentWeight, prevRefs, contentList, proof, destinationChain);
-        this.ledgerBlock =
-                new LedgerBlockImp(blockId, inherentWeight, prevRefs, contentList, proof, validatorSignatures, ID);
+        this.ledgerBlock = new LedgerBlockImp(blockId, inherentWeight, prevRefs, contentList, proof, validatorSignatures, ID);
         this.destinationChain = destinationChain;
         this.currentRank = currentRank;
         this.nextRank = nextRank;
@@ -164,7 +161,7 @@ public class BlockmessBlock
     }
 
     @Override
-    public ContentList<StructuredValue<Transaction>> getContentList() {
+    public ContentList getContentList() {
         return ledgerBlock.getContentList();
     }
 
