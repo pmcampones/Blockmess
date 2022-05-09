@@ -1,12 +1,12 @@
 package broadcastProtocols.eagerPush;
 
-import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.messages.BatcheableMessage;
 import broadcastProtocols.messages.BroadcastMessage;
 import broadcastProtocols.messages.BroadcastMessageImp;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
+import valueDispatcher.DispatcherWrapper;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -17,7 +17,7 @@ public class EagerValMessage extends BatcheableMessage implements BroadcastMessa
 
     private final BroadcastMessage broadcastMessage;
 
-    public EagerValMessage(UUID mid, BroadcastValue val) {
+    public EagerValMessage(UUID mid, DispatcherWrapper val) {
         super(ID);
         this.broadcastMessage = new BroadcastMessageImp(mid, val);
     }
@@ -33,7 +33,7 @@ public class EagerValMessage extends BatcheableMessage implements BroadcastMessa
     }
 
     @Override
-    public BroadcastValue getVal() {
+    public DispatcherWrapper getVal() {
         return broadcastMessage.getVal();
     }
 

@@ -1,7 +1,6 @@
 package broadcastProtocols.eagerPush;
 
 import broadcastProtocols.BroadcastProtocol;
-import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.notifications.DeliverVal;
@@ -112,8 +111,7 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
     }
 
     private void uponBroadcastRequest(EagerBroadcastRequest req, short source) {
-        BroadcastValue val = req.getVal();
-        EagerValMessage msg = new EagerValMessage(UUID.randomUUID(), val);
+        EagerValMessage msg = new EagerValMessage(UUID.randomUUID(), req.getVal());
         uponEagerValMessage(msg);
     }
 

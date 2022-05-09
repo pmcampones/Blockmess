@@ -1,7 +1,6 @@
 package valueDispatcher;
 
 import broadcastProtocols.BroadcastValue;
-import broadcastProtocols.BroadcastValueAbstract;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -9,24 +8,23 @@ import pt.unl.fct.di.novasys.network.ISerializer;
 import java.io.IOException;
 import java.util.UUID;
 
-public class DispatcherWrapper extends BroadcastValueAbstract {
+public class DispatcherWrapper {
 
     public static final short ID = 1000;
 
     private final short dispatcherType;
 
-    public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {
+    public static final ISerializer<DispatcherWrapper> serializer = new ISerializer<>() {
 
         @Override
-        public void serialize(BroadcastValue pojo, ByteBuf out) throws IOException {
-            DispatcherWrapper wrapper = (DispatcherWrapper) pojo;
+        public void serialize(DispatcherWrapper wrapper, ByteBuf out) throws IOException {
             out.writeShort(wrapper.dispatcherType);
             out.writeShort(wrapper.val.getClassId());
             wrapper.val.getSerializer().serialize(wrapper.val, out);
         }
 
         @Override
-        public BroadcastValue deserialize(ByteBuf in) throws IOException {
+        public DispatcherWrapper deserialize(ByteBuf in) throws IOException {
             return new DispatcherWrapper(in.readShort(),
                     BroadcastValue.pojoSerializers.get(in.readShort()).deserialize(in));
         }
@@ -38,17 +36,14 @@ public class DispatcherWrapper extends BroadcastValueAbstract {
     }
 
     public DispatcherWrapper(short dispatcherType, BroadcastValue val) {
-        super(ID);
         this.dispatcherType = dispatcherType;
         this.val = val;
     }
 
-    @Override
     public boolean isBlocking() {
         return val.isBlocking();
     }
 
-    @Override
     public UUID getBlockingID() throws InnerValueIsNotBlockingBroadcast {
         return val.getBlockingID();
     }
@@ -62,8 +57,7 @@ public class DispatcherWrapper extends BroadcastValueAbstract {
         return val;
     }
 
-    @Override
-    public ISerializer<BroadcastValue> getSerializer() {
+    public ISerializer<DispatcherWrapper> getSerializer() {
         return serializer;
     }
 

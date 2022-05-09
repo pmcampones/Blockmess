@@ -1,10 +1,10 @@
 package broadcastProtocols.messages;
 
-import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerValMessage;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
+import valueDispatcher.DispatcherWrapper;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -20,35 +20,25 @@ public class BroadcastMessageImp extends BatcheableMessage implements BroadcastM
             BroadcastMessage broadcastMessage = (BroadcastMessage) msg;
             out.writeLong(broadcastMessage.getMid().getMostSignificantBits());
             out.writeLong(broadcastMessage.getMid().getLeastSignificantBits());
-            serializeVal(broadcastMessage.getVal(), out);
-        }
-
-        private void serializeVal(BroadcastValue val, ByteBuf out) throws IOException {
-            out.writeShort(val.getClassId());
-            val.getSerializer().serialize(val, out);
+            DispatcherWrapper.serializer.serialize(broadcastMessage.getVal(), out);
         }
 
         @Override
         public BatcheableMessage deserialize(ByteBuf in) throws IOException {
             UUID mid = new UUID(in.readLong(), in.readLong());
-            BroadcastValue val = deserializeVal(in);
+            DispatcherWrapper val = DispatcherWrapper.serializer.deserialize(in);
             return new EagerValMessage(mid, val);
         }
 
-        private BroadcastValue deserializeVal(ByteBuf in) throws IOException {
-            short pojoId = in.readShort();
-            ISerializer<BroadcastValue> serializer = BroadcastValue.pojoSerializers.get(pojoId);
-            return serializer.deserialize(in);
-        }
     };
-    private final BroadcastValue val;
+    private final DispatcherWrapper val;
 
     @Override
     public UUID getMid() {
         return mid;
     }
 
-    public BroadcastMessageImp(UUID mid, BroadcastValue val) {
+    public BroadcastMessageImp(UUID mid, DispatcherWrapper val) {
         super((short) -1);  //Don't instantiate to be used inside Babel.
         // This is only here because I can't turn ProtoMessage into an interface
         this.mid = mid;
@@ -66,7 +56,7 @@ public class BroadcastMessageImp extends BatcheableMessage implements BroadcastM
     }
 
     @Override
-    public BroadcastValue getVal() {
+    public DispatcherWrapper getVal() {
         return val;
     }
 

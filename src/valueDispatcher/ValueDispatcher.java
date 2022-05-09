@@ -68,7 +68,6 @@ public class ValueDispatcher extends GenericProtocol {
 
     private void tryToSetupDispatcher() throws HandlerRegistrationException {
         subscribeNotification(DeliverVal.ID, this::uponDeliverVal);
-        BroadcastValue.pojoSerializers.put(DispatcherWrapper.ID, DispatcherWrapper.serializer);
     }
 
     public static ValueDispatcher getSingleton() {
@@ -81,14 +80,12 @@ public class ValueDispatcher extends GenericProtocol {
     public void init(Properties properties) {}
 
     private void uponDeliverVal(DeliverVal v, short id) {
-        if (v.getVal() instanceof DispatcherWrapper) {
-            DispatcherWrapper wrapper = (DispatcherWrapper) v.getVal();
-            short typeIndex = wrapper.getDispatcherType();
-            if (typeIndex < ValType.values().length) {
-                ValType type = ValType.values()[typeIndex];
-                logger.info("Received disseminated content from {} of type {}", id, type);
-                notifyUpperProtocols(type, wrapper.getVal());
-            }
+        DispatcherWrapper wrapper = v.getVal();
+        short typeIndex = wrapper.getDispatcherType();
+        if (typeIndex < ValType.values().length) {
+            ValType type = ValType.values()[typeIndex];
+            logger.info("Received disseminated content from {} of type {}", id, type);
+            notifyUpperProtocols(type, wrapper.getVal());
         }
     }
 
