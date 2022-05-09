@@ -1,7 +1,6 @@
 package catecoin.blocks;
 
 import catecoin.txs.IndexableContent;
-import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
 import ledger.ledgerManager.StructuredValue;
 import main.ProtoPojo;
@@ -36,9 +35,9 @@ public class ContentList extends ProtoPojoAbstract {
         @Override
         public ProtoPojo deserialize(ByteBuf in) throws IOException {
             int numElems = in.readInt();
-            List<StructuredValue<Transaction>> contentLst = new ArrayList<>(numElems);
+            List<StructuredValue> contentLst = new ArrayList<>(numElems);
             for (int i = 0; i < numElems; i++)
-                contentLst.add((StructuredValue<Transaction>) deserializeElem(in));
+                contentLst.add((StructuredValue) deserializeElem(in));
             return new ContentList(contentLst);
         }
 
@@ -48,14 +47,14 @@ public class ContentList extends ProtoPojoAbstract {
             return (IndexableContent) serializer.deserialize(in);
         }
     };
-    private final List<StructuredValue<Transaction>> contentLst;
+    private final List<StructuredValue> contentLst;
 
     public boolean hasValidSemantics() {
         return contentLst.stream()
                 .allMatch(IndexableContent::hasValidSemantics);
     }
 
-    public ContentList(List<StructuredValue<Transaction>> contentLst) {
+    public ContentList(List<StructuredValue> contentLst) {
         super(ID);
         this.contentLst = contentLst;
     }
@@ -67,7 +66,7 @@ public class ContentList extends ProtoPojoAbstract {
         return new MerkleRoot(contentHashes).getHashValue();
     }
 
-    public List<StructuredValue<Transaction>> getContentList() {
+    public List<StructuredValue> getContentList() {
         return contentLst;
     }
 
@@ -78,7 +77,7 @@ public class ContentList extends ProtoPojoAbstract {
 
     public int getSerializedSize() throws IOException {
         int accum = 0;
-        for (StructuredValue<Transaction> elem : contentLst)
+        for (StructuredValue elem : contentLst)
             accum += elem.getSerializedSize();
         return accum;
     }

@@ -1,6 +1,5 @@
 package catecoin.blockConstructors;
 
-import catecoin.txs.Transaction;
 import ledger.ledgerManager.StructuredValue;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +24,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         try {
             innerLock.readLock().lock();
@@ -36,7 +35,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<Transaction>> content) {
+    public void submitContent(Collection<StructuredValue> content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -46,7 +45,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public void submitContent(StructuredValue<Transaction> content) {
+    public void submitContent(StructuredValue content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -66,7 +65,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public Collection<StructuredValue<Transaction>> getStoredContent() {
+    public Collection<StructuredValue> getStoredContent() {
         try {
             innerLock.readLock().lock();
             return inner.getStoredContent();
@@ -92,9 +91,9 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
 
     @NotNull
     private Set<UUID> redistributeContent(StructuredValueMask mask, ComposableContentStorage lft, ComposableContentStorage rgt) {
-        Collection<StructuredValue<Transaction>> allValues = inner.getStoredContent();
+        Collection<StructuredValue> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
-        for (StructuredValue<Transaction> val : inner.getStoredContent()) {
+        for (StructuredValue val : inner.getStoredContent()) {
             StructuredValueMask.MaskResult res = mask.matchIds(val.getMatch1(), val.getMatch2());
             if (res.equals(StructuredValueMask.MaskResult.LEFT)) {
                 migrated.add(val.getId());

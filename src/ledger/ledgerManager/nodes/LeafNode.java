@@ -2,7 +2,6 @@ package ledger.ledgerManager.nodes;
 
 import catecoin.blockConstructors.*;
 import catecoin.blocks.ContentList;
-import catecoin.txs.Transaction;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
@@ -324,7 +323,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public void submitContentDirectly(Collection<StructuredValue<Transaction>> content) {
+    public void submitContentDirectly(Collection<StructuredValue> content) {
         contentStorage.submitContent(content);
     }
 
@@ -448,18 +447,18 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return contentStorage.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<Transaction>> content) {
+    public void submitContent(Collection<StructuredValue> content) {
         contentStorage.submitContent(content);
     }
 
     @Override
-    public void submitContent(StructuredValue<Transaction> content) {
+    public void submitContent(StructuredValue content) {
         contentStorage.submitContent(content);
     }
 
@@ -469,14 +468,14 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public Collection<StructuredValue<Transaction>> getStoredContent() {
+    public Collection<StructuredValue> getStoredContent() {
         return Stream.concat(
                 contentStorage.getStoredContent().stream(),
                 getTxsInBufferedFinalizedBlocks(finalizedBuffer.stream())
                 ).collect(toSet());
     }
 
-    private Stream<StructuredValue<Transaction>> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock> stream) {
+    private Stream<StructuredValue> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock> stream) {
         return stream
                 .map(BlockmessBlock::getContentList)
                 .map(ContentList::getContentList)

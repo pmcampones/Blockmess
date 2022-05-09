@@ -2,7 +2,6 @@ package sybilResistantElection;
 
 import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
-import catecoin.txs.Transaction;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.StructuredValue;
@@ -220,7 +219,7 @@ public class SybilResistantElection extends GenericProtocol {
     private ChainSeed computeChainRandomSeed(BlockmessChain chain)
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
-        List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(prevBlocks, getAproximateProofSize());
+        List<StructuredValue> contentLst = chain.generateContentListList(prevBlocks, getAproximateProofSize());
         ContentList content = new ContentList(contentLst);
         return new ChainSeed(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
     }
@@ -269,7 +268,7 @@ public class SybilResistantElection extends GenericProtocol {
     private void replaceChain(ChainSeed oldSeed, Set<UUID> newPrevs) throws IOException {
         UUID newPrev = newPrevs.iterator().next();
         BlockmessChain chain = oldSeed.getChain();
-        List<StructuredValue<Transaction>> contentLst = chain.generateContentListList(newPrevs, getAproximateProofSize());
+        List<StructuredValue> contentLst = chain.generateContentListList(newPrevs, getAproximateProofSize());
         ContentList newContent = new ContentList(contentLst);
         ChainSeed newChainSeed =
                 new ChainSeed(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());

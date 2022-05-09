@@ -3,7 +3,6 @@ package ledger.ledgerManager.nodes;
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import catecoin.blockConstructors.StructuredValueMask;
-import catecoin.txs.Transaction;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -187,7 +186,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void submitContentDirectly(Collection<StructuredValue<Transaction>> content) {
+    public void submitContentDirectly(Collection<StructuredValue> content) {
         leaf.submitContentDirectly(content);
     }
 
@@ -242,18 +241,18 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<StructuredValue<Transaction>> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return leaf.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue<Transaction>> content) {
+    public void submitContent(Collection<StructuredValue> content) {
         nodeState.submitContent(content);
     }
 
     @Override
-    public void submitContent(StructuredValue<Transaction> content) {
+    public void submitContent(StructuredValue content) {
         nodeState.submitContent(content);
     }
 
@@ -263,7 +262,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Collection<StructuredValue<Transaction>> getStoredContent() {
+    public Collection<StructuredValue> getStoredContent() {
         return leaf.getStoredContent();
     }
 

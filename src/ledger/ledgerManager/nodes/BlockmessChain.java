@@ -1,7 +1,6 @@
 package ledger.ledgerManager.nodes;
 
 import catecoin.blockConstructors.ComposableContentStorage;
-import catecoin.txs.Transaction;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -92,7 +91,7 @@ public interface BlockmessChain extends Ledger, ComposableContentStorage {
      * <p>This is used to test the wasted performance of other parallel chain solutions that
      * allow repeated transactions in several chains.</p>
      */
-    void submitContentDirectly(Collection<StructuredValue<Transaction>> content);
+    void submitContentDirectly(Collection<StructuredValue> content);
 
     int countReferencedPermanent();
 

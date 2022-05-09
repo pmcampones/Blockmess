@@ -2,6 +2,7 @@ package ledger.ledgerManager;
 
 import catecoin.blockConstructors.StructuredValueMask;
 import catecoin.txs.IndexableContent;
+import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
@@ -10,62 +11,13 @@ import pt.unl.fct.di.novasys.network.ISerializer;
 import java.io.IOException;
 import java.util.UUID;
 
-public class StructuredValue<E extends IndexableContent> extends ProtoPojoAbstract implements IndexableContent {
+public class StructuredValue extends ProtoPojoAbstract implements IndexableContent {
 
     public static final short ID = 1982;
 
     private final byte[] match1, match2;
 
     private final StructuredValueMask mask = new StructuredValueMask();
-
-    private final E innerValue;
-
-    public StructuredValue(byte[] match1, byte[] match2, E innerValue) {
-        super(ID);
-        this.match1 = match1;
-        this.match2 = match2;
-        this.innerValue = innerValue;
-    }
-
-    @Override
-    public UUID getId() {
-        return innerValue.getId();
-    }
-
-    @Override
-    public byte[] getHashVal() {
-        return innerValue.getHashVal();
-    }
-
-    @Override
-    public boolean hasValidSemantics() {
-        return innerValue.hasValidSemantics();
-    }
-
-    public byte[] getMatch1() {
-        return match1;
-    }
-
-    public byte[] getMatch2() {
-        return match2;
-    }
-
-    public E getInnerValue() {
-        return innerValue;
-    }
-
-    public StructuredValueMask.MaskResult matchIds() {
-        return mask.matchIds(match1, match2);
-    }
-
-    public void advanceMask() {
-        mask.advanceMask();
-    }
-
-    @Override
-    public ISerializer<ProtoPojo> getSerializer() {
-        return serializer;
-    }
 
     public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
 
@@ -91,8 +43,8 @@ public class StructuredValue<E extends IndexableContent> extends ProtoPojoAbstra
         public ProtoPojo deserialize(ByteBuf in) throws IOException {
             byte[] match1 = deserializeMatch(in);
             byte[] match2 = deserializeMatch(in);
-            IndexableContent inner = (IndexableContent) deserializeInner(in);
-            return new StructuredValue<>(match1, match2, inner);
+            Transaction inner = (Transaction) deserializeInner(in);
+            return new StructuredValue(match1, match2, inner);
         }
 
         private byte[] deserializeMatch(ByteBuf in) {
@@ -108,6 +60,54 @@ public class StructuredValue<E extends IndexableContent> extends ProtoPojoAbstra
         }
 
      };
+    private final Transaction innerValue;
+
+    @Override
+    public UUID getId() {
+        return innerValue.getId();
+    }
+
+    @Override
+    public byte[] getHashVal() {
+        return innerValue.getHashVal();
+    }
+
+    @Override
+    public boolean hasValidSemantics() {
+        return innerValue.hasValidSemantics();
+    }
+
+    public byte[] getMatch1() {
+        return match1;
+    }
+
+    public byte[] getMatch2() {
+        return match2;
+    }
+
+    public StructuredValue(byte[] match1, byte[] match2, Transaction innerValue) {
+        super(ID);
+        this.match1 = match1;
+        this.match2 = match2;
+        this.innerValue = innerValue;
+    }
+
+    public StructuredValueMask.MaskResult matchIds() {
+        return mask.matchIds(match1, match2);
+    }
+
+    public void advanceMask() {
+        mask.advanceMask();
+    }
+
+    @Override
+    public ISerializer<ProtoPojo> getSerializer() {
+        return serializer;
+    }
+
+    public Transaction getInnerValue() {
+        return innerValue;
+    }
 
     @Override
     public int getSerializedSize() throws IOException {
