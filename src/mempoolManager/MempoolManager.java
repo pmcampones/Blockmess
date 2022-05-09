@@ -9,34 +9,28 @@ import catecoin.utxos.StorageUTXO;
 import ledger.blocks.ContentList;
 import ledger.blocks.LedgerBlock;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
-import utils.CryptographicUtils;
 import utils.IDGenerator;
 
 import java.io.IOException;
-import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.lang.Integer.parseInt;
 import static java.util.Collections.unmodifiableSet;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableSet;
 
 public class MempoolManager extends GenericProtocol {
 
     private static final Logger logger = LogManager.getLogger(MempoolManager.class);
 
     public static final short ID = IDGenerator.genId();
-
-    public static final int NUMBER_COINS = 10000;
 
     private final ReadWriteLock mempoolLock = new ReentrantReadWriteLock();
 
@@ -58,7 +52,6 @@ public class MempoolManager extends GenericProtocol {
     private MempoolManager() throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
         this.recordModule = new MinimalistRecordModule();
-        loadInitialUtxos();
         bootstrapDL();
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
                 (DeliverNonFinalizedBlockNotification<LedgerBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
@@ -67,24 +60,9 @@ public class MempoolManager extends GenericProtocol {
         BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
     }
 
-    private void loadInitialUtxos() throws Exception {
-        Properties props = GlobalProperties.getProps();
-        PublicKey originalPublic = CryptographicUtils.readECDSAPublicKey(props.getProperty("originalPublic"));
-        int numberCoins = parseInt(props.getProperty("numberCoins", String.valueOf(NUMBER_COINS)));
-        List<StorageUTXO> utxos = IntStream.range(0, numberCoins)
-                .mapToObj(i -> new StorageUTXO(new UUID(0, i), 1, originalPublic))
-                .collect(toList());
-        UTXOCollection.updateUtxos(utxos, Collections.emptyList());
-    }
-
     private void bootstrapDL() {
         logger.info("Bootstrapping DL");
         List<MempoolChunk> chunks = BootstrapModule.getStoredChunks();
-        List<StorageUTXO> addedUtxos = chunks.stream()
-                .flatMap(chunk -> chunk.getAddedUtxos().stream()).collect(toList());
-        List<UUID> removedUtxos = chunks.stream()
-                .flatMap(chunk -> chunk.getRemovedUtxos().stream()).collect(toList());
-        UTXOCollection.updateUtxos(addedUtxos, removedUtxos);
         logger.info("Successfully bootstrapped {} blocks.", chunks.size());
     }
 
@@ -176,25 +154,8 @@ public class MempoolManager extends GenericProtocol {
     }
 
     private void tryToFinalizeBlocks(List<MempoolChunk> finalized) {
-        Set<UUID> removedUtxoIds = extractRemovedUtxosFromBlock(finalized);
-        Set<StorageUTXO> addedUtxos = extractStorageUtxosFromBlock(finalized);
         triggerNotification(new DeliverFinalizedBlocksContentNotification());
-        UTXOCollection.updateUtxos(addedUtxos, removedUtxoIds);
         finalized.stream().map(MempoolChunk::getId).forEach(mempool::remove);
-    }
-
-    private Set<UUID> extractRemovedUtxosFromBlock(List<MempoolChunk> blocks) {
-        return blocks.stream()
-                .flatMap(b -> b.getRemovedUtxos().stream())
-                .collect(toSet());
-    }
-
-    private Set<StorageUTXO> extractStorageUtxosFromBlock(List<MempoolChunk> blocks) {
-        return blocks.stream()
-                .peek(b -> logger.info("Finalized block {}, with {} UTXOs and {} txs.",
-                        b.getId(), b.getAddedUtxos().size(), b.getUsedTxs().size()))
-                .flatMap(b -> b.getAddedUtxos().stream())
-                .collect(toSet());
     }
 
     public Set<UUID> getInvalidTxsFromChunk(UUID previousState, Set<UUID> visited) {
