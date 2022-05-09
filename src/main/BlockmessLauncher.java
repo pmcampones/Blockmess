@@ -1,12 +1,8 @@
 package main;
 
-import blockConstructors.ContentStorage;
-import blockConstructors.StructuredValuesTxLoader;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
-import catecoin.transactionGenerators.FakeTxsGenerator;
-import catecoin.txs.StructuredValueSlimTransactionWrapper;
 import catecoin.txs.Transaction;
 import ledger.AppContent;
 import ledger.BabelLedger;
@@ -35,8 +31,9 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.security.KeyPair;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Properties;
 
 import static java.lang.Integer.parseInt;
 
@@ -114,8 +111,7 @@ public class BlockmessLauncher {
         List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
         MempoolManager mempoolManager = MempoolManager.getSingleton();
         protocols.add(mempoolManager);
-        LedgerManager ledgerManager = setUpLedgerManager(protocols);
-        bootstrapContent(props, ledgerManager);
+        setUpLedgerManager(protocols);
         setUpSybilElection(protocols);
         initializeSerializers();
         initializeProtocols(props, babel, protocols);
@@ -133,45 +129,6 @@ public class BlockmessLauncher {
         var babelLedger = new BabelLedger(ledgerManager);
         protocols.add(babelLedger);
         return ledgerManager;
-    }
-
-    private static void bootstrapContent(Properties props, LedgerManager ledgerManager) {
-        var txsLoader = new StructuredValuesTxLoader(ledgerManager);
-        if (props.getProperty("allowCommonTransactionsAmongChains", "F").equals("F")) {
-            loadTxsForBlockmess(txsLoader);
-            assert(areAllTxsDistinctAmongChains());
-        } else {
-            loadTxsCommon();
-        }
-    }
-
-    private static boolean areAllTxsDistinctAmongChains() {
-        List<UUID> allTxsIds = LedgerManager.getSingleton().getAvailableChains().stream()
-                .map(ContentStorage::getStoredContent)
-                .flatMap(Collection::stream)
-                .map(AppContent::getId)
-                .collect(Collectors.toList());
-        return allTxsIds.size() == new HashSet<>(allTxsIds).size();
-    }
-
-    private static void loadTxsCommon() {
-        Properties props = GlobalProperties.getProps();
-        int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
-        var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
-        var structuredValues = txs.stream()
-                .map(StructuredValueSlimTransactionWrapper::wrapTx)
-                .collect(Collectors.toList());
-        LedgerManager.getSingleton().getAvailableChains().forEach(b -> b.submitContentDirectly(structuredValues));
-    }
-
-    private static void loadTxsForBlockmess(StructuredValuesTxLoader txsLoader) {
-        Properties props = GlobalProperties.getProps();
-        int numTxs = parseInt(props.getProperty("numBootstrapTxs", "10000"));
-        var txs = new FakeTxsGenerator().generateFakeTxs(numTxs);
-        var structuredValues = txs.stream()
-                .map(StructuredValueSlimTransactionWrapper::wrapTx)
-                .collect(Collectors.toList());
-        txsLoader.loadTxs(structuredValues);
     }
 
     private static List<GenericProtocol> addNetworkProtocols(Host myself) throws Exception {
