@@ -1,7 +1,6 @@
 package catecoin.blocks;
 
 import io.netty.buffer.ByteBuf;
-import ledger.blocks.SizeAccountable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -12,7 +11,7 @@ import java.security.*;
 import java.util.Arrays;
 import java.util.UUID;
 
-public class ValidatorSignature implements SizeAccountable {
+public class ValidatorSignature {
 
     public final static ISerializer<ValidatorSignature> serializer = new ISerializer<>() {
 
@@ -59,7 +58,6 @@ public class ValidatorSignature implements SizeAccountable {
         return false;
     }
 
-    @Override
     public int getSerializedSize() throws IOException {
         return CryptographicUtils.computeKeySize(validator) + Short.BYTES + signedContent.length;
     }

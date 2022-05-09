@@ -26,7 +26,7 @@ import java.util.UUID;
  *  The same logic applies to ContentList.
  * However it assigns more responsibilities to the application validator class (by default {@link ContextObliviousValidator})
  */
-public class Transaction extends BroadcastValueAbstract implements IndexableContent {
+public class Transaction extends BroadcastValueAbstract implements BroadcastValue {
 
     private static final long serialVersionUID = 1L;
 
@@ -201,12 +201,10 @@ public class Transaction extends BroadcastValueAbstract implements IndexableCont
                 (UTXO.SERIALIZED_SIZE - 2 * Long.BYTES) * (destinationFields.size() + originFields.size());
     }
 
-    @Override
     public UUID getId() {
         return txId;
     }
 
-    @Override
     public byte[] getHashVal() {
         return hashVal;
     }
@@ -235,7 +233,6 @@ public class Transaction extends BroadcastValueAbstract implements IndexableCont
         return outputsDestination;
     }
 
-    @Override
     public int getSerializedSize() {
         return serializedSize;
     }
@@ -262,7 +259,6 @@ public class Transaction extends BroadcastValueAbstract implements IndexableCont
      *       We see no harm in this, however the system can work correctly if this was disallowed.
      *       Should this prove to be an attack vector, we should rectify this behaviour.
      */
-    @Override
     public boolean hasValidSemantics() {
         return  !inputs.isEmpty() && !outputsDestination.isEmpty()
                 && !hasInvalidAmount(outputsDestination)

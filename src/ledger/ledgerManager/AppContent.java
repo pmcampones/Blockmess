@@ -3,14 +3,13 @@ package ledger.ledgerManager;
 import blockConstructors.CMuxMask;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
-import catecoin.txs.IndexableContent;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.CryptographicUtils;
 
 import java.util.UUID;
 
-public class AppContent extends BroadcastValueAbstract implements IndexableContent {
+public class AppContent extends BroadcastValueAbstract implements BroadcastValue {
 
     public static final short ID = 1982;
 
@@ -44,17 +43,14 @@ public class AppContent extends BroadcastValueAbstract implements IndexableConte
         this.content = content;
     }
 
-    @Override
     public UUID getId() {
         return id;
     }
 
-    @Override
     public byte[] getHashVal() {
         return hashVal;
     }
 
-    @Override
     public boolean hasValidSemantics() {
         return true;
     }
@@ -80,7 +76,6 @@ public class AppContent extends BroadcastValueAbstract implements IndexableConte
         return serializer;
     }
 
-    @Override
     public int getSerializedSize() {
         return content.length;
     }

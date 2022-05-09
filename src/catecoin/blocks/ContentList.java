@@ -2,7 +2,6 @@ package catecoin.blocks;
 
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
-import catecoin.txs.IndexableContent;
 import io.netty.buffer.ByteBuf;
 import ledger.ledgerManager.AppContent;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -23,11 +22,11 @@ public class ContentList extends BroadcastValueAbstract {
         public void serialize(BroadcastValue broadcastValue, ByteBuf out) throws IOException {
             ContentList ContentListList = (ContentList) broadcastValue;
             out.writeInt(ContentListList.contentLst.size());
-            for (IndexableContent elem : ContentListList.contentLst)
+            for (AppContent elem : ContentListList.contentLst)
                 serializeElement(elem, out);
         }
 
-        private void serializeElement(IndexableContent elem, ByteBuf out) throws IOException {
+        private void serializeElement(AppContent elem, ByteBuf out) throws IOException {
             out.writeShort(elem.getClassId());
             elem.getSerializer().serialize(elem, out);
         }
@@ -37,21 +36,21 @@ public class ContentList extends BroadcastValueAbstract {
             int numElems = in.readInt();
             List<AppContent> contentLst = new ArrayList<>(numElems);
             for (int i = 0; i < numElems; i++)
-                contentLst.add((AppContent) deserializeElem(in));
+                contentLst.add(deserializeElem(in));
             return new ContentList(contentLst);
         }
 
-        private IndexableContent deserializeElem(ByteBuf in) throws IOException {
+        private AppContent deserializeElem(ByteBuf in) throws IOException {
             short elemClass = in.readShort();
             ISerializer<BroadcastValue> serializer = BroadcastValue.pojoSerializers.get(elemClass);
-            return (IndexableContent) serializer.deserialize(in);
+            return (AppContent) serializer.deserialize(in);
         }
     };
     private final List<AppContent> contentLst;
 
     public boolean hasValidSemantics() {
         return contentLst.stream()
-                .allMatch(IndexableContent::hasValidSemantics);
+                .allMatch(AppContent::hasValidSemantics);
     }
 
     public ContentList(List<AppContent> contentLst) {
@@ -61,7 +60,7 @@ public class ContentList extends BroadcastValueAbstract {
 
     public byte[] getContentHash() {
         List<byte[]> contentHashes = contentLst.stream()
-                .map(IndexableContent::getHashVal)
+                .map(AppContent::getHashVal)
                 .collect(Collectors.toList());
         return new MerkleRoot(contentHashes).getHashValue();
     }

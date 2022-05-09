@@ -1,6 +1,5 @@
 package blockConstructors;
 
-import catecoin.txs.IndexableContent;
 import ledger.ledgerManager.AppContent;
 import main.GlobalProperties;
 import mempoolManager.MempoolManager;
@@ -44,7 +43,7 @@ public class BaseContentStorage implements ContentStorage {
 
     @Override
     public void submitContent(Collection<AppContent> content) {
-        contentMap.putAll(content.stream().collect(toMap(IndexableContent::getId,c->c)));
+        contentMap.putAll(content.stream().collect(toMap(AppContent::getId, c->c)));
     }
 
     @Override
@@ -58,7 +57,7 @@ public class BaseContentStorage implements ContentStorage {
     }
 
     @NotNull
-    private List<AppContent> getContentDeterministicOrderBound(int usedSpace, Set<UUID> used) throws IOException {
+    private List<AppContent> getContentDeterministicOrderBound(int usedSpace, Set<UUID> used) {
         Iterator<Map.Entry<UUID, AppContent>> contentEntries = contentMap.entrySet().iterator();
         List<AppContent> content = new ArrayList<>();
         while (contentEntries.hasNext() && usedSpace < maxBlockSize - maxSizeOffset) {

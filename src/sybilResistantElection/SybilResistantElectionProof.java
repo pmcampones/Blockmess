@@ -3,7 +3,6 @@ package sybilResistantElection;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
 import io.netty.buffer.ByteBuf;
-import ledger.blocks.SizeAccountable;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
@@ -12,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class SybilResistantElectionProof extends BroadcastValueAbstract implements BroadcastValue, SizeAccountable {
+public class SybilResistantElectionProof extends BroadcastValueAbstract implements BroadcastValue {
 
     public static final short ID = 7265;
 
@@ -34,7 +33,6 @@ public class SybilResistantElectionProof extends BroadcastValueAbstract implemen
         return nonce;
     }
 
-    @Override
     public int getSerializedSize() throws IOException {
         return Integer.BYTES + ChainSeeds.size() * 2 * Long.BYTES +
                 ChainSeeds.stream()

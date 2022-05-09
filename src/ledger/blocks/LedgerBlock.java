@@ -5,6 +5,7 @@ import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
 import sybilResistantElection.SybilResistantElectionProof;
 
+import java.io.IOException;
 import java.security.PublicKey;
 import java.util.List;
 import java.util.UUID;
@@ -14,7 +15,7 @@ import java.util.UUID;
  * It is slightly more general than what is specified in <a href=https://bitcoin.org/bitcoin.pdf>Bitcoin</a>
  * for their use in Blockchains.
  */
-public interface LedgerBlock extends SizeAccountable, BroadcastValue {
+public interface LedgerBlock extends BroadcastValue {
 
     /**
      * Used as the hash of the block in Bitcoin.
@@ -93,4 +94,9 @@ public interface LedgerBlock extends SizeAccountable, BroadcastValue {
      */
     boolean hasValidSemantics();
 
+    /**
+     * @throws IOException In order to compute the serialized size of the object,
+     * some inner components may need to be serialized, resulting in this exception.
+     */
+    int getSerializedSize() throws IOException;
 }
