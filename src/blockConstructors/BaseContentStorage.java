@@ -15,8 +15,6 @@ public class BaseContentStorage implements ContentStorage {
 
     public static final int MAX_BLOCK_SIZE = 40000;
 
-    private final MempoolManager mempoolManager = MempoolManager.getSingleton();
-
     private final int maxBlockSize;
     private final int maxSizeOffset;
     private final Map<UUID, AppContent> contentMap = Collections.synchronizedMap(new TreeMap<>());
@@ -37,7 +35,7 @@ public class BaseContentStorage implements ContentStorage {
         Set<UUID> used = new HashSet<>();
         Set<UUID> visited = new HashSet<>();
         for (UUID state : states)
-            used.addAll(mempoolManager.getUsedContentFromChunk(state, visited));
+            used.addAll(MempoolManager.getSingleton().getUsedContentFromChunk(state, visited));
         return used;
     }
 

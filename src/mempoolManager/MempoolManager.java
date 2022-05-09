@@ -2,10 +2,11 @@ package mempoolManager;
 
 import broadcastProtocols.BroadcastValue;
 import ledger.AppContent;
+import ledger.LedgerObserver;
+import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
 import ledger.blocks.LedgerBlock;
-import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import mempoolManager.notifications.DeliverFinalizedBlockIdentifiersNotification;
+import ledger.ledgerManager.LedgerManager;
 import mempoolManager.notifications.DeliverFinalizedBlocksContentNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,7 +20,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.stream.Collectors.toList;
 
-public class MempoolManager extends GenericProtocol {
+public class MempoolManager extends GenericProtocol implements LedgerObserver {
 
     private static final Logger logger = LogManager.getLogger(MempoolManager.class);
 
@@ -32,13 +33,10 @@ public class MempoolManager extends GenericProtocol {
 
     private static MempoolManager singleton;
 
-    private MempoolManager() throws Exception {
+    private MempoolManager() {
         super(MempoolManager.class.getSimpleName(), ID);
+        LedgerManager.getSingleton().attachObserver(this);
         bootstrapDL();
-        subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<LedgerBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
-        subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
-                (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
         BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
     }
 
@@ -62,22 +60,9 @@ public class MempoolManager extends GenericProtocol {
     @Override
     public void init(Properties properties) {}
 
-    private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<LedgerBlock> notif) {
-        LedgerBlock block = notif.getNonFinalizedBlock();
-        logger.debug("Received non finalized block with id {}", block.getBlockId());
-        MempoolChunk chunk = createChunk(block);
-        mempool.put(chunk.getId(), chunk);
-    }
-
     private MempoolChunk createChunk(LedgerBlock block) {
         List<AppContent> unwrappedContent = Collections.emptyList();
         return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()), unwrappedContent);
-    }
-
-    private void uponDeliverFinalizedBlockNotification(DeliverFinalizedBlockIdentifiersNotification notif) {
-        notif.getDiscardedBlockIds().forEach(mempool::remove);
-        finalize(notif.getFinalizedBlocksIds());
     }
 
     public void finalize(List<UUID> finalized) {
@@ -112,4 +97,16 @@ public class MempoolManager extends GenericProtocol {
         return invalid;
     }
 
+    @Override
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
+        logger.debug("Received non finalized block with id {}", block.getBlockId());
+        MempoolChunk chunk = createChunk(block);
+        mempool.put(chunk.getId(), chunk);
+    }
+
+    @Override
+    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+        discarded.forEach(mempool::remove);
+        finalize(finalized);
+    }
 }
