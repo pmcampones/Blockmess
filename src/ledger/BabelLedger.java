@@ -12,7 +12,6 @@ import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
@@ -43,7 +42,7 @@ public class BabelLedger extends GenericProtocol implements LedgerObserver {
     }
 
     @Override
-    public void init(Properties properties) throws HandlerRegistrationException, IOException {}
+    public void init(Properties properties) {}
 
     private void uponDeliverSignedBlockNotification (DeliverSignedBlockNotification<BlockmessBlock> notif) {
         BlockmessBlock block = notif.getBlock();

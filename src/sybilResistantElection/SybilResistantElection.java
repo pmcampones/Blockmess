@@ -2,18 +2,16 @@ package sybilResistantElection;
 
 import broadcastProtocols.BroadcastValue;
 import ledger.AppContent;
+import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
-import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.BlockmessLauncher;
-import mempoolManager.notifications.DeliverFinalizedBlockIdentifiersNotification;
+import main.GlobalProperties;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import sybilResistantElection.difficultyComputers.ConcurrentDifficultyComputer;
 import sybilResistantElection.difficultyComputers.MultiChainDifficultyComputer;
 import utils.CryptographicUtils;
@@ -39,7 +37,7 @@ import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toList;
 import static sybilResistantElection.difficultyComputers.BaseDifficultyComputer.TIME_BETWEEN_QUERIES;
 
-public class SybilResistantElection extends GenericProtocol {
+public class SybilResistantElection implements LedgerObserver {
 
     private static final Logger logger = LogManager.getLogger(SybilResistantElection.class);
 
@@ -60,8 +58,7 @@ public class SybilResistantElection extends GenericProtocol {
 
     private int nonce = 0;
 
-    public SybilResistantElection(KeyPair self) throws HandlerRegistrationException {
-        super(SybilResistantElection.class.getSimpleName(), ID);
+    public SybilResistantElection(KeyPair self) {
         this.self = self;
         this.blockmessRoot = LedgerManager.getSingleton();
         this.difficultyComputer = new ConcurrentDifficultyComputer(
@@ -69,7 +66,8 @@ public class SybilResistantElection extends GenericProtocol {
         this.chainSeeds = replaceChainSeeds(blockmessRoot.getAvailableChains());
         this.randomSeed = computeRandomSeed();
         BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
-        subscribeNotifications();
+        LedgerManager.getSingleton().attachObserver(this);
+        establishQueryTimer();
     }
 
     private MerkleTree computeRandomSeed() {
@@ -80,15 +78,9 @@ public class SybilResistantElection extends GenericProtocol {
         return new ConcurrentMerkleTree(new ConsistentOrderMerkleTree(randomSeedElements));
     }
 
-    private void subscribeNotifications() throws HandlerRegistrationException {
-        subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
-                (DeliverNonFinalizedBlockNotification<BlockmessBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
-        subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
-                (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification());
-    }
 
-    @Override
-    public void init(Properties props) {
+    public void establishQueryTimer() {
+        Properties props = GlobalProperties.getProps();
         int timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
         int initializationTime = parseInt(props.getProperty("initializationTime",
                 String.valueOf(INITIALIZATION_TIME)));
@@ -115,16 +107,6 @@ public class SybilResistantElection extends GenericProtocol {
         }
     }
 
-    private void uponDeliverNonFinalizedBlockNotification(
-            DeliverNonFinalizedBlockNotification<BlockmessBlock> notif) {
-        try {
-            lock.lock();
-            updateMetaContentList(notif);
-        } finally {
-            lock.unlock();
-        }
-    }
-
     private byte[] computeSolution() {
         nonce = (nonce + 1) % Integer.MAX_VALUE;
         ByteBuffer byteBuffer = ByteBuffer.wrap(randomSeed.getHashValue());
@@ -133,6 +115,17 @@ public class SybilResistantElection extends GenericProtocol {
         logger.debug("Solution with nonce {}, has {} leading zeros",
                 nonce, difficultyComputer.getSolutionLeadingZeros(solution));
         return solution;
+    }
+
+
+    @Override
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
+        try {
+            lock.lock();
+            updateMetaContentList(block);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private List<Pair<UUID, byte[]>> computeChainSeedsList() {
@@ -164,7 +157,7 @@ public class SybilResistantElection extends GenericProtocol {
         return byteBuffer.getInt();
     }
 
-    private void updateMetaContentList(DeliverNonFinalizedBlockNotification<BlockmessBlock> notif) {
+    private void updateMetaContentList(BlockmessBlock block) {
         try {
             Thread.sleep(100);  //Enough time for the mempool manager to process the block.
         } catch (InterruptedException e) {
@@ -173,8 +166,7 @@ public class SybilResistantElection extends GenericProtocol {
         List<BlockmessChain> chains = blockmessRoot.getAvailableChains();
         if (wereChainsChanged(chains))
             reactToChangeInNumberOfChains(chains);
-        BlockmessBlock updatedChain = notif.getNonFinalizedBlock();
-        replaceChainIfNecessary(updatedChain);
+        replaceChainIfNecessary(block);
     }
 
     private void replaceChainIfNecessary(BlockmessBlock newBlock) {
@@ -230,7 +222,8 @@ public class SybilResistantElection extends GenericProtocol {
                 .allMatch(chainSeeds::containsKey));
     }
 
-    private void uponDeliverFinalizedBlockNotification() {
+    @Override
+    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
         List<BlockmessChain> chains = blockmessRoot.getAvailableChains();
         try {
             lock.lock();
@@ -278,5 +271,4 @@ public class SybilResistantElection extends GenericProtocol {
     private int getAproximateProofSize() {
         return Integer.BYTES + chainSeeds.size() * (2 * Long.BYTES + 32 * Byte.BYTES);
     }
-
 }

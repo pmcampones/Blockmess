@@ -109,14 +109,14 @@ public class BlockmessLauncher {
         List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
         protocols.add(MempoolManager.getSingleton());
         setUpLedgerManager(protocols);
-        setUpSybilElection(protocols);
+        setUpSybilElection();
         initializeSerializers();
         initializeProtocols(babel, protocols);
     }
 
-    private static void setUpSybilElection(List<GenericProtocol> protocols) throws Exception {
+    private static void setUpSybilElection() throws Exception {
         KeyPair myKeys = CryptographicUtils.getNodeKeys();
-        protocols.add(new SybilResistantElection(myKeys));
+        new SybilResistantElection(myKeys);
     }
 
     private static void setUpLedgerManager(List<GenericProtocol> protocols) throws HandlerRegistrationException {

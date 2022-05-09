@@ -27,6 +27,8 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
     /**The complete collection of unused UTXOs in the finalized portion of the system**/
     public final Map<UUID, MempoolChunk> mempool = new ConcurrentHashMap<>();
 
+    private final List<LedgerObserver> observers = new LinkedList<>();
+
     private static MempoolManager singleton;
 
     private MempoolManager() {
@@ -56,6 +58,10 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
     @Override
     public void init(Properties properties) {}
 
+    public void attachObserver(LedgerObserver observer) {
+        observers.add(observer);
+    }
+
     private MempoolChunk createChunk(LedgerBlock block) {
         List<AppContent> unwrappedContent = Collections.emptyList();
         return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()), unwrappedContent);
@@ -75,6 +81,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
         logger.debug("Received non finalized block with id {}", block.getBlockId());
         MempoolChunk chunk = createChunk(block);
         mempool.put(chunk.getId(), chunk);
+        observers.forEach(observer -> deliverNonFinalizedBlock(block, weight));
     }
 
     @Override
@@ -87,6 +94,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
                 .flatMap(Collection::stream)
                 .collect(toList());
         LedgerManager.getSingleton().deleteContent(finalizedContent.stream().map(AppContent::getId).collect(toSet()));
+        observers.forEach(observer -> observer.deliverFinalizedBlocks(finalized, discarded));
     }
 
 }
