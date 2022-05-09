@@ -8,7 +8,7 @@ import ledger.blocks.ContentList;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
-import main.Main;
+import main.BlockmessLauncher;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -94,7 +94,7 @@ public class SybilResistantElection extends GenericProtocol {
         int initializationTime = parseInt(props.getProperty("initializationTime",
                 String.valueOf(INITIALIZATION_TIME)));
         long currTime = System.currentTimeMillis();
-        long elapsed = currTime - Main.startTime;
+        long elapsed = currTime - BlockmessLauncher.startTime;
         long remainder = initializationTime - elapsed;
         logger.info("Starting to generate Sybil Resistant Proof for block in {} miliseconds.",
                 remainder);

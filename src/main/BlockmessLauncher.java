@@ -44,7 +44,7 @@ import java.util.stream.Collectors;
 
 import static java.lang.Integer.parseInt;
 
-public class Main {
+public class BlockmessLauncher {
 
     public static long startTime;
 
@@ -54,7 +54,7 @@ public class Main {
     }
 
     //Creates the logger object
-    private static final Logger logger = LogManager.getLogger(Main.class);
+    private static final Logger logger = LogManager.getLogger(BlockmessLauncher.class);
 
     //Default babel configuration file (can be overridden by the "-config" launch argument)
     public static final String DEFAULT_CONF = "config/config.properties";
@@ -197,7 +197,7 @@ public class Main {
         HyparView peerSamplingProtocol = new HyparView(myself);;
         protocols.add(peerSamplingProtocol);
         protocols.addAll(addBroadcastProtocols(myself, peerSamplingProtocol));
-        protocols.add(new ValueDispatcher());
+        protocols.add(ValueDispatcher.getSingleton());
         return protocols;
     }
 

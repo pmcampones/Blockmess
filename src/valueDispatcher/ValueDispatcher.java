@@ -44,18 +44,32 @@ public class ValueDispatcher extends GenericProtocol {
         SIGNED_BLOCK,               //A Ledger Block is being broadcast
     }
 
-    public ValueDispatcher() throws HandlerRegistrationException {
+    public static ValueDispatcher singleton;
+
+    private ValueDispatcher() {
         super(ValueDispatcher.class.getSimpleName(), ID);
+        try {
+            tryToSetupDispatcher();
+        } catch (HandlerRegistrationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void tryToSetupDispatcher() throws HandlerRegistrationException {
         subscribeNotification(DeliverVal.ID, this::uponDeliverVal);
         registerRequestHandlers();
         BroadcastValue.pojoSerializers.put(DispatcherWrapper.ID, DispatcherWrapper.serializer);
     }
 
     private void registerRequestHandlers() throws HandlerRegistrationException {
-        registerRequestHandler(DisseminateSignedBlockRequest.ID,
-                this::uponDisseminateBlockRequest);
-        registerRequestHandler(DisseminateTransactionRequest.ID,
-                this::uponDisseminateTransactionRequest);
+        registerRequestHandler(DisseminateSignedBlockRequest.ID, this::uponDisseminateBlockRequest);
+        registerRequestHandler(DisseminateTransactionRequest.ID, this::uponDisseminateTransactionRequest);
+    }
+
+    public static ValueDispatcher getSingleton() {
+        if (singleton == null)
+            singleton = new ValueDispatcher();
+        return singleton;
     }
 
     @Override

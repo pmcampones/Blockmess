@@ -152,7 +152,7 @@
                     <appendAssemblyId>false</appendAssemblyId>
                     <archive>
                         <manifest>
-                            <mainClass>main.Main</mainClass>
+                            <mainClass>main.BlockmessLauncher</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Multi-Release>true</Multi-Release>
