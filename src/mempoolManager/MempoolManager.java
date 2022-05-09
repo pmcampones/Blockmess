@@ -1,7 +1,6 @@
 package mempoolManager;
 
 import broadcastProtocols.BroadcastValue;
-import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.notifications.DeliverFinalizedBlocksContentNotification;
 import ledger.AppContent;
@@ -11,10 +10,8 @@ import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -33,17 +30,10 @@ public class MempoolManager extends GenericProtocol {
     /**The complete collection of unused UTXOs in the finalized portion of the system**/
     public final Map<UUID, MempoolChunk> mempool = new ConcurrentHashMap<>();
 
-    /**
-     * Contains the file the relative path to the file where the contents will be placed.
-     * <p>This field is empty if this node is not recording the blocks.</p>
-     */
-    private final MinimalistRecordModule recordModule;
-
     private static MempoolManager singleton;
 
     private MempoolManager() throws Exception {
         super(MempoolManager.class.getSimpleName(), ID);
-        this.recordModule = new MinimalistRecordModule();
         bootstrapDL();
         subscribeNotification(DeliverNonFinalizedBlockNotification.ID,
                 (DeliverNonFinalizedBlockNotification<LedgerBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
@@ -70,7 +60,7 @@ public class MempoolManager extends GenericProtocol {
     }
 
     @Override
-    public void init(Properties properties) throws HandlerRegistrationException, IOException {}
+    public void init(Properties properties) {}
 
     private void uponDeliverNonFinalizedBlockNotification(
             DeliverNonFinalizedBlockNotification<LedgerBlock> notif) {
@@ -92,17 +82,11 @@ public class MempoolManager extends GenericProtocol {
 
     public void finalize(List<UUID> finalized) {
         List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
-        recordBlocks(finalizedChunks);
+        List<AppContent> finalizedContent = finalizedChunks.stream()
+                .map(MempoolChunk::getAddedContent)
+                .flatMap(Collection::stream)
+                .collect(toList());
         finalizeBlocks(finalizedChunks);
-    }
-
-    private void recordBlocks(List<MempoolChunk> finalized) {
-        try {
-            recordModule.recordBlocks(finalized);
-        } catch (IOException e) {
-            logger.error("Unable to write to file because: {}", e.getMessage());
-            e.printStackTrace();
-        }
     }
 
     private void finalizeBlocks(List<MempoolChunk> finalized) {

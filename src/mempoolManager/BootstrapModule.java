@@ -1,6 +1,5 @@
 package mempoolManager;
 
-import catecoin.blocks.chunks.MempoolChunk;
 import com.google.gson.Gson;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;

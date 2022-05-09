@@ -11,7 +11,6 @@ import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.lazyPush.timers.DelayedResponsesTimer;
 import broadcastProtocols.notifications.DeliverVal;
 import broadcastProtocols.notifications.PeerUnreachableNotification;
-import catecoin.notifications.AnswerMessageValidationNotification;
 import com.google.common.collect.Sets;
 import main.GlobalProperties;
 import org.apache.commons.lang3.tuple.Pair;
@@ -31,6 +30,7 @@ import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import pt.unl.fct.di.novasys.network.data.Host;
 import utils.IDGenerator;
+import validators.AnswerMessageValidationNotification;
 
 import java.io.IOException;
 import java.util.*;

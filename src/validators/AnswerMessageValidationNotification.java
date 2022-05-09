@@ -1,4 +1,4 @@
-package catecoin.notifications;
+package validators;
 
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import utils.IDGenerator;

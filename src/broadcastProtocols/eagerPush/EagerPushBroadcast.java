@@ -5,7 +5,6 @@ import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.notifications.DeliverVal;
 import broadcastProtocols.notifications.PeerUnreachableNotification;
-import catecoin.notifications.AnswerMessageValidationNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import peerSamplingProtocols.hyparview.HyparView;
@@ -14,6 +13,7 @@ import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
 import pt.unl.fct.di.novasys.network.data.Host;
 import utils.IDGenerator;
+import validators.AnswerMessageValidationNotification;
 
 import java.io.IOException;
 import java.util.Map;

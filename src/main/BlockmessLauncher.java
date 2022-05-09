@@ -13,10 +13,6 @@ import ledger.BabelLedger;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
 import ledger.ledgerManager.LedgerManager;
-import logsGenerators.ChangesInNumberOfChainsLog;
-import logsGenerators.FinalizedBlocksLog;
-import logsGenerators.RepeatedTransactionsLog;
-import logsGenerators.UnfinalizedBlocksLog;
 import mempoolManager.MempoolManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -121,7 +117,6 @@ public class BlockmessLauncher {
         LedgerManager ledgerManager = setUpLedgerManager(protocols);
         bootstrapContent(props, ledgerManager);
         setUpSybilElection(protocols);
-        recordMetricsBlockmess(protocols);
         initializeSerializers();
         initializeProtocols(props, babel, protocols);
     }
@@ -177,19 +172,6 @@ public class BlockmessLauncher {
                 .map(StructuredValueSlimTransactionWrapper::wrapTx)
                 .collect(Collectors.toList());
         txsLoader.loadTxs(structuredValues);
-    }
-
-    private static void recordMetricsBlockmess(List<GenericProtocol> protocols) throws Exception {
-        LedgerManager ledgerManager = LedgerManager.getSingleton();
-        Properties props = GlobalProperties.getProps();
-        if (props.getProperty("recordUnfinalized", "T").equals("T"))
-            ledgerManager.attachObserver(new UnfinalizedBlocksLog(props));
-        if (props.getProperty("recordFinalized", "T").equals("T"))
-            ledgerManager.attachObserver(new FinalizedBlocksLog(props));
-        if (props.getProperty("recordRepeats", "F").equals("T"))
-            protocols.add(new RepeatedTransactionsLog(props));
-        if (props.getProperty("recordChangesChains", "F").equals("T"))
-            ledgerManager.changesLog.add(new ChangesInNumberOfChainsLog(props));
     }
 
     private static List<GenericProtocol> addNetworkProtocols(Host myself) throws Exception {

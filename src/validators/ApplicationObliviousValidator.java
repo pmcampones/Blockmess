@@ -1,7 +1,6 @@
 package validators;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
-import catecoin.notifications.AnswerMessageValidationNotification;
 import ledger.blocks.BlockmessBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;

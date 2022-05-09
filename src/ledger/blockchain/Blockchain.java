@@ -1,11 +1,11 @@
 package ledger.blockchain;
 
-import catecoin.blocks.chunks.MempoolChunk;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import main.GlobalProperties;
 import mempoolManager.BootstrapModule;
+import mempoolManager.MempoolChunk;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import validators.ApplicationObliviousValidator;

@@ -11,7 +11,6 @@ import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
-import logsGenerators.ChangesInNumberOfChainsLog;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -49,8 +48,6 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     private long confirmBar = 0;
 
     private final BlockingQueue<Object> deliverFinalizedRequests = new LinkedBlockingQueue<>();
-
-    public final List<ChangesInNumberOfChainsLog> changesLog = new LinkedList<>();
 
     private static LedgerManager singleton;
 
@@ -211,12 +208,8 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     }
 
     public void deliverFinalizedBlocksAsync() {
-        int initialNumChains = chains.size();
         removeObsoleteChains();
         addNewChains();
-        int finalNumChains = chains.size();
-        if (finalNumChains != initialNumChains)
-            changesLog.forEach(obs -> obs.logChangeInNumChains(finalNumChains));
         System.out.println();
         for (BlockmessChain chain : chains.values())
             logger.debug("Chain {} has {} finalized blocks pending, minNextRank is {}, next block has rank {}",
@@ -283,7 +276,6 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     }
 
     private void discardSuccessiveChains() throws LedgerTreeNodeDoesNotExistException {
-        int initialNumChains = chains.size();
         boolean mergeFound = true;
         int numCanRemove = getAvailableChains().size() - minNumChains;
         List<BlockmessChain> toResetSamples = new LinkedList<>();
@@ -302,9 +294,6 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
             toRemove.forEach(chains::remove);
         }
         toResetSamples.forEach(BlockmessChain::resetSamples);
-        int finalNumChains = chains.size();
-        if (finalNumChains != initialNumChains)
-            changesLog.forEach(obs -> obs.logChangeInNumChains(finalNumChains));
     }
 
     public List<BlockmessChain> getAvailableChains() {
