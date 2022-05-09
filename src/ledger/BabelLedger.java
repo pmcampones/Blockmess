@@ -1,10 +1,10 @@
 package ledger;
 
 import broadcastProtocols.BroadcastValue;
-import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.LedgerBlockImp;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
+import mempoolManager.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;

@@ -41,7 +41,6 @@ public class HyparView extends GenericProtocol {
     private final short kActive; //param: number of active nodes to exchange on shuffle
     private final short kPassive; //param: number of passive nodes to exchange on shuffle
 
-
     protected final int channelId;
     protected final Host myself;
 

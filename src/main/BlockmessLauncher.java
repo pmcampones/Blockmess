@@ -11,7 +11,6 @@ import ledger.ledgerManager.LedgerManager;
 import mempoolManager.MempoolManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jetbrains.annotations.NotNull;
 import peerSamplingProtocols.hyparview.HyparView;
 import peerSamplingProtocols.hyparview.channels.MultiLoggerChannelInitializer;
 import pt.unl.fct.di.novasys.babel.core.Babel;
@@ -60,7 +59,7 @@ public class BlockmessLauncher {
         int port = getNodePort(props);
         Host myself = new Host(InetAddress.getByName(props.getProperty("address")), port);
         logger.info("Hello, I am {} and my contact is {}.", myself, props.getProperty("contact"));
-        launchBlockmess(props, myself, babel);
+        launchBlockmess(myself, babel);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
     }
 
@@ -106,14 +105,13 @@ public class BlockmessLauncher {
         }
     }
 
-    private static void launchBlockmess(Properties props, Host myself, Babel babel) throws Exception {
+    private static void launchBlockmess(Host myself, Babel babel) throws Exception {
         List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
-        MempoolManager mempoolManager = MempoolManager.getSingleton();
-        protocols.add(mempoolManager);
+        protocols.add(MempoolManager.getSingleton());
         setUpLedgerManager(protocols);
         setUpSybilElection(protocols);
         initializeSerializers();
-        initializeProtocols(props, babel, protocols);
+        initializeProtocols(babel, protocols);
     }
 
     private static void setUpSybilElection(List<GenericProtocol> protocols) throws Exception {
@@ -121,13 +119,9 @@ public class BlockmessLauncher {
         protocols.add(new SybilResistantElection(myKeys));
     }
 
-    @NotNull
-    private static LedgerManager setUpLedgerManager(List<GenericProtocol> protocols)
-            throws HandlerRegistrationException {
-        LedgerManager ledgerManager = LedgerManager.getSingleton();
-        var babelLedger = new BabelLedger(ledgerManager);
+    private static void setUpLedgerManager(List<GenericProtocol> protocols) throws HandlerRegistrationException {
+        var babelLedger = new BabelLedger(LedgerManager.getSingleton());
         protocols.add(babelLedger);
-        return ledgerManager;
     }
 
     private static List<GenericProtocol> addNetworkProtocols(Host myself) throws Exception {
@@ -154,11 +148,12 @@ public class BlockmessLauncher {
         return protocols;
     }
 
-    private static void initializeProtocols(Properties props, Babel babel, List<GenericProtocol> protocols)
+    private static void initializeProtocols(Babel babel, List<GenericProtocol> protocols)
             throws ProtocolAlreadyExistsException, HandlerRegistrationException, IOException {
         for (GenericProtocol protocol : protocols)
             babel.registerProtocol(protocol);
         babel.start();
+        Properties props = GlobalProperties.getProps();
         for (GenericProtocol protocol : protocols) {
             protocol.init(props);
         }

@@ -1,4 +1,4 @@
-package catecoin.notifications;
+package mempoolManager.notifications;
 
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import utils.IDGenerator;

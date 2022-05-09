@@ -1,12 +1,12 @@
 package mempoolManager;
 
 import broadcastProtocols.BroadcastValue;
-import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
-import catecoin.notifications.DeliverFinalizedBlocksContentNotification;
 import ledger.AppContent;
 import ledger.blocks.ContentList;
 import ledger.blocks.LedgerBlock;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
+import mempoolManager.notifications.DeliverFinalizedBlockIdentifiersNotification;
+import mempoolManager.notifications.DeliverFinalizedBlocksContentNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;

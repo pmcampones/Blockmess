@@ -1,7 +1,6 @@
 package sybilResistantElection;
 
 import broadcastProtocols.BroadcastValue;
-import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import ledger.AppContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
@@ -9,6 +8,7 @@ import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.BlockmessLauncher;
+import mempoolManager.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
