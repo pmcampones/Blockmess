@@ -8,6 +8,8 @@ import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
 import catecoin.notifications.DeliverIndexableContentNotification;
 import catecoin.txs.Transaction;
+import ledger.AppContent;
+import ledger.blocks.BlockmessBlock;
 import ledger.blocks.LedgerBlock;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +17,6 @@ import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
-import valueDispatcher.requests.DisseminateSignedBlockRequest;
-import valueDispatcher.requests.DisseminateTransactionRequest;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -39,9 +39,20 @@ public class ValueDispatcher extends GenericProtocol {
 
     public static final short ID = IDGenerator.genId();
 
-    private enum ValType {
-        TRANSACTION,                //A transaction is being broadcast
-        SIGNED_BLOCK,               //A Ledger Block is being broadcast
+    //If the val is not of the correct instance, its assumed the message is incorrect and thus ignored.
+    private void notifyUpperProtocols(ValType type, BroadcastValue val) {
+        switch (type) {
+            case APP_CONTENT:
+                if (val instanceof Transaction)
+                    triggerNotification(new DeliverIndexableContentNotification((Transaction) val));
+                break;
+            case SIGNED_BLOCK:
+                if (val instanceof LedgerBlock)
+                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock) val));
+                break;
+            default:
+                logger.debug("Received unknown value type");
+        }
     }
 
     public static ValueDispatcher singleton;
@@ -57,13 +68,7 @@ public class ValueDispatcher extends GenericProtocol {
 
     private void tryToSetupDispatcher() throws HandlerRegistrationException {
         subscribeNotification(DeliverVal.ID, this::uponDeliverVal);
-        registerRequestHandlers();
         BroadcastValue.pojoSerializers.put(DispatcherWrapper.ID, DispatcherWrapper.serializer);
-    }
-
-    private void registerRequestHandlers() throws HandlerRegistrationException {
-        registerRequestHandler(DisseminateSignedBlockRequest.ID, this::uponDisseminateBlockRequest);
-        registerRequestHandler(DisseminateTransactionRequest.ID, this::uponDisseminateTransactionRequest);
     }
 
     public static ValueDispatcher getSingleton() {
@@ -87,40 +92,27 @@ public class ValueDispatcher extends GenericProtocol {
         }
     }
 
-    //If the val is not of the correct instance, its assumed the message is incorrect and thus ignored.
-    private void notifyUpperProtocols(ValType type, BroadcastValue val) {
-        switch (type) {
-            case TRANSACTION:
-                if (val instanceof Transaction)
-                    triggerNotification(new DeliverIndexableContentNotification((Transaction) val));
-                break;
-            case SIGNED_BLOCK:
-                if (val instanceof LedgerBlock)
-                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock) val));
-                break;
-            default:
-                logger.debug("Received unknown value type");
-        }
-    }
-
-    private void uponDisseminateBlockRequest(DisseminateSignedBlockRequest req, short source) {
+    public void disseminateBlockRequest(BlockmessBlock block) {
         try {
-            logger.info("Protocol {} requested the dissemination of a {}",
-                    source, ValType.SIGNED_BLOCK);
-            sendLazyRequest(req.getBlock());
+            logger.info("Requested the dissemination of a {}", ValType.SIGNED_BLOCK);
+            sendLazyRequest(block);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void uponDisseminateTransactionRequest(DisseminateTransactionRequest req, short source) {
+    public void disseminateAppContentRequest(AppContent req) {
         try {
-            logger.info("Protocol {} requested the dissemination of a {}",
-                    source, ValType.TRANSACTION);
-            sendEagerRequest(req.getTransaction());
+            logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
+            sendEagerRequest(req);
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void sendEagerRequest(BroadcastValue val) throws IOException {
+        DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.APP_CONTENT.ordinal(), val);
+        sendRequest(new EagerBroadcastRequest(wrapper), EagerPushBroadcast.ID);
     }
 
     private void sendLazyRequest(BroadcastValue val) throws IOException {
@@ -128,9 +120,9 @@ public class ValueDispatcher extends GenericProtocol {
         sendRequest(new LazyBroadcastRequest(wrapper), LazyPushBroadcast.ID);
     }
 
-    private void sendEagerRequest(BroadcastValue val) throws IOException {
-        DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.TRANSACTION.ordinal(), val);
-        sendRequest(new EagerBroadcastRequest(wrapper), EagerPushBroadcast.ID);
+    private enum ValType {
+        APP_CONTENT,                //A transaction is being broadcast
+        SIGNED_BLOCK,               //A Ledger Block is being broadcast
     }
 
 }

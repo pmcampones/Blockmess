@@ -22,7 +22,6 @@ import utils.merkleTree.ConcurrentMerkleTree;
 import utils.merkleTree.ConsistentOrderMerkleTree;
 import utils.merkleTree.MerkleTree;
 import valueDispatcher.ValueDispatcher;
-import valueDispatcher.requests.DisseminateSignedBlockRequest;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -262,7 +261,7 @@ public class SybilResistantElection extends GenericProtocol {
                         placementChain.getCurrContent(), proof, self, placementChain.getChainId(),
                         placementChain.getChain().getRankFromRefs(Set.of(placementChain.getPrevBlock())),
                         blockmessRoot.getHighestSeenRank() + 1);
-        sendRequest(new DisseminateSignedBlockRequest(block), ValueDispatcher.ID);
+        ValueDispatcher.getSingleton().disseminateBlockRequest(block);
     }
 
     private void replaceChain(ChainSeed oldSeed, Set<UUID> newPrevs) throws IOException {
