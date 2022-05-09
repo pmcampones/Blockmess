@@ -6,17 +6,14 @@ import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
-import catecoin.notifications.DeliverIndexableContentNotification;
-import catecoin.txs.Transaction;
 import ledger.AppContent;
 import ledger.blocks.BlockmessBlock;
-import ledger.blocks.LedgerBlock;
+import ledger.ledgerManager.LedgerManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
-import valueDispatcher.notifications.DeliverSignedBlockNotification;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -40,21 +37,6 @@ public class ValueDispatcher extends GenericProtocol {
     public static final short ID = IDGenerator.genId();
 
     //If the val is not of the correct instance, its assumed the message is incorrect and thus ignored.
-    private void notifyUpperProtocols(ValType type, BroadcastValue val) {
-        switch (type) {
-            case APP_CONTENT:
-                if (val instanceof Transaction)
-                    triggerNotification(new DeliverIndexableContentNotification((Transaction) val));
-                break;
-            case SIGNED_BLOCK:
-                if (val instanceof LedgerBlock)
-                    triggerNotification(new DeliverSignedBlockNotification<>((LedgerBlock) val));
-                break;
-            default:
-                logger.debug("Received unknown value type");
-        }
-    }
-
     public static ValueDispatcher singleton;
 
     private ValueDispatcher() {
@@ -86,6 +68,21 @@ public class ValueDispatcher extends GenericProtocol {
             ValType type = ValType.values()[typeIndex];
             logger.info("Received disseminated content from {} of type {}", id, type);
             notifyUpperProtocols(type, wrapper.getVal());
+        }
+    }
+
+    private void notifyUpperProtocols(ValType type, BroadcastValue val) {
+        switch (type) {
+            case APP_CONTENT:
+                if (val instanceof AppContent)
+                    LedgerManager.getSingleton().submitContent((AppContent) val);
+                break;
+            case SIGNED_BLOCK:
+                if (val instanceof BlockmessBlock)
+                    LedgerManager.getSingleton().submitBlock((BlockmessBlock) val);
+                break;
+            default:
+                logger.debug("Received unknown value type");
         }
     }
 

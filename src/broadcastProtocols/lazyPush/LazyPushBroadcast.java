@@ -49,11 +49,6 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
 
     private static final int PORT_OFFSET = 1000;
 
-    /**
-     * Underlying peer sampling protocol.
-     */
-    //private final PeerSamplingProtocol membership;
-
     private final Host self;
 
     private final Map<UUID, LazyValMessage> messageBuffer;
@@ -126,8 +121,8 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
 
     private void subscribeNotifications() throws HandlerRegistrationException {
         subscribeNotification(AnswerMessageValidationNotification.ID,
-                (AnswerMessageValidationNotification notif2, short source2) -> uponAnswerMessageValidationNotification(notif2));
-        subscribeNotification(NeighbourUpNotification.ID, (NeighbourUpNotification notif1, short source1) -> uponNeighbourUpNotification(notif1));
+                (AnswerMessageValidationNotification notif, short source) -> uponAnswerMessageValidationNotification(notif));
+        subscribeNotification(NeighbourUpNotification.ID, (NeighbourUpNotification notif, short source) -> uponNeighbourUpNotification(notif));
         subscribeNotification(NeighbourDownNotification.ID, (NeighbourDownNotification notif, short source) -> uponNeighbourDownNotification(notif));
     }
 
@@ -206,27 +201,11 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
         triggerNotification(new PeerUnreachableNotification());
     }
 
-    /**
-     * This node records a received message 'msg',
-     * delivers it to the application,
-     * and notifies all its peers of the message's identifier
-     */
-    private void uponLazyValMessage(
-            LazyValMessage msg, Host from) {
-        UUID mid = msg.getMid();
-        if (!messageBuffer.containsKey(mid)) {
-            logger.info("Received message: {}\n From {}",
-                    msg.toString(), from);
-            messageBuffer.put(mid, msg);
-            waitingForContent.remove(mid);
-            if (msg.isBlocking()) {
-                logger.debug("Received message {} is blocking. Waiting validation.", mid);
-                recordValueToBeValidated(msg);
-            } else {
-                disseminateMessage(mid);
-            }
-            //deliverLazyValMessage(msg);
-            triggerNotification(new DeliverVal(msg.getVal()));
+    private void uponAnswerMessageValidationNotification(AnswerMessageValidationNotification notif) {
+        UUID mid = mapBlockingIdToMid.get(notif.getBlockingMessageID());
+        if (mid != null) {
+            logger.debug("Continuing the dissemination of message {}.", mid);
+            disseminateMessage(mid);
         }
     }
 
@@ -240,12 +219,25 @@ public class LazyPushBroadcast extends GenericProtocol implements BroadcastProto
         }
     }
 
-    private void uponAnswerMessageValidationNotification(
-            AnswerMessageValidationNotification notif) {
-        UUID mid = mapBlockingIdToMid.get(notif.getBlockingMessageID());
-        if (mid != null) {
-            logger.debug("Continuing the dissemination of message {}.", mid);
-            disseminateMessage(mid);
+    /**
+     * This node records a received message 'msg',
+     * delivers it to the application,
+     * and notifies all its peers of the message's identifier
+     */
+    private void uponLazyValMessage(LazyValMessage msg, Host from) {
+        UUID mid = msg.getMid();
+        if (!messageBuffer.containsKey(mid)) {
+            logger.info("Received message: {}\n From {}",
+                    msg.toString(), from);
+            messageBuffer.put(mid, msg);
+            waitingForContent.remove(mid);
+            if (msg.isBlocking()) {
+                logger.debug("Received message {} is blocking. Waiting validation.", mid);
+                recordValueToBeValidated(msg);
+            } else {
+                disseminateMessage(mid);
+            }
+            triggerNotification(new DeliverVal(msg.getVal()));
         }
     }
 
