@@ -1,6 +1,6 @@
 package blockConstructors;
 
-import ledger.ledgerManager.AppContent;
+import ledger.AppContent;
 
 import java.util.Collection;
 

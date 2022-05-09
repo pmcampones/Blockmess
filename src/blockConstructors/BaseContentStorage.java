@@ -1,6 +1,6 @@
 package blockConstructors;
 
-import ledger.ledgerManager.AppContent;
+import ledger.AppContent;
 import main.GlobalProperties;
 import mempoolManager.MempoolManager;
 import org.jetbrains.annotations.NotNull;

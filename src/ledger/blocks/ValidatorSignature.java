@@ -1,4 +1,4 @@
-package catecoin.blocks;
+package ledger.blocks;
 
 import io.netty.buffer.ByteBuf;
 import org.apache.logging.log4j.LogManager;

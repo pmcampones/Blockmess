@@ -2,8 +2,6 @@ package ledger.blocks;
 
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
-import catecoin.blocks.ContentList;
-import catecoin.blocks.ValidatorSignature;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import pt.unl.fct.di.novasys.network.ISerializer;

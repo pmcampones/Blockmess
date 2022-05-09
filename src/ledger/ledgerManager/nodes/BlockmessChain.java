@@ -1,9 +1,9 @@
 package ledger.ledgerManager.nodes;
 
 import blockConstructors.ComposableContentStorage;
+import ledger.AppContent;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.AppContent;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 
 import java.util.Collection;

@@ -1,6 +1,6 @@
 package sybilResistantElection;
 
-import catecoin.blocks.ContentList;
+import ledger.blocks.ContentList;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import utils.CryptographicUtils;
 

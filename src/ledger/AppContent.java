@@ -1,4 +1,4 @@
-package ledger.ledgerManager;
+package ledger;
 
 import blockConstructors.CMuxMask;
 import broadcastProtocols.BroadcastValue;

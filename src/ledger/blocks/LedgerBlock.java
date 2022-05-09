@@ -1,8 +1,6 @@
 package ledger.blocks;
 
 import broadcastProtocols.BroadcastValue;
-import catecoin.blocks.ContentList;
-import catecoin.blocks.ValidatorSignature;
 import sybilResistantElection.SybilResistantElectionProof;
 
 import java.io.IOException;

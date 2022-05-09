@@ -1,12 +1,12 @@
 package ledger.ledgerManager.nodes;
 
 import blockConstructors.*;
-import catecoin.blocks.ContentList;
+import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.AppContent;
+import ledger.blocks.ContentList;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;

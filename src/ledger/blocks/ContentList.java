@@ -1,9 +1,9 @@
-package catecoin.blocks;
+package ledger.blocks;
 
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
 import io.netty.buffer.ByteBuf;
-import ledger.ledgerManager.AppContent;
+import ledger.AppContent;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.merkleTree.MerkleRoot;
 

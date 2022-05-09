@@ -1,6 +1,6 @@
 package valueDispatcher.requests;
 
-import ledger.ledgerManager.AppContent;
+import ledger.AppContent;
 import pt.unl.fct.di.novasys.babel.generic.ProtoRequest;
 import utils.IDGenerator;
 

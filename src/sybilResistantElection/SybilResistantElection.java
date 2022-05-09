@@ -1,10 +1,10 @@
 package sybilResistantElection;
 
 import broadcastProtocols.BroadcastValue;
-import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
+import ledger.AppContent;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.AppContent;
+import ledger.blocks.ContentList;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;

@@ -1,10 +1,10 @@
 package logsGenerators;
 
-import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import com.google.common.collect.Sets;
+import ledger.AppContent;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.AppContent;
+import ledger.blocks.ContentList;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;

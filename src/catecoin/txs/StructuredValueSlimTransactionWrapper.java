@@ -2,7 +2,7 @@ package catecoin.txs;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import ledger.ledgerManager.AppContent;
+import ledger.AppContent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

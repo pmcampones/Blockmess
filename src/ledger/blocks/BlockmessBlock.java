@@ -2,8 +2,6 @@ package ledger.blocks;
 
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
-import catecoin.blocks.ContentList;
-import catecoin.blocks.ValidatorSignature;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import sybilResistantElection.SybilResistantElectionProof;

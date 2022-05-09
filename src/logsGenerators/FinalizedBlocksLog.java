@@ -1,8 +1,8 @@
 package logsGenerators;
 
-import catecoin.blocks.ContentList;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
+import ledger.blocks.ContentList;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

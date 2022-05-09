@@ -1,12 +1,12 @@
 package mempoolManager;
 
 import broadcastProtocols.BroadcastValue;
-import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import catecoin.notifications.DeliverFinalizedBlocksContentNotification;
 import catecoin.txs.Transaction;
 import catecoin.utxos.StorageUTXO;
+import ledger.blocks.ContentList;
 import ledger.blocks.LedgerBlock;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.GlobalProperties;

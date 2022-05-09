@@ -2,6 +2,7 @@ package ledger.ledgerManager;
 
 import blockConstructors.ComposableContentStorageImp;
 import blockConstructors.ContentStorage;
+import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
