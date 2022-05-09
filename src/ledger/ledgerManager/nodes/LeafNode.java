@@ -183,7 +183,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     @Override
     public void spawnChildren(UUID originator) {
-        StructuredValueMask mask = new StructuredValueMask(depth);
+        CMuxMask mask = new CMuxMask(depth);
         ContentStorage lft = new BaseContentStorage();
         ContentStorage rgt = new BaseContentStorage();
         depth++;
@@ -484,7 +484,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     @Override
     public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
-            StructuredValueMask mask,
+            CMuxMask mask,
             ContentStorage innerLft,
             ContentStorage innerRgt) {
         return contentStorage.separateContent(mask, innerLft, innerRgt);

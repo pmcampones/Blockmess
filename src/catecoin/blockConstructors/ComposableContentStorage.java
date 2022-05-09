@@ -8,7 +8,7 @@ public interface ComposableContentStorage
         extends ContentStorage {
 
     Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
-            StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt);
+            CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt);
 
     void aggregateContent(Collection<ComposableContentStorage> blockConstructors);
 

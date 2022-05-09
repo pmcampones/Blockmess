@@ -76,7 +76,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
 
     @Override
     public Pair<ComposableContentStorage, ComposableContentStorage>
-    separateContent(StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
+    separateContent(CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
         ComposableContentStorage lft = new ComposableContentStorageImp(innerLft);
         ComposableContentStorage rgt = new ComposableContentStorageImp(innerRgt);
         try {
@@ -90,15 +90,15 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @NotNull
-    private Set<UUID> redistributeContent(StructuredValueMask mask, ComposableContentStorage lft, ComposableContentStorage rgt) {
+    private Set<UUID> redistributeContent(CMuxMask mask, ComposableContentStorage lft, ComposableContentStorage rgt) {
         Collection<StructuredValue> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
         for (StructuredValue val : inner.getStoredContent()) {
-            StructuredValueMask.MaskResult res = mask.matchIds(val.getMatch1(), val.getMatch2());
-            if (res.equals(StructuredValueMask.MaskResult.LEFT)) {
+            CMuxMask.MaskResult res = mask.matchIds(val.getMatch1(), val.getMatch2());
+            if (res.equals(CMuxMask.MaskResult.LEFT)) {
                 migrated.add(val.getId());
                 lft.submitContent(val);
-            } else if (res.equals(StructuredValueMask.MaskResult.RIGHT)) {
+            } else if (res.equals(CMuxMask.MaskResult.RIGHT)) {
                 migrated.add(val.getId());
                 rgt.submitContent(val);
             }

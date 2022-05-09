@@ -1,8 +1,8 @@
 package ledger.ledgerManager.nodes;
 
+import catecoin.blockConstructors.CMuxMask;
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
-import catecoin.blockConstructors.StructuredValueMask;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -370,7 +370,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
 
     @Override
     public void submitContent(StructuredValue content) {
-        StructuredValueMask.MaskResult res = content.matchIds();
+        CMuxMask.MaskResult res = content.matchIds();
         content.advanceMask();
         switch (res) {
             case LEFT:
@@ -400,7 +400,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
 
     @Override
     public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
-            StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
+            CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 

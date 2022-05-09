@@ -1,6 +1,6 @@
 package catecoin.blockConstructors;
 
-public class StructuredValueMask {
+public class CMuxMask {
 
     public enum MaskResult {
         LEFT,
@@ -12,9 +12,9 @@ public class StructuredValueMask {
 
     private byte byteMask = 7;
 
-    public StructuredValueMask() {}
+    public CMuxMask() {}
 
-    public StructuredValueMask(int startBit) {
+    public CMuxMask(int startBit) {
         this.byteIndex = startBit / Byte.SIZE;
         this.byteMask = (byte) ((Byte.SIZE - 1) - startBit % Byte.SIZE);
     }

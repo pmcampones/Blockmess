@@ -1,6 +1,6 @@
 package ledger.ledgerManager;
 
-import catecoin.blockConstructors.StructuredValueMask;
+import catecoin.blockConstructors.CMuxMask;
 import catecoin.txs.IndexableContent;
 import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
@@ -17,7 +17,7 @@ public class StructuredValue extends ProtoPojoAbstract implements IndexableConte
 
     private final byte[] match1, match2;
 
-    private final StructuredValueMask mask = new StructuredValueMask();
+    private final CMuxMask mask = new CMuxMask();
 
     public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
 
@@ -92,7 +92,7 @@ public class StructuredValue extends ProtoPojoAbstract implements IndexableConte
         this.innerValue = innerValue;
     }
 
-    public StructuredValueMask.MaskResult matchIds() {
+    public CMuxMask.MaskResult matchIds() {
         return mask.matchIds(match1, match2);
     }
 

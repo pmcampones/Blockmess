@@ -1,8 +1,8 @@
 package ledger.ledgerManager.nodes;
 
+import catecoin.blockConstructors.CMuxMask;
 import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
-import catecoin.blockConstructors.StructuredValueMask;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.StructuredValue;
@@ -268,7 +268,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
 
     @Override
     public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
-            StructuredValueMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
+            CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
         return leaf.separateContent(mask, innerLft, innerRgt);
     }
 
