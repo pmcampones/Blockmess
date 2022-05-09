@@ -10,7 +10,7 @@ import utils.CryptographicUtils;
 
 import java.util.UUID;
 
-public class StructuredValue extends ProtoPojoAbstract implements IndexableContent {
+public class AppContent extends ProtoPojoAbstract implements IndexableContent {
 
     public static final short ID = 1982;
 
@@ -18,16 +18,16 @@ public class StructuredValue extends ProtoPojoAbstract implements IndexableConte
 
         @Override
         public void serialize(ProtoPojo protoPojo, ByteBuf out) {
-            StructuredValue structuredValue = (StructuredValue) protoPojo;
-            out.writeShort(structuredValue.getSerializedSize());
-            out.writeBytes(structuredValue.content);
+            AppContent appContent = (AppContent) protoPojo;
+            out.writeShort(appContent.getSerializedSize());
+            out.writeBytes(appContent.content);
         }
 
         @Override
         public ProtoPojo deserialize(ByteBuf in) {
             byte[] content = new byte[in.readShort()];
             in.readBytes(content);
-            return new StructuredValue(content);
+            return new AppContent(content);
         }
     };
     private final transient UUID id;
@@ -35,7 +35,7 @@ public class StructuredValue extends ProtoPojoAbstract implements IndexableConte
     private final transient CMuxMask mask = new CMuxMask();
     private final byte[] content;
 
-    public StructuredValue(byte[] content) {
+    public AppContent(byte[] content) {
         super(ID);
         this.hashVal = CryptographicUtils.hashInput(content);
         this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);

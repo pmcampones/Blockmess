@@ -361,18 +361,18 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     }
 
     @Override
-    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return getOrigin().generateContentListList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue> content) {
+    public void submitContent(Collection<AppContent> content) {
         getOrigin().submitContent(content);
     }
 
     @Override
-    public void submitContent(StructuredValue content) {
+    public void submitContent(AppContent content) {
         getOrigin().submitContent(content);
     }
 
@@ -382,7 +382,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     }
 
     @Override
-    public Collection<StructuredValue> getStoredContent() {
+    public Collection<AppContent> getStoredContent() {
         return chains.values().stream()
                 .map(ContentStorage::getStoredContent)
                 .flatMap(Collection::stream)

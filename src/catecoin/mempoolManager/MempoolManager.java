@@ -115,7 +115,7 @@ public class MempoolManager extends GenericProtocol {
         List<Transaction> unwrappedContent = Collections.emptyList();/*block.getContentList()
                 .getContentList()
                 .stream()
-                .map(StructuredValue::getInnerValue)
+                .map(AppContent::getInnerValue)
                 .collect(toList());*/
         Set<StorageUTXO> addedUtxos = extractAddedUtxos(unwrappedContent);
         Set<UUID> usedUtxos = extractRemovedUtxos(unwrappedContent);

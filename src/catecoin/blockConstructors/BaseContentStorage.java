@@ -2,7 +2,7 @@ package catecoin.blockConstructors;
 
 import catecoin.mempoolManager.MempoolManager;
 import catecoin.txs.IndexableContent;
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 import main.GlobalProperties;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,7 +20,7 @@ public class BaseContentStorage implements ContentStorage {
 
     private final int maxBlockSize;
     private final int maxSizeOffset;
-    private final Map<UUID, StructuredValue> contentMap = Collections.synchronizedMap(new TreeMap<>());
+    private final Map<UUID, AppContent> contentMap = Collections.synchronizedMap(new TreeMap<>());
 
     public BaseContentStorage() {
         Properties props = GlobalProperties.getProps();
@@ -29,7 +29,7 @@ public class BaseContentStorage implements ContentStorage {
     }
 
     @Override
-    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException {
+    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException {
         Set<UUID> used = findUsedTransactions(states);
         return getContentDeterministicOrderBound(usedSpace, used);
     }
@@ -43,26 +43,26 @@ public class BaseContentStorage implements ContentStorage {
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue> content) {
+    public void submitContent(Collection<AppContent> content) {
         contentMap.putAll(content.stream().collect(toMap(IndexableContent::getId,c->c)));
     }
 
     @Override
-    public void submitContent(StructuredValue content) {
+    public void submitContent(AppContent content) {
         contentMap.put(content.getId(), content);
     }
 
     @Override
-    public Collection<StructuredValue> getStoredContent() {
+    public Collection<AppContent> getStoredContent() {
         return contentMap.values();
     }
 
     @NotNull
-    private List<StructuredValue> getContentDeterministicOrderBound(int usedSpace, Set<UUID> used) throws IOException {
-        Iterator<Map.Entry<UUID, StructuredValue>> contentEntries = contentMap.entrySet().iterator();
-        List<StructuredValue> content = new ArrayList<>();
+    private List<AppContent> getContentDeterministicOrderBound(int usedSpace, Set<UUID> used) throws IOException {
+        Iterator<Map.Entry<UUID, AppContent>> contentEntries = contentMap.entrySet().iterator();
+        List<AppContent> content = new ArrayList<>();
         while (contentEntries.hasNext() && usedSpace < maxBlockSize - maxSizeOffset) {
-            Map.Entry<UUID, StructuredValue> contentEntry = contentEntries.next();
+            Map.Entry<UUID, AppContent> contentEntry = contentEntries.next();
             if (!used.contains(contentEntry.getKey())) {
                 content.add(contentEntry.getValue());
                 usedSpace += contentEntry.getValue().getSerializedSize();

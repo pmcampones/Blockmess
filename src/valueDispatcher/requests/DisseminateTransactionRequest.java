@@ -1,6 +1,6 @@
 package valueDispatcher.requests;
 
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 import pt.unl.fct.di.novasys.babel.generic.ProtoRequest;
 import utils.IDGenerator;
 
@@ -8,14 +8,14 @@ public class DisseminateTransactionRequest extends ProtoRequest {
 
     public static final short ID = IDGenerator.genId();
 
-    private final StructuredValue tx;
+    private final AppContent tx;
 
-    public DisseminateTransactionRequest(StructuredValue tx) {
+    public DisseminateTransactionRequest(AppContent tx) {
         super(ID);
         this.tx = tx;
     }
 
-    public StructuredValue getTransaction() {
+    public AppContent getTransaction() {
         return tx;
     }
 

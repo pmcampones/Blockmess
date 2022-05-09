@@ -1,6 +1,6 @@
 package catecoin.blockConstructors;
 
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -10,14 +10,14 @@ import java.util.UUID;
 
 public interface ContentStorage {
 
-    List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException;
+    List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException;
 
-    void submitContent(Collection<StructuredValue> content);
+    void submitContent(Collection<AppContent> content);
 
-    void submitContent(StructuredValue content);
+    void submitContent(AppContent content);
 
     void deleteContent(Set<UUID> contentIds);
 
-    Collection<StructuredValue> getStoredContent();
+    Collection<AppContent> getStoredContent();
 
 }

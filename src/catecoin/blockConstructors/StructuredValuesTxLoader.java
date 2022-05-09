@@ -1,6 +1,6 @@
 package catecoin.blockConstructors;
 
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 
 import java.util.Collection;
 
@@ -12,7 +12,7 @@ public class StructuredValuesTxLoader {
         this.contentStorage = contentStorage;
     }
 
-    public void loadTxs(Collection<StructuredValue> txs) {
+    public void loadTxs(Collection<AppContent> txs) {
         contentStorage.submitContent(txs);
     }
 }

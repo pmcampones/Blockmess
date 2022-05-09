@@ -2,14 +2,14 @@ package catecoin.txs;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
 
 public class StructuredValueSlimTransactionWrapper {
 
-    public static StructuredValue wrapTx(Transaction tx) {
+    public static AppContent wrapTx(Transaction tx) {
         try {
             return tryToWrapTx(tx);
         } catch (IOException e) {
@@ -18,12 +18,12 @@ public class StructuredValueSlimTransactionWrapper {
     }
 
     @NotNull
-    private static StructuredValue tryToWrapTx(Transaction tx) throws IOException {
+    private static AppContent tryToWrapTx(Transaction tx) throws IOException {
         ByteBuf buff = Unpooled.buffer();
         Transaction.serializer.serialize(tx, buff);
         byte[] fakeTx = new byte[200];
         buff.readBytes(fakeTx);
-        return new StructuredValue(fakeTx);
+        return new AppContent(fakeTx);
     }
 
 }

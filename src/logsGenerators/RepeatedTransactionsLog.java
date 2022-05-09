@@ -4,7 +4,7 @@ import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import com.google.common.collect.Sets;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
@@ -63,7 +63,7 @@ public class RepeatedTransactionsLog extends GenericProtocol {
                 .map(BlockmessBlock::getContentList)
                 .map(ContentList::getContentList)
                 .flatMap(Collection::stream)
-                .map(StructuredValue::getId)
+                .map(AppContent::getId)
                 .collect(toList());
         notif.getFinalizedBlocksIds().forEach(nonFinalizedBlocks::remove);
         for (UUID tx : txs)

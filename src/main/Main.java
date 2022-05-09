@@ -11,8 +11,8 @@ import catecoin.txs.StructuredValueSlimTransactionWrapper;
 import catecoin.txs.Transaction;
 import ledger.BabelLedger;
 import ledger.blocks.BlockmessBlock;
+import ledger.ledgerManager.AppContent;
 import ledger.ledgerManager.LedgerManager;
-import ledger.ledgerManager.StructuredValue;
 import logsGenerators.ChangesInNumberOfChainsLog;
 import logsGenerators.FinalizedBlocksLog;
 import logsGenerators.RepeatedTransactionsLog;
@@ -153,7 +153,7 @@ public class Main {
         List<UUID> allTxsIds = LedgerManager.getSingleton().getAvailableChains().stream()
                 .map(ContentStorage::getStoredContent)
                 .flatMap(Collection::stream)
-                .map(StructuredValue::getId)
+                .map(AppContent::getId)
                 .collect(Collectors.toList());
         return allTxsIds.size() == new HashSet<>(allTxsIds).size();
     }
@@ -205,7 +205,7 @@ public class Main {
         ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
         ProtoPojo.pojoSerializers.put(Transaction.ID, Transaction.serializer);
         ProtoPojo.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
-        ProtoPojo.pojoSerializers.put(StructuredValue.ID, StructuredValue.serializer);
+        ProtoPojo.pojoSerializers.put(AppContent.ID, AppContent.serializer);
     }
 
     private static List<GenericProtocol> addBroadcastProtocols(Host myself, HyparView peerSamplingProtocol)

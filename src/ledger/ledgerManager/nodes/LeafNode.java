@@ -6,7 +6,7 @@ import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
@@ -266,7 +266,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         return getTxsInBufferedFinalizedBlocks(
                 finalized.stream()
                 .map(blocks::get))
-                .map(StructuredValue::getId)
+                .map(AppContent::getId)
                 .collect(toSet());
     }
 
@@ -322,9 +322,11 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         parent.createChains(List.of(lft, rgt));
     }
 
-    @Override
-    public void submitContentDirectly(Collection<StructuredValue> content) {
-        contentStorage.submitContent(content);
+    private Stream<AppContent> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock> stream) {
+        return stream
+                .map(BlockmessBlock::getContentList)
+                .map(ContentList::getContentList)
+                .flatMap(Collection::stream);
     }
 
     private void updateNextRank() {
@@ -447,18 +449,18 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace)
+    public void submitContentDirectly(Collection<AppContent> content) {
+        contentStorage.submitContent(content);
+    }
+
+    @Override
+    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return contentStorage.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue> content) {
-        contentStorage.submitContent(content);
-    }
-
-    @Override
-    public void submitContent(StructuredValue content) {
+    public void submitContent(Collection<AppContent> content) {
         contentStorage.submitContent(content);
     }
 
@@ -468,18 +470,16 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public Collection<StructuredValue> getStoredContent() {
+    public void submitContent(AppContent content) {
+        contentStorage.submitContent(content);
+    }
+
+    @Override
+    public Collection<AppContent> getStoredContent() {
         return Stream.concat(
                 contentStorage.getStoredContent().stream(),
                 getTxsInBufferedFinalizedBlocks(finalizedBuffer.stream())
                 ).collect(toSet());
-    }
-
-    private Stream<StructuredValue> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock> stream) {
-        return stream
-                .map(BlockmessBlock::getContentList)
-                .map(ContentList::getContentList)
-                .flatMap(Collection::stream);
     }
 
     @Override

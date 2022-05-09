@@ -1,6 +1,6 @@
 package catecoin.blockConstructors;
 
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
@@ -24,7 +24,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         try {
             innerLock.readLock().lock();
@@ -35,7 +35,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue> content) {
+    public void submitContent(Collection<AppContent> content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -45,7 +45,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public void submitContent(StructuredValue content) {
+    public void submitContent(AppContent content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -65,7 +65,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public Collection<StructuredValue> getStoredContent() {
+    public Collection<AppContent> getStoredContent() {
         try {
             innerLock.readLock().lock();
             return inner.getStoredContent();
@@ -91,9 +91,9 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
 
     @NotNull
     private Set<UUID> redistributeContent(CMuxMask mask, ComposableContentStorage lft, ComposableContentStorage rgt) {
-        Collection<StructuredValue> allValues = inner.getStoredContent();
+        Collection<AppContent> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
-        for (StructuredValue val : inner.getStoredContent()) {
+        for (AppContent val : inner.getStoredContent()) {
             CMuxMask.MaskResult res = mask.matchIds(val.getCmuxId1(), val.getCmuxId2());
             if (res.equals(CMuxMask.MaskResult.LEFT)) {
                 migrated.add(val.getId());

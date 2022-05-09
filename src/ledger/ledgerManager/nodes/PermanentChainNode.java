@@ -5,7 +5,7 @@ import catecoin.blockConstructors.ComposableContentStorage;
 import catecoin.blockConstructors.ContentStorage;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.StructuredValue;
+import ledger.ledgerManager.AppContent;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import org.apache.commons.lang3.tuple.Pair;
 
@@ -163,7 +163,7 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void submitContentDirectly(Collection<StructuredValue> content) {
+    public void submitContentDirectly(Collection<AppContent> content) {
         inner.submitContentDirectly(content);
     }
 
@@ -248,18 +248,18 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<StructuredValue> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return inner.generateContentListList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<StructuredValue> content) {
+    public void submitContent(Collection<AppContent> content) {
         content.forEach(this::submitContent);
     }
 
     @Override
-    public void submitContent(StructuredValue content) {
+    public void submitContent(AppContent content) {
         CMuxMask.MaskResult res = content.matchIds();
         content.advanceMask();
         switch (res) {
@@ -282,7 +282,7 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Collection<StructuredValue> getStoredContent() {
+    public Collection<AppContent> getStoredContent() {
         return inner.getStoredContent();
     }
 
