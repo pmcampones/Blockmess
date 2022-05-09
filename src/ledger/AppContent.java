@@ -1,6 +1,6 @@
 package ledger;
 
-import applicationInterface.OperationToCMuxIdentifierMapper;
+import applicationInterface.FixedCMuxIdentifierMapper;
 import blockConstructors.CMuxMask;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
@@ -27,7 +27,7 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
         public BroadcastValue deserialize(ByteBuf in) {
             byte[] content = new byte[in.readShort()];
             in.readBytes(content);
-            OperationToCMuxIdentifierMapper mapper = OperationToCMuxIdentifierMapper.getSingleton();
+            FixedCMuxIdentifierMapper mapper = FixedCMuxIdentifierMapper.getSingleton();
             return new AppContent(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content));
         }
     };
@@ -63,6 +63,10 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
 
     public byte[] getCmuxId2() {
         return cmuxId2;
+    }
+
+    public byte[] getContent() {
+        return content;
     }
 
     public CMuxMask.MaskResult matchIds() {

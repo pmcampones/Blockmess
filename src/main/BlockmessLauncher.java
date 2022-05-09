@@ -50,6 +50,7 @@ public class BlockmessLauncher {
     //Default babel configuration file (can be overridden by the "-config" launch argument)
     public static final String DEFAULT_CONF = "config/config.properties";
 
+
     public static void main(String[] args) throws Exception {
         startTime = System.currentTimeMillis();
         Babel babel = Babel.getInstance();
