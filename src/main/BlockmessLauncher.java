@@ -3,7 +3,6 @@ package main;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
-import catecoin.txs.Transaction;
 import ledger.AppContent;
 import ledger.BabelLedger;
 import ledger.blocks.BlockmessBlock;
@@ -143,7 +142,6 @@ public class BlockmessLauncher {
     private static void initializeSerializers() {
         BroadcastValue.pojoSerializers.put(BlockmessBlock.ID, BlockmessBlock.serializer);
         BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
-        BroadcastValue.pojoSerializers.put(Transaction.ID, Transaction.serializer);
         BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
         BroadcastValue.pojoSerializers.put(AppContent.ID, AppContent.serializer);
     }
