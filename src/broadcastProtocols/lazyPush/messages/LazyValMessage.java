@@ -1,11 +1,11 @@
 package broadcastProtocols.lazyPush.messages;
 
-import broadcastProtocols.messages.BroadcastMessage;
-import broadcastProtocols.messages.BroadcastMessageImp;
+import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.messages.BatcheableMessage;
+import broadcastProtocols.messages.BroadcastMessage;
+import broadcastProtocols.messages.BroadcastMessageImp;
 import io.netty.buffer.ByteBuf;
-import main.ProtoPojo;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ public class LazyValMessage extends BatcheableMessage implements BroadcastMessag
 
     private final BroadcastMessage broadcastMessage;
 
-    public LazyValMessage(UUID mid, ProtoPojo val) {
+    public LazyValMessage(UUID mid, BroadcastValue val) {
         super(ID);
         this.broadcastMessage = new BroadcastMessageImp(mid, val);
     }
@@ -33,7 +33,7 @@ public class LazyValMessage extends BatcheableMessage implements BroadcastMessag
     }
 
     @Override
-    public ProtoPojo getVal()  {
+    public BroadcastValue getVal()  {
         return broadcastMessage.getVal();
     }
 

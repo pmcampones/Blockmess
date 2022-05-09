@@ -1,8 +1,8 @@
 package ledger.ledgerManager.nodes;
 
-import catecoin.blockConstructors.CMuxMask;
-import catecoin.blockConstructors.ComposableContentStorage;
-import catecoin.blockConstructors.ContentStorage;
+import blockConstructors.CMuxMask;
+import blockConstructors.ComposableContentStorage;
+import blockConstructors.ContentStorage;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.AppContent;

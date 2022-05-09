@@ -1,4 +1,4 @@
-package catecoin.mempoolManager;
+package mempoolManager;
 
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.blocks.chunks.SerializableChunk;

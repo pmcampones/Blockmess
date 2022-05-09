@@ -1,11 +1,11 @@
 package catecoin.txs;
 
+import broadcastProtocols.BroadcastValue;
 import ledger.blocks.SizeAccountable;
-import main.ProtoPojo;
 
 import java.util.UUID;
 
-public interface IndexableContent extends ProtoPojo, SizeAccountable {
+public interface IndexableContent extends BroadcastValue, SizeAccountable {
 
     UUID getId();
 

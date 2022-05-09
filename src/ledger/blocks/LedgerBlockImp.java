@@ -1,11 +1,11 @@
 package ledger.blocks;
 
+import broadcastProtocols.BroadcastValue;
+import broadcastProtocols.BroadcastValueAbstract;
 import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import main.ProtoPojo;
-import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class LedgerBlockImp extends ProtoPojoAbstract implements LedgerBlock {
+public class LedgerBlockImp extends BroadcastValueAbstract implements LedgerBlock {
 
     public static final short ID = 9888;
 
@@ -26,11 +26,11 @@ public class LedgerBlockImp extends ProtoPojoAbstract implements LedgerBlock {
 
     private final List<UUID> prevRefs;
 
-    public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
+    public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {
 
         @Override
-        public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
-            LedgerBlock block = (LedgerBlock) protoPojo;
+        public void serialize(BroadcastValue broadcastValue, ByteBuf out) throws IOException {
+            LedgerBlock block = (LedgerBlock) broadcastValue;
             out.writeInt(block.getInherentWeight());
             serializePrevs(block.getPrevRefs(), out);
             serializePojo(block.getContentList(), out);
@@ -46,9 +46,9 @@ public class LedgerBlockImp extends ProtoPojoAbstract implements LedgerBlock {
             }
         }
 
-        private void serializePojo(ProtoPojo pojo, ByteBuf out) throws IOException {
+        private void serializePojo(BroadcastValue pojo, ByteBuf out) throws IOException {
             out.writeShort(pojo.getClassId());
-            ISerializer<ProtoPojo> serializer = pojo.getSerializer();
+            ISerializer<BroadcastValue> serializer = pojo.getSerializer();
             serializer.serialize(pojo, out);
         }
 
@@ -61,9 +61,9 @@ public class LedgerBlockImp extends ProtoPojoAbstract implements LedgerBlock {
         }
 
         @Override
-        public ProtoPojo deserialize(ByteBuf in) throws IOException {
+        public BroadcastValue deserialize(ByteBuf in) throws IOException {
             int inherentWeight = in.readInt();
-            List<UUID> prevRefs = ProtoPojo.deserializeUuids(in);
+            List<UUID> prevRefs = BroadcastValue.deserializeUuids(in);
             ContentList contentList = (ContentList) deserializeInnerPojo(in);
             SybilResistantElectionProof proof = (SybilResistantElectionProof) deserializeInnerPojo(in);
             List<ValidatorSignature> validatorSignatures = deserializeValidatorSignatures(in);
@@ -223,9 +223,10 @@ public class LedgerBlockImp extends ProtoPojoAbstract implements LedgerBlock {
         return blockId;
     }
 
-    @Override
-    public ISerializer<ProtoPojo> getSerializer() {
-        return serializer;
+    static BroadcastValue deserializeInnerPojo(ByteBuf in) throws IOException {
+        short innerClass = in.readShort();
+        ISerializer<BroadcastValue> serializer = pojoSerializers.get(innerClass);
+        return serializer.deserialize(in);
     }
 
     @Override
@@ -233,10 +234,9 @@ public class LedgerBlockImp extends ProtoPojoAbstract implements LedgerBlock {
         validatorSignatures.add(validatorSignature);
     }
 
-    static ProtoPojo deserializeInnerPojo(ByteBuf in) throws IOException {
-        short innerClass = in.readShort();
-        ISerializer<ProtoPojo> serializer = pojoSerializers.get(innerClass);
-        return serializer.deserialize(in);
+    @Override
+    public ISerializer<BroadcastValue> getSerializer() {
+        return serializer;
     }
 
     private int computeValidatorSignaturesSize() throws IOException {

@@ -1,4 +1,4 @@
-package catecoin.validators;
+package validators;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import catecoin.notifications.AnswerMessageValidationNotification;

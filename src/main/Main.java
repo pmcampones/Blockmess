@@ -1,11 +1,11 @@
 package main;
 
+import blockConstructors.ContentStorage;
+import blockConstructors.StructuredValuesTxLoader;
+import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
-import catecoin.blockConstructors.ContentStorage;
-import catecoin.blockConstructors.StructuredValuesTxLoader;
 import catecoin.blocks.ContentList;
-import catecoin.mempoolManager.MempoolManager;
 import catecoin.transactionGenerators.FakeTxsGenerator;
 import catecoin.txs.StructuredValueSlimTransactionWrapper;
 import catecoin.txs.Transaction;
@@ -17,6 +17,7 @@ import logsGenerators.ChangesInNumberOfChainsLog;
 import logsGenerators.FinalizedBlocksLog;
 import logsGenerators.RepeatedTransactionsLog;
 import logsGenerators.UnfinalizedBlocksLog;
+import mempoolManager.MempoolManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -201,11 +202,11 @@ public class Main {
     }
 
     private static void initializeSerializers() {
-        ProtoPojo.pojoSerializers.put(BlockmessBlock.ID, BlockmessBlock.serializer);
-        ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
-        ProtoPojo.pojoSerializers.put(Transaction.ID, Transaction.serializer);
-        ProtoPojo.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
-        ProtoPojo.pojoSerializers.put(AppContent.ID, AppContent.serializer);
+        BroadcastValue.pojoSerializers.put(BlockmessBlock.ID, BlockmessBlock.serializer);
+        BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
+        BroadcastValue.pojoSerializers.put(Transaction.ID, Transaction.serializer);
+        BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
+        BroadcastValue.pojoSerializers.put(AppContent.ID, AppContent.serializer);
     }
 
     private static List<GenericProtocol> addBroadcastProtocols(Host myself, HyparView peerSamplingProtocol)

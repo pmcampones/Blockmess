@@ -1,6 +1,6 @@
 package ledger.ledgerManager.nodes;
 
-import catecoin.blockConstructors.ComposableContentStorage;
+import blockConstructors.ComposableContentStorage;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.AppContent;

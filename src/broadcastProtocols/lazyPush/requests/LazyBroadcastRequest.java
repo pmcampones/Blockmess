@@ -1,7 +1,6 @@
 package broadcastProtocols.lazyPush.requests;
 
-import main.ProtoPojo;
-import main.ProtoPojoAbstract;
+import broadcastProtocols.BroadcastValue;
 import pt.unl.fct.di.novasys.babel.generic.ProtoRequest;
 import utils.IDGenerator;
 
@@ -9,14 +8,14 @@ public class LazyBroadcastRequest extends ProtoRequest {
 
     public static final short ID = IDGenerator.genId();
 
-    private final ProtoPojo val;
+    private final BroadcastValue val;
 
-    public LazyBroadcastRequest(ProtoPojo val) {
+    public LazyBroadcastRequest(BroadcastValue val) {
         super(ID);
         this.val = val;
     }
 
-    public ProtoPojo getVal() {
+    public BroadcastValue getVal() {
         return val;
     }
 }

@@ -1,9 +1,9 @@
 package sybilResistantElection;
 
+import broadcastProtocols.BroadcastValue;
+import broadcastProtocols.BroadcastValueAbstract;
 import io.netty.buffer.ByteBuf;
 import ledger.blocks.SizeAccountable;
-import main.ProtoPojo;
-import main.ProtoPojoAbstract;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-public class SybilResistantElectionProof extends ProtoPojoAbstract implements ProtoPojo, SizeAccountable {
+public class SybilResistantElectionProof extends BroadcastValueAbstract implements BroadcastValue, SizeAccountable {
 
     public static final short ID = 7265;
 
@@ -43,16 +43,11 @@ public class SybilResistantElectionProof extends ProtoPojoAbstract implements Pr
                 .sum();
     }
 
-    @Override
-    public ISerializer<ProtoPojo> getSerializer() {
-        return serializer;
-    }
-
-    public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
+    public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {
 
         @Override
-        public void serialize(ProtoPojo protoPojo, ByteBuf out) {
-            SybilResistantElectionProof proof = (SybilResistantElectionProof) protoPojo;
+        public void serialize(BroadcastValue broadcastValue, ByteBuf out) {
+            SybilResistantElectionProof proof = (SybilResistantElectionProof) broadcastValue;
             serializeChainSeeds(proof.ChainSeeds, out);
             out.writeInt(proof.nonce);
         }
@@ -70,7 +65,7 @@ public class SybilResistantElectionProof extends ProtoPojoAbstract implements Pr
         }
 
         @Override
-        public ProtoPojo deserialize(ByteBuf in) {
+        public BroadcastValue deserialize(ByteBuf in) {
             List<Pair<UUID, byte[]>> ChainSeeds = deserializeChainSeeds(in);
             int nonce = in.readInt();
             return new SybilResistantElectionProof(ChainSeeds, nonce);
@@ -89,4 +84,9 @@ public class SybilResistantElectionProof extends ProtoPojoAbstract implements Pr
         }
 
     };
+
+    @Override
+    public ISerializer<BroadcastValue> getSerializer() {
+        return serializer;
+    }
 }

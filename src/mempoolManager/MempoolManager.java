@@ -1,5 +1,6 @@
-package catecoin.mempoolManager;
+package mempoolManager;
 
+import broadcastProtocols.BroadcastValue;
 import catecoin.blocks.ContentList;
 import catecoin.blocks.chunks.MempoolChunk;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
@@ -9,7 +10,6 @@ import catecoin.utxos.StorageUTXO;
 import ledger.blocks.LedgerBlock;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.GlobalProperties;
-import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
@@ -65,7 +65,7 @@ public class MempoolManager extends GenericProtocol {
                 (DeliverNonFinalizedBlockNotification<LedgerBlock> notif1, short source1) -> uponDeliverNonFinalizedBlockNotification(notif1));
         subscribeNotification(DeliverFinalizedBlockIdentifiersNotification.ID,
                 (DeliverFinalizedBlockIdentifiersNotification notif, short source) -> uponDeliverFinalizedBlockNotification(notif));
-        ProtoPojo.pojoSerializers.put(ContentList.ID, ContentList.serializer);
+        BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
     }
 
     private void loadInitialUtxos() throws Exception {

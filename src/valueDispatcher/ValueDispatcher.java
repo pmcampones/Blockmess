@@ -1,5 +1,6 @@
 package valueDispatcher;
 
+import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerBroadcastRequest;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
@@ -8,14 +9,12 @@ import broadcastProtocols.notifications.DeliverVal;
 import catecoin.notifications.DeliverIndexableContentNotification;
 import catecoin.txs.Transaction;
 import ledger.blocks.LedgerBlock;
-import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
 import valueDispatcher.notifications.DeliverSignedBlockNotification;
-import valueDispatcher.pojos.DispatcherWrapper;
 import valueDispatcher.requests.DisseminateSignedBlockRequest;
 import valueDispatcher.requests.DisseminateTransactionRequest;
 
@@ -28,10 +27,10 @@ import java.util.Properties;
  * <p>All content pertaining to the DL engine and Application from the Broadcast Protocols is delivered here.</p>
  * <p>The values disseminated are processed in 3 stages, if another is added, the following should be done.</p>
  *  <p>1st - Introduce a new type of message in the ValType enum. This enable the Dispatcher to identify values delivered from the Broadcasts.</p>
- *  <p>2nd - Register a request handler for the message type. It must contain a ProtoPojo instance,
+ *  <p>2nd - Register a request handler for the message type. It must contain a BroadcastValue instance,
  *      as these instances contain the necessary logic to be serialized by the Broadcast protocols irrespective of their contents.</p>
- *  <p>3rd - Add a new entry to the switch to forward the inner ProtoPojo to the pertinent protocols.</p>
- *      Doing a verification of the ProtoPojo type here is important but not necessary.
+ *  <p>3rd - Add a new entry to the switch to forward the inner BroadcastValue to the pertinent protocols.</p>
+ *      Doing a verification of the BroadcastValue type here is important but not necessary.
  *      Verifying here ensures malformed content is discarded without upsetting the logic of the more complex upper protocols.
  */
 public class ValueDispatcher extends GenericProtocol {
@@ -49,7 +48,7 @@ public class ValueDispatcher extends GenericProtocol {
         super(ValueDispatcher.class.getSimpleName(), ID);
         subscribeNotification(DeliverVal.ID, this::uponDeliverVal);
         registerRequestHandlers();
-        ProtoPojo.pojoSerializers.put(DispatcherWrapper.ID, DispatcherWrapper.serializer);
+        BroadcastValue.pojoSerializers.put(DispatcherWrapper.ID, DispatcherWrapper.serializer);
     }
 
     private void registerRequestHandlers() throws HandlerRegistrationException {
@@ -75,7 +74,7 @@ public class ValueDispatcher extends GenericProtocol {
     }
 
     //If the val is not of the correct instance, its assumed the message is incorrect and thus ignored.
-    private void notifyUpperProtocols(ValType type, ProtoPojo val) {
+    private void notifyUpperProtocols(ValType type, BroadcastValue val) {
         switch (type) {
             case TRANSACTION:
                 if (val instanceof Transaction)
@@ -110,12 +109,12 @@ public class ValueDispatcher extends GenericProtocol {
         }
     }
 
-    private void sendLazyRequest(ProtoPojo val) throws IOException {
+    private void sendLazyRequest(BroadcastValue val) throws IOException {
         DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.SIGNED_BLOCK.ordinal(), val);
         sendRequest(new LazyBroadcastRequest(wrapper), LazyPushBroadcast.ID);
     }
 
-    private void sendEagerRequest(ProtoPojo val) throws IOException {
+    private void sendEagerRequest(BroadcastValue val) throws IOException {
         DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.TRANSACTION.ordinal(), val);
         sendRequest(new EagerBroadcastRequest(wrapper), EagerPushBroadcast.ID);
     }

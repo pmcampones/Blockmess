@@ -1,4 +1,4 @@
-package catecoin.mempoolManager;
+package mempoolManager;
 
 import catecoin.utxos.StorageUTXO;
 import org.rocksdb.RocksDB;

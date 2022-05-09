@@ -20,7 +20,7 @@
         <Logger level="error" name="pt.unl.fct.di.novasys.babel.core"/>
         <Logger level="error" name="broadcastProtocols"/>-->
         <Logger level="error" name="peerSamplingProtocols"/>-->
-        <Logger level="info" name="catecoin.mempoolManager"/>
+        <Logger level="info" name="mempoolManager"/>
         <Logger level="debug" name="ledger.ledgerManager.LedgerManager"/>
         <Logger level="debug" name="ledger"/>
         <Logger level="info" name="sybilResistantElection.SybilResistantElection"/>

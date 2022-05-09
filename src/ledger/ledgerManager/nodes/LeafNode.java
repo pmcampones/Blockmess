@@ -1,6 +1,6 @@
 package ledger.ledgerManager.nodes;
 
-import catecoin.blockConstructors.*;
+import blockConstructors.*;
 import catecoin.blocks.ContentList;
 import ledger.Ledger;
 import ledger.LedgerObserver;

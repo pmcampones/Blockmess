@@ -1,10 +1,10 @@
 package catecoin.blocks;
 
+import broadcastProtocols.BroadcastValue;
+import broadcastProtocols.BroadcastValueAbstract;
 import catecoin.txs.IndexableContent;
 import io.netty.buffer.ByteBuf;
 import ledger.ledgerManager.AppContent;
-import main.ProtoPojo;
-import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.merkleTree.MerkleRoot;
 
@@ -13,15 +13,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ContentList extends ProtoPojoAbstract {
+public class ContentList extends BroadcastValueAbstract {
 
     public static final short ID = 3920;
 
-    public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
+    public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {
 
         @Override
-        public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
-            ContentList ContentListList = (ContentList) protoPojo;
+        public void serialize(BroadcastValue broadcastValue, ByteBuf out) throws IOException {
+            ContentList ContentListList = (ContentList) broadcastValue;
             out.writeInt(ContentListList.contentLst.size());
             for (IndexableContent elem : ContentListList.contentLst)
                 serializeElement(elem, out);
@@ -33,7 +33,7 @@ public class ContentList extends ProtoPojoAbstract {
         }
 
         @Override
-        public ProtoPojo deserialize(ByteBuf in) throws IOException {
+        public BroadcastValue deserialize(ByteBuf in) throws IOException {
             int numElems = in.readInt();
             List<AppContent> contentLst = new ArrayList<>(numElems);
             for (int i = 0; i < numElems; i++)
@@ -43,7 +43,7 @@ public class ContentList extends ProtoPojoAbstract {
 
         private IndexableContent deserializeElem(ByteBuf in) throws IOException {
             short elemClass = in.readShort();
-            ISerializer<ProtoPojo> serializer = ProtoPojo.pojoSerializers.get(elemClass);
+            ISerializer<BroadcastValue> serializer = BroadcastValue.pojoSerializers.get(elemClass);
             return (IndexableContent) serializer.deserialize(in);
         }
     };
@@ -71,7 +71,7 @@ public class ContentList extends ProtoPojoAbstract {
     }
 
     @Override
-    public ISerializer<ProtoPojo> getSerializer() {
+    public ISerializer<BroadcastValue> getSerializer() {
         return serializer;
     }
 

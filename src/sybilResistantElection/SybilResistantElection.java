@@ -1,5 +1,6 @@
 package sybilResistantElection;
 
+import broadcastProtocols.BroadcastValue;
 import catecoin.blocks.ContentList;
 import catecoin.notifications.DeliverFinalizedBlockIdentifiersNotification;
 import ledger.blocks.BlockmessBlock;
@@ -8,7 +9,6 @@ import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.Main;
-import main.ProtoPojo;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -69,7 +69,7 @@ public class SybilResistantElection extends GenericProtocol {
                 blockmessRoot.getAvailableChains().size());
         this.chainSeeds = replaceChainSeeds(blockmessRoot.getAvailableChains());
         this.randomSeed = computeRandomSeed();
-        ProtoPojo.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
+        BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
         subscribeNotifications();
     }
 

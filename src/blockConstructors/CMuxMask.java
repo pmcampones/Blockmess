@@ -1,4 +1,4 @@
-package catecoin.blockConstructors;
+package blockConstructors;
 
 public class CMuxMask {
 

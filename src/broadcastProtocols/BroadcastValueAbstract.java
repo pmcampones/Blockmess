@@ -1,16 +1,14 @@
-package main;
+package broadcastProtocols;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.UUID;
 
-public abstract class ProtoPojoAbstract implements ProtoPojo {
+public abstract class BroadcastValueAbstract implements BroadcastValue {
 
     private final short id;
 
-    protected ProtoPojoAbstract(short id) {
+    protected BroadcastValueAbstract(short id) {
         this.id = id;
     }
 

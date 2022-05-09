@@ -1,12 +1,12 @@
 package broadcastProtocols.eagerPush;
 
 import broadcastProtocols.BroadcastProtocol;
+import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.notifications.DeliverVal;
 import broadcastProtocols.notifications.PeerUnreachableNotification;
 import catecoin.notifications.AnswerMessageValidationNotification;
-import main.ProtoPojo;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import peerSamplingProtocols.hyparview.HyparView;
@@ -112,7 +112,7 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
     }
 
     private void uponBroadcastRequest(EagerBroadcastRequest req, short source) {
-        ProtoPojo val = req.getVal();
+        BroadcastValue val = req.getVal();
         EagerValMessage msg = new EagerValMessage(UUID.randomUUID(), val);
         uponEagerValMessage(msg);
     }

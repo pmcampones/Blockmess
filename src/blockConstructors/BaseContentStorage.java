@@ -1,9 +1,9 @@
-package catecoin.blockConstructors;
+package blockConstructors;
 
-import catecoin.mempoolManager.MempoolManager;
 import catecoin.txs.IndexableContent;
 import ledger.ledgerManager.AppContent;
 import main.GlobalProperties;
+import mempoolManager.MempoolManager;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;

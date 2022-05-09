@@ -1,14 +1,14 @@
 package ledger.blockchain;
 
 import catecoin.blocks.chunks.MempoolChunk;
-import catecoin.mempoolManager.BootstrapModule;
-import catecoin.validators.ApplicationObliviousValidator;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import main.GlobalProperties;
+import mempoolManager.BootstrapModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import validators.ApplicationObliviousValidator;
 
 import java.util.*;
 import java.util.concurrent.*;

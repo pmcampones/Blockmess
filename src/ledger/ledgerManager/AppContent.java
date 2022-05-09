@@ -1,30 +1,30 @@
 package ledger.ledgerManager;
 
-import catecoin.blockConstructors.CMuxMask;
+import blockConstructors.CMuxMask;
+import broadcastProtocols.BroadcastValue;
+import broadcastProtocols.BroadcastValueAbstract;
 import catecoin.txs.IndexableContent;
 import io.netty.buffer.ByteBuf;
-import main.ProtoPojo;
-import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.CryptographicUtils;
 
 import java.util.UUID;
 
-public class AppContent extends ProtoPojoAbstract implements IndexableContent {
+public class AppContent extends BroadcastValueAbstract implements IndexableContent {
 
     public static final short ID = 1982;
 
-    public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
+    public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {
 
         @Override
-        public void serialize(ProtoPojo protoPojo, ByteBuf out) {
-            AppContent appContent = (AppContent) protoPojo;
+        public void serialize(BroadcastValue broadcastValue, ByteBuf out) {
+            AppContent appContent = (AppContent) broadcastValue;
             out.writeShort(appContent.getSerializedSize());
             out.writeBytes(appContent.content);
         }
 
         @Override
-        public ProtoPojo deserialize(ByteBuf in) {
+        public BroadcastValue deserialize(ByteBuf in) {
             byte[] content = new byte[in.readShort()];
             in.readBytes(content);
             return new AppContent(content);
@@ -76,7 +76,7 @@ public class AppContent extends ProtoPojoAbstract implements IndexableContent {
     }
 
     @Override
-    public ISerializer<ProtoPojo> getSerializer() {
+    public ISerializer<BroadcastValue> getSerializer() {
         return serializer;
     }
 

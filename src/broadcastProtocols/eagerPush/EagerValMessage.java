@@ -1,11 +1,11 @@
 package broadcastProtocols.eagerPush;
 
-import broadcastProtocols.messages.BroadcastMessage;
-import broadcastProtocols.messages.BroadcastMessageImp;
+import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.messages.BatcheableMessage;
+import broadcastProtocols.messages.BroadcastMessage;
+import broadcastProtocols.messages.BroadcastMessageImp;
 import io.netty.buffer.ByteBuf;
-import main.ProtoPojo;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ public class EagerValMessage extends BatcheableMessage implements BroadcastMessa
 
     private final BroadcastMessage broadcastMessage;
 
-    public EagerValMessage(UUID mid, ProtoPojo val) {
+    public EagerValMessage(UUID mid, BroadcastValue val) {
         super(ID);
         this.broadcastMessage = new BroadcastMessageImp(mid, val);
     }
@@ -33,7 +33,7 @@ public class EagerValMessage extends BatcheableMessage implements BroadcastMessa
     }
 
     @Override
-    public ProtoPojo getVal() {
+    public BroadcastValue getVal() {
         return broadcastMessage.getVal();
     }
 

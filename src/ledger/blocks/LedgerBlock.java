@@ -1,8 +1,8 @@
 package ledger.blocks;
 
+import broadcastProtocols.BroadcastValue;
 import catecoin.blocks.ContentList;
 import catecoin.blocks.ValidatorSignature;
-import main.ProtoPojo;
 import sybilResistantElection.SybilResistantElectionProof;
 
 import java.security.PublicKey;
@@ -14,7 +14,7 @@ import java.util.UUID;
  * It is slightly more general than what is specified in <a href=https://bitcoin.org/bitcoin.pdf>Bitcoin</a>
  * for their use in Blockchains.
  */
-public interface LedgerBlock extends SizeAccountable, ProtoPojo {
+public interface LedgerBlock extends SizeAccountable, BroadcastValue {
 
     /**
      * Used as the hash of the block in Bitcoin.

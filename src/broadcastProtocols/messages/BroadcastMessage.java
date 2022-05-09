@@ -1,7 +1,7 @@
 package broadcastProtocols.messages;
 
+import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
-import main.ProtoPojo;
 
 import java.util.UUID;
 
@@ -9,7 +9,7 @@ public interface BroadcastMessage {
 
     UUID getMid();
 
-    ProtoPojo getVal();
+    BroadcastValue getVal();
 
     boolean isBlocking();
 

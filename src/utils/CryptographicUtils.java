@@ -137,7 +137,7 @@ public class CryptographicUtils {
     }
 
     /**
-     * Signs a ProtoPojo.
+     * Signs a BroadcastValue.
      * @param byteFields The contents to be signed in a byte array format.
      * @param signer The private key of the object issuer. Used to sign the transaction.
      * @return The signature of the Pojo's contents.

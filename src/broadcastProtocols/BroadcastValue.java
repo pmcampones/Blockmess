@@ -1,4 +1,4 @@
-package main;
+package broadcastProtocols;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import io.netty.buffer.ByteBuf;
@@ -15,13 +15,13 @@ import java.util.stream.Stream;
  * <p>Notably a means to select a serializer based on the object's unique identifier,</p>
  *  and indicates the common cryptographic algorithms used to sign/verify and hash these objects.
  */
-public interface ProtoPojo extends Serializable {
+public interface BroadcastValue extends Serializable {
 
     /**
      * Maps each class implementing this interface to its serializer.
      * Doing so allows a node receiving information to select the correct serializer without concern for context
      */
-    Map<Short, ISerializer<ProtoPojo>> pojoSerializers = new ConcurrentHashMap<>();
+    Map<Short, ISerializer<BroadcastValue>> pojoSerializers = new ConcurrentHashMap<>();
 
     /**
      * @return Implementing class specific identifier.
@@ -31,7 +31,7 @@ public interface ProtoPojo extends Serializable {
     /**
      * @return Serializer that serializes/deserializes the objects as these are transferred between nodes.
      */
-    ISerializer<ProtoPojo> getSerializer();
+    ISerializer<BroadcastValue> getSerializer();
 
     /**
      * Indicates whether the contents in a message should block its broadcast until being validated.

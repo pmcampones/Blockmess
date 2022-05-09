@@ -1,10 +1,10 @@
 package catecoin.txs;
 
+import broadcastProtocols.BroadcastValue;
+import broadcastProtocols.BroadcastValueAbstract;
 import catecoin.utxos.SlimUTXOIndependentFields;
 import catecoin.utxos.UTXO;
 import io.netty.buffer.ByteBuf;
-import main.ProtoPojo;
-import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.CryptographicUtils;
 
@@ -26,7 +26,7 @@ import java.util.UUID;
  *  The same logic applies to ContentList.
  * However it assigns more responsibilities to the application validator class (by default {@link ContextObliviousValidator})
  */
-public class Transaction extends ProtoPojoAbstract implements IndexableContent {
+public class Transaction extends BroadcastValueAbstract implements IndexableContent {
 
     private static final long serialVersionUID = 1L;
 
@@ -48,10 +48,10 @@ public class Transaction extends ProtoPojoAbstract implements IndexableContent {
      */
     private final List<UUID> inputs;
 
-    public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
+    public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {
 
         @Override
-        public void serialize(ProtoPojo pojo, ByteBuf out) throws IOException {
+        public void serialize(BroadcastValue pojo, ByteBuf out) throws IOException {
             Transaction tx = (Transaction) pojo;
             CryptographicUtils.serializeKey(tx.origin, out);
             CryptographicUtils.serializeKey(tx.destination, out);
@@ -79,7 +79,7 @@ public class Transaction extends ProtoPojoAbstract implements IndexableContent {
         }
 
         @Override
-        public ProtoPojo deserialize(ByteBuf in) throws IOException {
+        public BroadcastValue deserialize(ByteBuf in) throws IOException {
             PublicKey origin = CryptographicUtils.deserializePubKey(in);
             PublicKey destination = CryptographicUtils.deserializePubKey(in);
             List<UUID> inputs = deserializeInputs(in);
@@ -94,7 +94,7 @@ public class Transaction extends ProtoPojoAbstract implements IndexableContent {
         }
 
         private List<UUID> deserializeInputs(ByteBuf in) {
-            return ProtoPojo.deserializeUuids(in);
+            return BroadcastValue.deserializeUuids(in);
         }
 
         private List<SlimUTXOIndependentFields> deserializeOutputs(ByteBuf in) {
@@ -267,9 +267,9 @@ public class Transaction extends ProtoPojoAbstract implements IndexableContent {
         return  !inputs.isEmpty() && !outputsDestination.isEmpty()
                 && !hasInvalidAmount(outputsDestination)
                 && !hasInvalidAmount(outputsOrigin)
-                && ProtoPojo.allUnique(inputs.stream())
-                && ProtoPojo.allUnique(outputsDestination.stream())
-                && ProtoPojo.allUnique(outputsOrigin.stream())
+                && BroadcastValue.allUnique(inputs.stream())
+                && BroadcastValue.allUnique(outputsDestination.stream())
+                && BroadcastValue.allUnique(outputsOrigin.stream())
                 && hasValidSignature();
     }
 
@@ -287,7 +287,7 @@ public class Transaction extends ProtoPojoAbstract implements IndexableContent {
     }
 
     @Override
-    public ISerializer<ProtoPojo> getSerializer() {
+    public ISerializer<BroadcastValue> getSerializer() {
         return serializer;
     }
 

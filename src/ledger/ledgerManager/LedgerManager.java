@@ -1,7 +1,7 @@
 package ledger.ledgerManager;
 
-import catecoin.blockConstructors.ComposableContentStorageImp;
-import catecoin.blockConstructors.ContentStorage;
+import blockConstructors.ComposableContentStorageImp;
+import blockConstructors.ContentStorage;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
