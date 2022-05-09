@@ -2,98 +2,73 @@ package ledger.ledgerManager;
 
 import catecoin.blockConstructors.CMuxMask;
 import catecoin.txs.IndexableContent;
-import catecoin.txs.Transaction;
 import io.netty.buffer.ByteBuf;
 import main.ProtoPojo;
 import main.ProtoPojoAbstract;
 import pt.unl.fct.di.novasys.network.ISerializer;
+import utils.CryptographicUtils;
 
-import java.io.IOException;
 import java.util.UUID;
 
 public class StructuredValue extends ProtoPojoAbstract implements IndexableContent {
 
     public static final short ID = 1982;
 
-    private final byte[] match1, match2;
-
-    private final CMuxMask mask = new CMuxMask();
-
     public static final ISerializer<ProtoPojo> serializer = new ISerializer<>() {
 
         @Override
-        public void serialize(ProtoPojo protoPojo, ByteBuf out) throws IOException {
+        public void serialize(ProtoPojo protoPojo, ByteBuf out) {
             StructuredValue structuredValue = (StructuredValue) protoPojo;
-            serializeMatch(structuredValue.match1, out);
-            serializeMatch(structuredValue.match2, out);
-            serializeInnerPojo(structuredValue.innerValue, out);
-        }
-
-        private void serializeMatch(byte[] match, ByteBuf out) {
-            out.writeShort(match.length);
-            out.writeBytes(match);
-        }
-
-        private void serializeInnerPojo(ProtoPojo inner, ByteBuf out) throws IOException {
-            out.writeShort(inner.getClassId());
-            inner.getSerializer().serialize(inner, out);
+            out.writeShort(structuredValue.getSerializedSize());
+            out.writeBytes(structuredValue.content);
         }
 
         @Override
-        public ProtoPojo deserialize(ByteBuf in) throws IOException {
-            byte[] match1 = deserializeMatch(in);
-            byte[] match2 = deserializeMatch(in);
-            Transaction inner = (Transaction) deserializeInner(in);
-            return new StructuredValue(match1, match2, inner);
+        public ProtoPojo deserialize(ByteBuf in) {
+            byte[] content = new byte[in.readShort()];
+            in.readBytes(content);
+            return new StructuredValue(content);
         }
+    };
+    private final transient UUID id;
+    private transient final byte[] hashVal, cmuxId1, cmuxId2;
+    private final transient CMuxMask mask = new CMuxMask();
+    private final byte[] content;
 
-        private byte[] deserializeMatch(ByteBuf in) {
-            byte[] match = new byte[in.readShort()];
-            in.readBytes(match);
-            return match;
-        }
-
-        private ProtoPojo deserializeInner(ByteBuf in) throws IOException {
-            short innerId = in.readShort();
-            ISerializer<ProtoPojo> serializer = ProtoPojo.pojoSerializers.get(innerId);
-            return serializer.deserialize(in);
-        }
-
-     };
-    private final Transaction innerValue;
+    public StructuredValue(byte[] content) {
+        super(ID);
+        this.hashVal = CryptographicUtils.hashInput(content);
+        this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);
+        this.cmuxId1 = CryptographicUtils.hashInput(hashVal);
+        this.cmuxId2 = CryptographicUtils.hashInput(cmuxId1);
+        this.content = content;
+    }
 
     @Override
     public UUID getId() {
-        return innerValue.getId();
+        return id;
     }
 
     @Override
     public byte[] getHashVal() {
-        return innerValue.getHashVal();
+        return hashVal;
     }
 
     @Override
     public boolean hasValidSemantics() {
-        return innerValue.hasValidSemantics();
+        return true;
     }
 
-    public byte[] getMatch1() {
-        return match1;
+    public byte[] getCmuxId1() {
+        return cmuxId1;
     }
 
-    public byte[] getMatch2() {
-        return match2;
-    }
-
-    public StructuredValue(byte[] match1, byte[] match2, Transaction innerValue) {
-        super(ID);
-        this.match1 = match1;
-        this.match2 = match2;
-        this.innerValue = innerValue;
+    public byte[] getCmuxId2() {
+        return cmuxId2;
     }
 
     public CMuxMask.MaskResult matchIds() {
-        return mask.matchIds(match1, match2);
+        return mask.matchIds(cmuxId1, cmuxId2);
     }
 
     public void advanceMask() {
@@ -105,13 +80,8 @@ public class StructuredValue extends ProtoPojoAbstract implements IndexableConte
         return serializer;
     }
 
-    public Transaction getInnerValue() {
-        return innerValue;
-    }
-
     @Override
-    public int getSerializedSize() throws IOException {
-        return innerValue.getSerializedSize()
-                + (match1.length + match2.length) * Byte.BYTES;
+    public int getSerializedSize() {
+        return content.length;
     }
 }

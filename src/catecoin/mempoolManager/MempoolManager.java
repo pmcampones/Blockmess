@@ -7,7 +7,6 @@ import catecoin.notifications.DeliverFinalizedBlocksContentNotification;
 import catecoin.txs.Transaction;
 import catecoin.utxos.StorageUTXO;
 import ledger.blocks.LedgerBlock;
-import ledger.ledgerManager.StructuredValue;
 import ledger.notifications.DeliverNonFinalizedBlockNotification;
 import main.GlobalProperties;
 import main.ProtoPojo;
@@ -113,11 +112,11 @@ public class MempoolManager extends GenericProtocol {
     }
 
     private MempoolChunk createChunk(LedgerBlock block, int cumulativeWeight) {
-        List<Transaction> unwrappedContent = block.getContentList()
+        List<Transaction> unwrappedContent = Collections.emptyList();/*block.getContentList()
                 .getContentList()
                 .stream()
                 .map(StructuredValue::getInnerValue)
-                .collect(toList());
+                .collect(toList());*/
         Set<StorageUTXO> addedUtxos = extractAddedUtxos(unwrappedContent);
         Set<UUID> usedUtxos = extractRemovedUtxos(unwrappedContent);
         Set<UUID> usedTxs = extractUsedTxs(unwrappedContent);

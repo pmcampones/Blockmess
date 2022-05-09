@@ -94,7 +94,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
         Collection<StructuredValue> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
         for (StructuredValue val : inner.getStoredContent()) {
-            CMuxMask.MaskResult res = mask.matchIds(val.getMatch1(), val.getMatch2());
+            CMuxMask.MaskResult res = mask.matchIds(val.getCmuxId1(), val.getCmuxId2());
             if (res.equals(CMuxMask.MaskResult.LEFT)) {
                 migrated.add(val.getId());
                 lft.submitContent(val);
