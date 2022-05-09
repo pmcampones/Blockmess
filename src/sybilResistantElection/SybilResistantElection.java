@@ -88,7 +88,7 @@ public class SybilResistantElection extends GenericProtocol {
     }
 
     @Override
-    public void init(Properties props) throws HandlerRegistrationException, IOException {
+    public void init(Properties props) {
         int timeBetweenQueries = parseInt(props.getProperty("timeBetweenQueries", TIME_BETWEEN_QUERIES));
         int initializationTime = parseInt(props.getProperty("initializationTime",
                 String.valueOf(INITIALIZATION_TIME)));

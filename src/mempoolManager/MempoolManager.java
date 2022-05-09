@@ -7,7 +7,6 @@ import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
 import ledger.blocks.LedgerBlock;
 import ledger.ledgerManager.LedgerManager;
-import mempoolManager.notifications.DeliverFinalizedBlocksContentNotification;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
@@ -15,18 +14,15 @@ import utils.IDGenerator;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 public class MempoolManager extends GenericProtocol implements LedgerObserver {
 
     private static final Logger logger = LogManager.getLogger(MempoolManager.class);
 
     public static final short ID = IDGenerator.genId();
-
-    private final ReadWriteLock mempoolLock = new ReentrantReadWriteLock();
 
     /**The complete collection of unused UTXOs in the finalized portion of the system**/
     public final Map<UUID, MempoolChunk> mempool = new ConcurrentHashMap<>();
@@ -65,29 +61,6 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
         return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()), unwrappedContent);
     }
 
-    public void finalize(List<UUID> finalized) {
-        List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
-        List<AppContent> finalizedContent = finalizedChunks.stream()
-                .map(MempoolChunk::getAddedContent)
-                .flatMap(Collection::stream)
-                .collect(toList());
-        finalizeBlocks(finalizedChunks);
-    }
-
-    private void finalizeBlocks(List<MempoolChunk> finalized) {
-        try {
-            mempoolLock.writeLock().lock();
-            tryToFinalizeBlocks(finalized);
-        } finally {
-            mempoolLock.writeLock().unlock();
-        }
-    }
-
-    private void tryToFinalizeBlocks(List<MempoolChunk> finalized) {
-        triggerNotification(new DeliverFinalizedBlocksContentNotification());
-        finalized.stream().map(MempoolChunk::getId).forEach(mempool::remove);
-    }
-
     public Set<UUID> getUsedContentFromChunk(UUID previousState, Set<UUID> visited) {
         MempoolChunk chunk = mempool.get(previousState);
         if (visited.contains(previousState) || chunk == null) return Collections.emptySet();
@@ -107,6 +80,13 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
     @Override
     public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
         discarded.forEach(mempool::remove);
-        finalize(finalized);
+        List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
+        finalizedChunks.stream().map(MempoolChunk::getId).forEach(mempool::remove);
+        List<AppContent> finalizedContent = finalizedChunks.stream()
+                .map(MempoolChunk::getAddedContent)
+                .flatMap(Collection::stream)
+                .collect(toList());
+        LedgerManager.getSingleton().deleteContent(finalizedContent.stream().map(AppContent::getId).collect(toSet()));
     }
+
 }
