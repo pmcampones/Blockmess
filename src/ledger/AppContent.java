@@ -1,5 +1,6 @@
 package ledger;
 
+import applicationInterface.OperationToCMuxIdentifierMapper;
 import blockConstructors.CMuxMask;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
@@ -26,7 +27,8 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
         public BroadcastValue deserialize(ByteBuf in) {
             byte[] content = new byte[in.readShort()];
             in.readBytes(content);
-            return new AppContent(content);
+            OperationToCMuxIdentifierMapper mapper = OperationToCMuxIdentifierMapper.getSingleton();
+            return new AppContent(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content));
         }
     };
     private final transient UUID id;
@@ -34,12 +36,12 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
     private final transient CMuxMask mask = new CMuxMask();
     private final byte[] content;
 
-    public AppContent(byte[] content) {
+    public AppContent(byte[] content, byte[] cmuxId1, byte[] cmuxId2) {
         super(ID);
         this.hashVal = CryptographicUtils.hashInput(content);
         this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);
-        this.cmuxId1 = CryptographicUtils.hashInput(hashVal);
-        this.cmuxId2 = CryptographicUtils.hashInput(cmuxId1);
+        this.cmuxId1 = cmuxId1;
+        this.cmuxId2 = cmuxId2;
         this.content = content;
     }
 
