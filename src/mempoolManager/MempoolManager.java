@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.security.PublicKey;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.IntStream;
@@ -112,11 +111,7 @@ public class MempoolManager extends GenericProtocol {
     }
 
     private MempoolChunk createChunk(LedgerBlock block, int cumulativeWeight) {
-        List<Transaction> unwrappedContent = Collections.emptyList();/*block.getContentList()
-                .getContentList()
-                .stream()
-                .map(AppContent::getInnerValue)
-                .collect(toList());*/
+        List<Transaction> unwrappedContent = Collections.emptyList();
         Set<StorageUTXO> addedUtxos = extractAddedUtxos(unwrappedContent);
         Set<UUID> usedUtxos = extractRemovedUtxos(unwrappedContent);
         Set<UUID> usedTxs = extractUsedTxs(unwrappedContent);
@@ -209,37 +204,6 @@ public class MempoolManager extends GenericProtocol {
         Set<UUID> invalid = new HashSet<>(chunk.getUsedTxs());
         chunk.getPreviousChunksIds().forEach(id -> invalid.addAll(getInvalidTxsFromChunk(id, visited)));
         return invalid;
-    }
-
-    public Set<UUID> getInvalidUtxosFromChunk(UUID chunkId, Set<UUID> visited) {
-        MempoolChunk chunk = mempool.get(chunkId);
-        if (visited.contains(chunkId) || chunk == null) return Collections.emptySet();
-        visited.add(chunkId);
-        Set<UUID> invalid = new HashSet<>(chunk.getRemovedUtxos());
-        chunk.getPreviousChunksIds().forEach(id -> invalid.addAll(getInvalidUtxosFromChunk(id, visited)));
-        return invalid;
-    }
-
-    public Set<StorageUTXO> getAddedUtxosFromChunk(UUID chunkId, Set<UUID> visited) {
-        MempoolChunk chunk = mempool.get(chunkId);
-        if (visited.contains(chunkId) || chunk == null) return Collections.emptySet();
-        visited.add(chunkId);
-        Set<StorageUTXO> valid = new HashSet<>(chunk.getAddedUtxos());
-        chunk.getPreviousChunksIds()
-                .forEach(id -> valid.addAll(getAddedUtxosFromChunk(id, visited)));
-        return valid;
-    }
-
-    public Lock getMempoolReadLock() {
-        return mempoolLock.readLock();
-    }
-
-    public int computeNumOfUsedTransactions() {
-        return usedTxs + mempool.values()
-                .stream()
-                .map(MempoolChunk::getUsedTxs)
-                .mapToInt(Set::size)
-                .sum();
     }
 
 }
