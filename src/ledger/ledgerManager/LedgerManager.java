@@ -362,9 +362,9 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     }
 
     @Override
-    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return getOrigin().generateContentListList(states, usedSpace);
+        return getOrigin().generateContentList(states, usedSpace);
     }
 
     @Override

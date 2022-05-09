@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public interface ContentStorage {
 
-    List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException;
+    List<AppContent> generateContentList(Collection<UUID> states, int usedSpace) throws IOException;
 
     void submitContent(Collection<AppContent> content);
 

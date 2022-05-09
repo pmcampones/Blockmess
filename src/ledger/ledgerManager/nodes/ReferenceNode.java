@@ -241,9 +241,9 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return leaf.generateContentListList(states, usedSpace);
+        return leaf.generateContentList(states, usedSpace);
     }
 
     @Override

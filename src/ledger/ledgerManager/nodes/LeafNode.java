@@ -454,9 +454,9 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return contentStorage.generateContentListList(states, usedSpace);
+        return contentStorage.generateContentList(states, usedSpace);
     }
 
     @Override

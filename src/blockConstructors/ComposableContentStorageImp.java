@@ -24,11 +24,11 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
         try {
             innerLock.readLock().lock();
-            return inner.generateContentListList(states, usedSpace);
+            return inner.generateContentList(states, usedSpace);
         } finally {
             innerLock.readLock().unlock();
         }

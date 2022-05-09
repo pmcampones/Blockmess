@@ -1,7 +1,6 @@
 package mempoolManager;
 
 import catecoin.blocks.chunks.MempoolChunk;
-import catecoin.blocks.chunks.SerializableChunk;
 import com.google.gson.Gson;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
@@ -39,14 +38,8 @@ public class BootstrapModule {
             String bootstrapFile = props.getProperty("bootstrapFile",
                     "./bootstrapContent/bootstrap.txt");
             String bootstrapJson = Files.readString(Path.of(bootstrapFile));
-            SerializableChunk[] serializableChunks = new Gson()
-                    .fromJson(bootstrapJson, SerializableChunk[].class);
-            List<MempoolChunk> chunks = new ArrayList<>(serializableChunks.length);
-            for (SerializableChunk sC : serializableChunks) {
-                MempoolChunk chunk =  sC.fromSerializableChunk();
-                chunks.add(chunk);
-            }
-            return chunks;
+            MempoolChunk[] chunks = new Gson().fromJson(bootstrapJson, MempoolChunk[].class);
+            return new ArrayList<>(chunks.length);
         }
         return emptyList();
     }

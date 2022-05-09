@@ -28,16 +28,16 @@ public class BaseContentStorage implements ContentStorage {
     }
 
     @Override
-    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace) throws IOException {
-        Set<UUID> used = findUsedTransactions(states);
+    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace) throws IOException {
+        Set<UUID> used = findUsedContent(states);
         return getContentDeterministicOrderBound(usedSpace, used);
     }
 
-    private Set<UUID> findUsedTransactions(Collection<UUID> states) {
+    private Set<UUID> findUsedContent(Collection<UUID> states) {
         Set<UUID> used = new HashSet<>();
         Set<UUID> visited = new HashSet<>();
         for (UUID state : states)
-            used.addAll(mempoolManager.getInvalidTxsFromChunk(state, visited));
+            used.addAll(mempoolManager.getUsedContentFromChunk(state, visited));
         return used;
     }
 

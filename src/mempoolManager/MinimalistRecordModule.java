@@ -1,7 +1,6 @@
 package mempoolManager;
 
 import catecoin.blocks.chunks.MempoolChunk;
-import catecoin.blocks.chunks.SerializableChunk;
 import com.google.gson.Gson;
 import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
@@ -45,8 +44,7 @@ public class MinimalistRecordModule {
             logger.info("Recording finalized blocks: {}", finalized);
             Gson gson = new Gson();
             for (MempoolChunk chunk : finalized) {
-                SerializableChunk content = new SerializableChunk(chunk);
-                String contentJson = gson.toJson(content);
+                String contentJson = gson.toJson(chunk);
                 Files.writeString(recordFile.get(), contentJson + ", ", APPEND);
             }
         }

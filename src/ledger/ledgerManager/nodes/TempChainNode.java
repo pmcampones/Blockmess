@@ -358,9 +358,9 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public List<AppContent> generateContentListList(Collection<UUID> states, int usedSpace)
+    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return inner.generateContentListList(states, usedSpace);
+        return inner.generateContentList(states, usedSpace);
     }
 
     @Override
