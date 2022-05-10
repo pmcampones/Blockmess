@@ -3,6 +3,7 @@ package applicationInterface;
 import ledger.AppContent;
 import main.BlockmessLauncher;
 import org.apache.commons.lang3.tuple.Pair;
+import org.jetbrains.annotations.NotNull;
 import org.thavam.util.concurrent.blockingMap.BlockingHashMap;
 import org.thavam.util.concurrent.blockingMap.BlockingMap;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
@@ -11,6 +12,7 @@ import utils.IDGenerator;
 import valueDispatcher.ValueDispatcher;
 
 import java.nio.ByteBuffer;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -26,7 +28,9 @@ public abstract class ApplicationInterface extends GenericProtocol {
     private final AtomicLong localOpIdx = new AtomicLong(0);
     private long globalOpIdx = 0;
 
-    private final BlockingMap<UUID, Pair<byte[], Long>> completedOperations = new BlockingHashMap<>();
+    private final BlockingMap<UUID, Pair<byte[], Long>> completedSyncOperations = new BlockingHashMap<>();
+
+    private final Map<UUID, ReplyListener> operationListeners = new ConcurrentHashMap<>();
 
     private final Set<UUID> operationsWaitingResponse = ConcurrentHashMap.newKeySet();
 
@@ -56,13 +60,17 @@ public abstract class ApplicationInterface extends GenericProtocol {
         new Thread(this::processOperations).start();
     }
 
+    private static byte[] numToBytes(long num) {
+        return ByteBuffer.allocate(Long.BYTES).putLong(num).array();
+    }
+
     private void processOperations() {
         while(true) {
             try {
                 AppContent currentOp = queuedOperations.take();
                 byte[] operationResult = processOperation(currentOp.getContent());
                 if (operationsWaitingResponse.remove(currentOp.getId()))
-                    completedOperations.put(currentOp.getId(), Pair.of(operationResult, globalOpIdx));
+                    replyOperationResults(currentOp, operationResult);
                 globalOpIdx++;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
@@ -70,7 +78,16 @@ public abstract class ApplicationInterface extends GenericProtocol {
         }
     }
 
-    protected Pair<byte[], Long> invokeOperation(byte[] operation) {
+    private void replyOperationResults(AppContent currentOp, byte[] operationResult) {
+        ReplyListener listener = operationListeners.remove(currentOp.getId());
+        Pair<byte[], Long> operationReply = Pair.of(operationResult, globalOpIdx);
+        if (listener != null)
+            listener.processReply(operationReply);
+        else
+            completedSyncOperations.put(currentOp.getId(), operationReply);
+    }
+
+    public Pair<byte[], Long> invokeSyncOperation(byte[] operation) {
         try {
             return tryToInvokeOperation(operation);
         } catch (InterruptedException e) {
@@ -78,19 +95,28 @@ public abstract class ApplicationInterface extends GenericProtocol {
         }
     }
 
-    private static byte[] numToBytes(long num) {
-        return ByteBuffer.allocate(Long.BYTES).putLong(num).array();
+    private Pair<byte[], Long> tryToInvokeOperation(byte[] operation) throws InterruptedException {
+        AppContent content = computeAppContent(operation);
+        operationsWaitingResponse.add(content.getId());
+        ValueDispatcher.getSingleton().disseminateAppContentRequest(content);
+        return completedSyncOperations.take(content.getId());
     }
 
-    private Pair<byte[], Long> tryToInvokeOperation(byte[] operation) throws InterruptedException {
+    @NotNull
+    private AppContent computeAppContent(byte[] operation) {
         FixedCMuxIdentifierMapper mapper = FixedCMuxIdentifierMapper.getSingleton();
         byte[] cmuxId1 = mapper.mapToCmuxId1(operation);
         byte[] cmuxId2 = mapper.mapToCmuxId2(operation);
         byte[] replicaMetadata = makeMetadata();
         AppContent content = new AppContent(operation, cmuxId1, cmuxId2, replicaMetadata);
+        return content;
+    }
+
+    public void invokeAsyncOperation(byte[] operation, ReplyListener listener) {
+        AppContent content = computeAppContent(operation);
         operationsWaitingResponse.add(content.getId());
+        operationListeners.put(content.getId(), listener);
         ValueDispatcher.getSingleton().disseminateAppContentRequest(content);
-        return completedOperations.take(content.getId());
     }
 
     private byte[] makeMetadata() {
