@@ -5,12 +5,16 @@ import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.notifications.DeliverVal;
 import broadcastProtocols.notifications.PeerUnreachableNotification;
+import com.google.common.collect.Sets;
+import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import peerSamplingProtocols.hyparview.HyparView;
+import peerSamplingProtocols.hyparview.notifications.NeighbourDownNotification;
+import peerSamplingProtocols.hyparview.notifications.NeighbourUpNotification;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import pt.unl.fct.di.novasys.babel.generic.ProtoMessage;
+import pt.unl.fct.di.novasys.channel.tcp.TCPChannel;
 import pt.unl.fct.di.novasys.network.data.Host;
 import utils.IDGenerator;
 import validators.AnswerMessageValidationNotification;
@@ -28,12 +32,11 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
 
     public static final short ID = IDGenerator.genId();
 
-    //Milliseconds
+    public static final int PORT_OFFSET = 2000;
 
-    /**
-     * Underlying peer sampling protocol.
-     */
-    private final HyparView membership;
+    private final int channelId;
+
+    private final Set<Host> peers = Sets.newConcurrentHashSet();
 
     private final Map<UUID, EagerValMessage> messageBuffer;
 
@@ -44,34 +47,65 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
      */
     private final Map<UUID, EagerValMessage> mapBlockingIdToMid = new ConcurrentHashMap<>();
 
-    public EagerPushBroadcast(HyparView membership)
-            throws HandlerRegistrationException {
+    public EagerPushBroadcast()
+            throws HandlerRegistrationException, IOException {
         super(EagerPushBroadcast.class.getSimpleName(), ID);
-        this.membership = membership;
-        this.messageBuffer = new PeriodicPrunableHashMap<>();;
-        subscribeNotification(AnswerMessageValidationNotification.ID,
-                (AnswerMessageValidationNotification notif, short source) -> uponAnswerMessageValidationNotification(notif));
+        this.messageBuffer = new PeriodicPrunableHashMap<>();
+        channelId = createTCPChannel();
+        subscribeNotifications();
         registerRequestHandler(EagerBroadcastRequest.ID, this::uponBroadcastRequest);
         registerMessageConfigs();
     }
 
+    private void subscribeNotifications() throws HandlerRegistrationException {
+        subscribeNotification(AnswerMessageValidationNotification.ID,
+                (AnswerMessageValidationNotification notif, short source) -> uponAnswerMessageValidationNotification(notif));
+        subscribeNotification(NeighbourUpNotification.ID, (NeighbourUpNotification notif, short source) -> uponNeighbourUpNotification(notif));
+        subscribeNotification(NeighbourDownNotification.ID, (NeighbourDownNotification notif, short source) -> uponNeighbourDownNotification(notif));
+    }
+
+    private void uponNeighbourUpNotification(NeighbourUpNotification notif) {
+        Host peerOg = notif.getNeighbour();
+        Host peerModified = new Host(peerOg.getAddress(), peerOg.getPort() + PORT_OFFSET);
+        logger.debug("Opening connection to node: {}", peerModified);
+        openConnection(peerModified, channelId);
+        peers.add(peerModified);
+    }
+
+    private void uponNeighbourDownNotification(NeighbourDownNotification notif) {
+        Host peerOg = notif.getNeighbour();
+        Host peerModified = new Host(peerOg.getAddress(), peerOg.getPort() + PORT_OFFSET);
+        logger.debug("Closing connection with node: {}", peerModified);
+        peers.remove(peerModified);
+        closeConnection(peerModified, channelId);
+    }
+
+    private int createTCPChannel() throws IOException {
+        Properties props = GlobalProperties.getProps();
+        // Create a properties object to setup channel-specific properties. See the
+        // channel description for more details.
+        Properties channelProps = new Properties();
+        channelProps.setProperty(TCPChannel.ADDRESS_KEY, props.getProperty("address")); // The address to bind to
+        int port = Integer.parseInt(props.getProperty("port")) + PORT_OFFSET;
+        channelProps.setProperty(TCPChannel.PORT_KEY, String.valueOf(port)); // The port to bind to
+        channelProps.setProperty(TCPChannel.HEARTBEAT_INTERVAL_KEY, "1000"); // Heartbeats interval for established
+        // connections
+        channelProps.setProperty(TCPChannel.HEARTBEAT_TOLERANCE_KEY, "3000"); // Time passed without heartbeats until
+        // closing a connection
+        channelProps.setProperty(TCPChannel.CONNECT_TIMEOUT_KEY, "1000"); // TCP connect timeout
+        int channelId = createChannel(TCPChannel.NAME, channelProps);
+        logger.info("Using channel {} for the broadcast protocol.", channelId);
+        return channelId; // Create the channel with the given properties
+    }
+
     private void registerMessageConfigs() throws HandlerRegistrationException {
-        int cId = membership.getChannelID();
-        registerSharedChannel(cId);
-        registerMessageSerializers(cId);
-        registerMessageHandlers(cId);
+        registerMessageSerializers();
+        registerMessageHandlers();
     }
 
-    private void registerMessageSerializers(int cId) {
-        registerMessageSerializer(cId, EagerValMessage.ID, EagerValMessage.serializer);
+    private void registerMessageSerializers() {
+        registerMessageSerializer(channelId, EagerValMessage.ID, EagerValMessage.serializer);
     }
-
-    private void registerMessageHandlers(int cId) throws HandlerRegistrationException {
-        registerMessageHandler(cId, EagerValMessage.ID, (EagerValMessage msg1, Host from, short sourceProto, int channelId1) -> uponEagerValMessage(msg1), (msg, to, destProto, throwable, channelId) -> uponMsgFail(msg, to, throwable));
-    }
-
-    @Override
-    public void init(Properties properties) throws HandlerRegistrationException, IOException {}
 
     @Override
     public Set<UUID> getMsgIds() {
@@ -83,15 +117,12 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
         return Set.copyOf(messageBuffer.values());
     }
 
-    @Override
-    public Set<Host> getPeers() {
-        return membership.getPeers();
+    private void registerMessageHandlers() throws HandlerRegistrationException {
+        registerMessageHandler(channelId, EagerValMessage.ID, (EagerValMessage msg1, Host from, short sourceProto, int channelId1) -> uponEagerValMessage(msg1), (msg, to, destProto, throwable, channelId) -> uponMsgFail(msg, to, throwable));
     }
 
     @Override
-    public void sendMessageToPeer(ProtoMessage msg, Host target) {
-        sendMessage(msg, target);
-    }
+    public void init(Properties properties) {}
 
     @Override
     public void deliverMessage(ProtoMessage msg) {
@@ -147,10 +178,9 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
         }
     }
 
-    private void disseminateMessage(EagerValMessage msg) {
-        Set<Host> peers = membership.getPeers();
-        peers.forEach(h -> sendMessage(msg, h));
-        logger.debug("Sent message with value {} to peers {}", msg.getVal(), peers);
+    @Override
+    public Set<Host> getPeers() {
+        return peers;
     }
 
     private void uponMsgFail(ProtoMessage msg, Host to,
@@ -158,5 +188,15 @@ public class EagerPushBroadcast extends GenericProtocol implements BroadcastProt
         logger.error("Message {} to {} failed, reason: {}\n" +
                 "Notifying peer sampling that this node is unreliable.", msg, to, throwable);
         triggerNotification(new PeerUnreachableNotification());
+    }
+
+    @Override
+    public void sendMessageToPeer(ProtoMessage msg, Host target) {
+        sendMessage(channelId,msg, target);
+    }
+
+    private void disseminateMessage(EagerValMessage msg) {
+        peers.forEach(h -> sendMessage(channelId,msg, h));
+        logger.debug("Sent message with value {} to peers {}", msg.getVal(), peers);
     }
 }

@@ -150,7 +150,7 @@ public class BlockmessLauncher {
         List<GenericProtocol> protocols = new LinkedList<>();
         HyparView peerSamplingProtocol = new HyparView(myself);;
         protocols.add(peerSamplingProtocol);
-        protocols.addAll(addBroadcastProtocols(myself, peerSamplingProtocol));
+        protocols.addAll(addBroadcastProtocols(myself));
         protocols.add(ValueDispatcher.getSingleton());
         return protocols;
     }
@@ -162,11 +162,11 @@ public class BlockmessLauncher {
         BroadcastValue.pojoSerializers.put(AppContent.ID, AppContent.serializer);
     }
 
-    private static List<GenericProtocol> addBroadcastProtocols(Host myself, HyparView peerSamplingProtocol)
+    private static List<GenericProtocol> addBroadcastProtocols(Host myself)
             throws HandlerRegistrationException, IOException {
         List<GenericProtocol> protocols = new LinkedList<>();
         protocols.add(new LazyPushBroadcast(myself));
-        protocols.add(new EagerPushBroadcast(peerSamplingProtocol));
+        protocols.add(new EagerPushBroadcast());
         return protocols;
     }
 

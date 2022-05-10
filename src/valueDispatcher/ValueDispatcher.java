@@ -95,24 +95,24 @@ public class ValueDispatcher extends GenericProtocol {
         }
     }
 
+    public void disseminateAppContentRequest(AppContent req) {
+        try {
+            logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
+            sendEagerRequest(req, ValType.APP_CONTENT);
+            //sendLazyRequest(req, ValType.APP_CONTENT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
     private void sendLazyRequest(BroadcastValue val, ValType type) throws IOException {
         DispatcherWrapper wrapper = new DispatcherWrapper((short) type.ordinal(), val);
         sendRequest(new LazyBroadcastRequest(wrapper), LazyPushBroadcast.ID);
     }
 
-    private void sendEagerRequest(BroadcastValue val) throws IOException {
-        DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.APP_CONTENT.ordinal(), val);
+    private void sendEagerRequest(BroadcastValue val, ValType type) throws IOException {
+        DispatcherWrapper wrapper = new DispatcherWrapper((short) type.ordinal(), val);
         sendRequest(new EagerBroadcastRequest(wrapper), EagerPushBroadcast.ID);
-    }
-
-    public void disseminateAppContentRequest(AppContent req) {
-        try {
-            logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
-            //sendEagerRequest(req);
-            sendLazyRequest(req, ValType.APP_CONTENT);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private enum ValType {
