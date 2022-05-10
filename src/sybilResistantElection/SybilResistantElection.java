@@ -262,8 +262,7 @@ public class SybilResistantElection implements LedgerObserver {
         BlockmessChain chain = oldSeed.getChain();
         List<AppContent> contentLst = chain.generateContentList(newPrevs, getAproximateProofSize());
         ContentList newContent = new ContentList(contentLst);
-        ChainSeed newChainSeed =
-                new ChainSeed(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
+        ChainSeed newChainSeed = new ChainSeed(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
         chainSeeds.replace(oldSeed.getChainId(), newChainSeed);
         randomSeed.replaceLeaf(oldSeed.getChainSeed(), newChainSeed.getChainSeed());
     }

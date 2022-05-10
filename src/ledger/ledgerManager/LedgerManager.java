@@ -1,7 +1,7 @@
 package ledger.ledgerManager;
 
-import blockConstructors.ComposableContentStorageImp;
-import blockConstructors.ContentStorage;
+import contentStorage.ComposableContentStorageImp;
+import contentStorage.ContentStorage;
 import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
@@ -210,7 +210,6 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     public void deliverFinalizedBlocksAsync() {
         removeObsoleteChains();
         addNewChains();
-        System.out.println();
         for (BlockmessChain chain : chains.values())
             logger.debug("Chain {} has {} finalized blocks pending, minNextRank is {}, next block has rank {}",
                     chain.getChainId(), chain.getNumFinalizedPending(), chain.getNextRank(),
@@ -288,7 +287,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
                     Set<UUID> merged = chain.mergeChildren();
                     numCanRemove -= merged.size();
                     toRemove.addAll(merged);
-                    System.out.println("Merging Chains: " + toRemove);
+                    logger.info("Merging Chains: {}", toRemove);
                     mergeFound = true;
                 }
             toRemove.forEach(chains::remove);

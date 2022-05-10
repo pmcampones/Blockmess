@@ -1,6 +1,6 @@
 package ledger.ledgerManager.nodes;
 
-import blockConstructors.*;
+import contentStorage.*;
 import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
@@ -236,7 +236,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
             int discountedMaxBlockSize = maxBlockSize - proofSize - headerSize;
             overloadedBlocksSample.add(contentSize > discountedMaxBlockSize * overloadThreshold);
             underloadedBlocksSample.add(contentSize < discountedMaxBlockSize * underloadedThreshold);
-            System.out.println(block.getContentList().getContentList().size() + " : " + (contentSize < discountedMaxBlockSize * underloadedThreshold));
             if (overloadedBlocksSample.size() > blocksSampleSize)
                 overloadedBlocksSample.remove(0);
             if (underloadedBlocksSample.size() > blocksSampleSize)

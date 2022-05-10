@@ -1,5 +1,6 @@
 package mempoolManager;
 
+import applicationInterface.DeliverFinalizedContentNotification;
 import broadcastProtocols.BroadcastValue;
 import ledger.AppContent;
 import ledger.LedgerObserver;
@@ -63,7 +64,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
     }
 
     private MempoolChunk createChunk(LedgerBlock block) {
-        List<AppContent> unwrappedContent = Collections.emptyList();
+        List<AppContent> unwrappedContent = block.getContentList().getContentList();
         return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()), unwrappedContent);
     }
 
@@ -95,6 +96,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
                 .collect(toList());
         LedgerManager.getSingleton().deleteContent(finalizedContent.stream().map(AppContent::getId).collect(toSet()));
         observers.forEach(observer -> observer.deliverFinalizedBlocks(finalized, discarded));
+        triggerNotification(new DeliverFinalizedContentNotification(finalizedContent));
     }
 
 }

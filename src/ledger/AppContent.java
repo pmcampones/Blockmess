@@ -1,9 +1,9 @@
 package ledger;
 
 import applicationInterface.FixedCMuxIdentifierMapper;
-import blockConstructors.CMuxMask;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
+import contentStorage.CMuxMask;
 import io.netty.buffer.ByteBuf;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.CryptographicUtils;

@@ -1,11 +1,10 @@
-package blockConstructors;
+package contentStorage;
 
 import ledger.AppContent;
 import main.GlobalProperties;
 import mempoolManager.MempoolManager;
 import org.jetbrains.annotations.NotNull;
 
-import java.io.IOException;
 import java.util.*;
 
 import static java.lang.Integer.parseInt;
@@ -26,7 +25,7 @@ public class BaseContentStorage implements ContentStorage {
     }
 
     @Override
-    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace) throws IOException {
+    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace) {
         Set<UUID> used = findUsedContent(states);
         return getContentDeterministicOrderBound(usedSpace, used);
     }

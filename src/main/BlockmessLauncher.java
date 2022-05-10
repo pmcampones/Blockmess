@@ -1,5 +1,6 @@
 package main;
 
+import applicationInterface.ApplicationInterface;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
@@ -29,9 +30,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.security.KeyPair;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
 
 import static java.lang.Integer.parseInt;
 
@@ -50,8 +49,15 @@ public class BlockmessLauncher {
     //Default babel configuration file (can be overridden by the "-config" launch argument)
     public static final String DEFAULT_CONF = "config/config.properties";
 
+    public static void launchBlockmess(String[] args, ApplicationInterface protocol) {
+        try {
+            tryToLaunchBlockmess(args, protocol);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    public static void main(String[] args) throws Exception {
+    private static void tryToLaunchBlockmess(String[] args, ApplicationInterface protocol) throws Exception {
         startTime = System.currentTimeMillis();
         Babel babel = Babel.getInstance();
         Properties props = initializeProperties(args);
@@ -60,8 +66,19 @@ public class BlockmessLauncher {
         int port = getNodePort(props);
         Host myself = new Host(InetAddress.getByName(props.getProperty("address")), port);
         logger.info("Hello, I am {} and my contact is {}.", myself, props.getProperty("contact"));
-        launchBlockmess(myself, babel);
+        launchBlockmess(myself, babel, List.of(protocol));
         Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
+    }
+
+    private static void launchBlockmess(Host myself, Babel babel, Collection<GenericProtocol> protocol) throws Exception {
+        List<GenericProtocol> protocols = new LinkedList<>();
+        protocols.addAll(protocol);
+        protocols.addAll(addNetworkProtocols(myself));
+        protocols.add(MempoolManager.getSingleton());
+        setUpLedgerManager(protocols);
+        setUpSybilElection();
+        initializeSerializers();
+        initializeProtocols(babel, protocols);
     }
 
     private static Properties initializeProperties(String[] args) throws Exception {
@@ -106,13 +123,17 @@ public class BlockmessLauncher {
         }
     }
 
-    private static void launchBlockmess(Host myself, Babel babel) throws Exception {
-        List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
-        protocols.add(MempoolManager.getSingleton());
-        setUpLedgerManager(protocols);
-        setUpSybilElection();
-        initializeSerializers();
-        initializeProtocols(babel, protocols);
+    public static void main(String[] args) throws Exception {
+        startTime = System.currentTimeMillis();
+        Babel babel = Babel.getInstance();
+        Properties props = initializeProperties(args);
+        GlobalProperties.setProps(props);
+        babel.registerChannelInitializer("SharedTCP", new MultiLoggerChannelInitializer());
+        int port = getNodePort(props);
+        Host myself = new Host(InetAddress.getByName(props.getProperty("address")), port);
+        logger.info("Hello, I am {} and my contact is {}.", myself, props.getProperty("contact"));
+        launchBlockmess(myself, babel, Collections.emptyList());
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
     }
 
     private static void setUpSybilElection() throws Exception {

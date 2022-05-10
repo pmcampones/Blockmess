@@ -89,19 +89,15 @@ public class ValueDispatcher extends GenericProtocol {
     public void disseminateBlockRequest(BlockmessBlock block) {
         try {
             logger.info("Requested the dissemination of a {}", ValType.SIGNED_BLOCK);
-            sendLazyRequest(block);
+            sendLazyRequest(block, ValType.SIGNED_BLOCK);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void disseminateAppContentRequest(AppContent req) {
-        try {
-            logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
-            sendEagerRequest(req);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    private void sendLazyRequest(BroadcastValue val, ValType type) throws IOException {
+        DispatcherWrapper wrapper = new DispatcherWrapper((short) type.ordinal(), val);
+        sendRequest(new LazyBroadcastRequest(wrapper), LazyPushBroadcast.ID);
     }
 
     private void sendEagerRequest(BroadcastValue val) throws IOException {
@@ -109,9 +105,14 @@ public class ValueDispatcher extends GenericProtocol {
         sendRequest(new EagerBroadcastRequest(wrapper), EagerPushBroadcast.ID);
     }
 
-    private void sendLazyRequest(BroadcastValue val) throws IOException {
-        DispatcherWrapper wrapper = new DispatcherWrapper((short) ValType.SIGNED_BLOCK.ordinal(), val);
-        sendRequest(new LazyBroadcastRequest(wrapper), LazyPushBroadcast.ID);
+    public void disseminateAppContentRequest(AppContent req) {
+        try {
+            logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
+            //sendEagerRequest(req);
+            sendLazyRequest(req, ValType.APP_CONTENT);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private enum ValType {

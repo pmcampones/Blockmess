@@ -1,6 +1,6 @@
 package ledger.ledgerManager.nodes;
 
-import blockConstructors.ComposableContentStorage;
+import contentStorage.ComposableContentStorage;
 import ledger.AppContent;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
