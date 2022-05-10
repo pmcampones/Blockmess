@@ -62,7 +62,8 @@ public abstract class ApplicationInterface extends GenericProtocol {
                 AppContent currentOp = queuedOperations.take();
                 byte[] operationResult = processOperation(currentOp.getContent());
                 if (operationsWaitingResponse.remove(currentOp.getId()))
-                    completedOperations.put(currentOp.getId(), Pair.of(operationResult, globalOpIdx++));
+                    completedOperations.put(currentOp.getId(), Pair.of(operationResult, globalOpIdx));
+                globalOpIdx++;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
