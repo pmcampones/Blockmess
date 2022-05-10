@@ -12,8 +12,10 @@ import valueDispatcher.ValueDispatcher;
 
 import java.nio.ByteBuffer;
 import java.util.Properties;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -23,11 +25,14 @@ public abstract class ApplicationInterface extends GenericProtocol {
 
     private final AtomicLong localOpIdx = new AtomicLong(0);
     private long globalOpIdx = 0;
-    private byte[] replicaId;
 
     private final BlockingMap<UUID, Pair<byte[], Long>> completedOperations = new BlockingHashMap<>();
 
+    private final Set<UUID> operationsWaitingResponse = ConcurrentHashMap.newKeySet();
+
     private final BlockingQueue<AppContent> queuedOperations = new LinkedBlockingQueue<>();
+
+    private byte[] replicaId;
 
     public ApplicationInterface(String[] blockmessProperties) {
         super(ApplicationInterface.class.getSimpleName(), IDGenerator.genId());
@@ -56,7 +61,8 @@ public abstract class ApplicationInterface extends GenericProtocol {
             try {
                 AppContent currentOp = queuedOperations.take();
                 byte[] operationResult = processOperation(currentOp.getContent());
-                completedOperations.put(currentOp.getId(), Pair.of(operationResult, globalOpIdx++));
+                if (operationsWaitingResponse.remove(currentOp.getId()))
+                    completedOperations.put(currentOp.getId(), Pair.of(operationResult, globalOpIdx++));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
@@ -81,6 +87,7 @@ public abstract class ApplicationInterface extends GenericProtocol {
         byte[] cmuxId2 = mapper.mapToCmuxId2(operation);
         byte[] replicaMetadata = makeMetadata();
         AppContent content = new AppContent(operation, cmuxId1, cmuxId2, replicaMetadata);
+        operationsWaitingResponse.add(content.getId());
         ValueDispatcher.getSingleton().disseminateAppContentRequest(content);
         return completedOperations.take(content.getId());
     }
