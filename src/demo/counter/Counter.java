@@ -1,8 +1,12 @@
 package demo.counter;
 
 import applicationInterface.ApplicationInterface;
+import ledger.blocks.BlockmessBlock;
 
 import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class Counter extends ApplicationInterface {
 
@@ -32,4 +36,11 @@ public class Counter extends ApplicationInterface {
         counter += change;
         return numToBytes(counter);
     }
+
+    @Override
+    public void notifyNonFinalizedBlock(BlockmessBlock block) {}
+
+    @Override
+    public void notifyFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {}
+
 }

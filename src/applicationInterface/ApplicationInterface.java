@@ -1,7 +1,10 @@
 package applicationInterface;
 
 import ledger.AppContent;
+import ledger.LedgerObserver;
+import ledger.blocks.BlockmessBlock;
 import main.BlockmessLauncher;
+import mempoolManager.MempoolManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.thavam.util.concurrent.blockingMap.BlockingHashMap;
@@ -12,10 +15,7 @@ import utils.IDGenerator;
 import valueDispatcher.ValueDispatcher;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -23,7 +23,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import static org.bouncycastle.pqc.math.linearalgebra.ByteUtils.concatenate;
 
-public abstract class ApplicationInterface extends GenericProtocol {
+public abstract class ApplicationInterface extends GenericProtocol implements LedgerObserver {
 
     private final AtomicLong localOpIdx = new AtomicLong(0);
     private long globalOpIdx = 0;
@@ -46,6 +46,7 @@ public abstract class ApplicationInterface extends GenericProtocol {
             throw new RuntimeException(e);
         }
         BlockmessLauncher.launchBlockmess(blockmessProperties, this);
+        MempoolManager.getSingleton().attachObserver(this);
     }
 
     private void uponDeliverFinalizedContentNotification(DeliverFinalizedContentNotification notif, short source) {
@@ -125,5 +126,19 @@ public abstract class ApplicationInterface extends GenericProtocol {
     }
 
     public abstract byte[] processOperation(byte[] operation);
+
+    @Override
+    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
+        notifyNonFinalizedBlock(block);
+    }
+
+    public void notifyNonFinalizedBlock(BlockmessBlock block){}
+
+    @Override
+    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+        notifyFinalizedBlocks(finalized, discarded);
+    }
+
+    public void notifyFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded){}
 
 }
