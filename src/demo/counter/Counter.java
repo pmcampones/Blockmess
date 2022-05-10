@@ -23,21 +23,12 @@ public class Counter extends ApplicationInterface {
             updateCounter(counterServer, changeBytes, i);
     }
 
-    private static void updateCounter(Counter counterServer, byte[] changeBytes, int i) {
-        byte[] operation = getOperation(changeBytes, i);
+    private static void updateCounter(Counter counterServer, byte[] operation, int i) {
         Pair<byte[], Long> res = counterServer.invokeOperation(operation);
         byte[] currCounterBytes = res.getLeft();
         long opIdx = res.getRight();
         int currCounter = bytesToInt(currCounterBytes);
         System.out.printf("Counter with value %d on local update %d and global operation %d%n", currCounter, i, opIdx);
-    }
-
-    private static byte[] getOperation(byte[] changeBytes, int i) {
-        byte[] operation = new byte[2 * Integer.BYTES];
-        byte[] opIndex = numToBytes(i);
-        System.arraycopy(changeBytes, 0, operation, 0, changeBytes.length);
-        System.arraycopy(opIndex, 0, operation, changeBytes.length, opIndex.length);
-        return operation;
     }
 
     private static int bytesToInt(byte[] bytes) {

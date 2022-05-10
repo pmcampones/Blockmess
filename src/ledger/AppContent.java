@@ -19,30 +19,43 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
         @Override
         public void serialize(BroadcastValue broadcastValue, ByteBuf out) {
             AppContent appContent = (AppContent) broadcastValue;
-            out.writeShort(appContent.getSerializedSize());
+            out.writeInt(appContent.content.length);
             out.writeBytes(appContent.content);
+            out.writeShort(appContent.replicaMetadata.length);
+            out.readBytes(appContent.replicaMetadata);
         }
 
         @Override
         public BroadcastValue deserialize(ByteBuf in) {
-            byte[] content = new byte[in.readShort()];
+            byte[] content = new byte[in.readInt()];
             in.readBytes(content);
+            byte[] replicaMetadata = new byte[in.readShort()];
+            in.readBytes(replicaMetadata);
             FixedCMuxIdentifierMapper mapper = FixedCMuxIdentifierMapper.getSingleton();
-            return new AppContent(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content));
+            return new AppContent(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content), replicaMetadata);
         }
     };
     private final transient UUID id;
     private transient final byte[] hashVal, cmuxId1, cmuxId2;
     private final transient CMuxMask mask = new CMuxMask();
-    private final byte[] content;
+    private final byte[] content, replicaMetadata;
 
-    public AppContent(byte[] content, byte[] cmuxId1, byte[] cmuxId2) {
+    public AppContent(byte[] content, byte[] cmuxId1, byte[] cmuxId2, byte[] replicaMetadata) {
         super(ID);
-        this.hashVal = CryptographicUtils.hashInput(content);
+        byte[] fullOperation = concatenate(content, replicaMetadata);
+        this.hashVal = CryptographicUtils.hashInput(fullOperation);
         this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);
         this.cmuxId1 = cmuxId1;
         this.cmuxId2 = cmuxId2;
         this.content = content;
+        this.replicaMetadata = replicaMetadata;
+    }
+
+    private byte[] concatenate(byte[] head, byte[] tail) {
+        byte[] res = new byte[head.length + tail.length];
+        System.arraycopy(head, 0, res, 0, head.length);
+        System.arraycopy(tail, 0, res, head.length, tail.length);
+        return res;
     }
 
     public UUID getId() {
@@ -83,6 +96,6 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
     }
 
     public int getSerializedSize() {
-        return content.length;
+        return content.length + replicaMetadata.length + Integer.BYTES + Short.BYTES;
     }
 }
