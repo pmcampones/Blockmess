@@ -22,7 +22,7 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
             out.writeInt(appContent.content.length);
             out.writeBytes(appContent.content);
             out.writeShort(appContent.replicaMetadata.length);
-            out.readBytes(appContent.replicaMetadata);
+            out.writeBytes(appContent.replicaMetadata);
         }
 
         @Override
