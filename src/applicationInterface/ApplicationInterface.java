@@ -2,6 +2,7 @@ package applicationInterface;
 
 import ledger.AppContent;
 import main.BlockmessLauncher;
+import org.apache.commons.lang3.tuple.Pair;
 import org.thavam.util.concurrent.blockingMap.BlockingHashMap;
 import org.thavam.util.concurrent.blockingMap.BlockingMap;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
@@ -18,7 +19,7 @@ public abstract class ApplicationInterface extends GenericProtocol {
 
     private long opIdx = 0;
 
-    private final BlockingMap<UUID, byte[]> completedOperations = new BlockingHashMap<>();
+    private final BlockingMap<UUID, Pair<byte[], Long>> completedOperations = new BlockingHashMap<>();
 
     private final BlockingQueue<AppContent> queuedOperations = new LinkedBlockingQueue<>();
 
@@ -46,14 +47,14 @@ public abstract class ApplicationInterface extends GenericProtocol {
             try {
                 AppContent currentOp = queuedOperations.take();
                 byte[] operationResult = processOperation(currentOp.getContent());
-                completedOperations.put(currentOp.getId(), operationResult);
+                completedOperations.put(currentOp.getId(), Pair.of(operationResult, opIdx++));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
     }
 
-    protected byte[] invokeOperation(byte[] operation) {
+    protected Pair<byte[], Long> invokeOperation(byte[] operation) {
         try {
             return tryToInvokeOperation(operation);
         } catch (InterruptedException e) {
@@ -61,7 +62,7 @@ public abstract class ApplicationInterface extends GenericProtocol {
         }
     }
 
-    private byte[] tryToInvokeOperation(byte[] operation) throws InterruptedException {
+    private Pair<byte[], Long> tryToInvokeOperation(byte[] operation) throws InterruptedException {
         FixedCMuxIdentifierMapper mapper = FixedCMuxIdentifierMapper.getSingleton();
         byte[] cmuxId1 = mapper.mapToCmuxId1(operation);
         byte[] cmuxId2 = mapper.mapToCmuxId2(operation);

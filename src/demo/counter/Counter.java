@@ -1,6 +1,7 @@
 package demo.counter;
 
 import applicationInterface.ApplicationInterface;
+import org.apache.commons.lang3.tuple.Pair;
 
 import java.nio.ByteBuffer;
 
@@ -24,9 +25,11 @@ public class Counter extends ApplicationInterface {
 
     private static void updateCounter(Counter counterServer, byte[] changeBytes, int i) {
         byte[] operation = getOperation(changeBytes, i);
-        byte[] currCounterBytes = counterServer.invokeOperation(operation);
+        Pair<byte[], Long> res = counterServer.invokeOperation(operation);
+        byte[] currCounterBytes = res.getLeft();
+        long opIdx = res.getRight();
         int currCounter = bytesToInt(currCounterBytes);
-        System.out.printf("Counter with value %d on update %d%n", currCounter, i);
+        System.out.printf("Counter with value %d on local update %d and global operation %d%n", currCounter, i, opIdx);
     }
 
     private static byte[] getOperation(byte[] changeBytes, int i) {
