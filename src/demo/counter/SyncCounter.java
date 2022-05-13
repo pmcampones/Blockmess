@@ -5,6 +5,18 @@ import org.apache.commons.lang3.tuple.Pair;
 public class SyncCounter {
 
     public static void main(String[] args) {
+        if (args.length < 2) printUsageMessage();
+        else execute(args);
+    }
+
+    private static void printUsageMessage() {
+        System.out.println("Missing required arguments:");
+        System.out.println("Usage: java -cp demo.counter.SyncCounter counter_change num_updates [property=value]*");
+        System.out.println("counter_change: Update to the value of the shared counter in each update.");
+        System.out.println("num_updates: Number of updates to be executed synchronously.");
+    }
+
+    private static void execute(String[] args) {
         int change = Integer.parseInt(args[0]);
         byte[] changeBytes = Counter.numToBytes(change);
         int numUpdates = Integer.parseInt(args[1]);
