@@ -133,7 +133,7 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
      * @param operation The generic operation to be disseminated, ordered, and processed.
      * @param listener The structure that will receive and process the result of the operation.
      */
-    public void invokeAsyncOperation(byte[] operation, ReplyListener listener) {
+    public void invokeAsyncOperation(byte @NotNull [] operation, @NotNull ReplyListener listener) {
         AppContent content = computeAppContent(operation);
         operationsWaitingResponse.add(content.getId());
         operationListeners.put(content.getId(), listener);
