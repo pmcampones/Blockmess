@@ -151,16 +151,16 @@
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>3.1.1</version>
                 <configuration>
-                    <finalName>BlockmessJar</finalName>
+                    <finalName>BlockmessLib</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
-                    <archive>
+                    <!--<archive>
                         <manifest>
-                            <mainClass>main.BlockmessLauncher</mainClass>
+                            <mainClass>demo.counter.AsyncCounter</mainClass>
                         </manifest>
                         <manifestEntries>
                             <Multi-Release>true</Multi-Release>
                         </manifestEntries>
-                    </archive>
+                    </archive>-->
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
