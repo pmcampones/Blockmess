@@ -70,14 +70,13 @@ public class BlockmessLauncher {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
     }
 
-    private static void launchBlockmess(Host myself, Babel babel, Collection<GenericProtocol> protocol) throws Exception {
-        List<GenericProtocol> protocols = new LinkedList<>();
-        protocols.addAll(protocol);
-        protocols.addAll(addNetworkProtocols(myself));
+    private static void launchBlockmess(Host myself, Babel babel, Collection<GenericProtocol> appProtocols) throws Exception {
+        List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
         protocols.add(MempoolManager.getSingleton());
         setUpLedgerManager(protocols);
         setUpSybilElection();
         initializeSerializers();
+        protocols.addAll(appProtocols);
         initializeProtocols(babel, protocols);
     }
 
@@ -148,7 +147,7 @@ public class BlockmessLauncher {
 
     private static List<GenericProtocol> addNetworkProtocols(Host myself) throws Exception {
         List<GenericProtocol> protocols = new LinkedList<>();
-        HyparView peerSamplingProtocol = new HyparView(myself);;
+        HyparView peerSamplingProtocol = new HyparView(myself);
         protocols.add(peerSamplingProtocol);
         protocols.addAll(addBroadcastProtocols(myself));
         protocols.add(ValueDispatcher.getSingleton());

@@ -82,7 +82,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
         logger.debug("Received non finalized block with id {}", block.getBlockId());
         MempoolChunk chunk = createChunk(block);
         mempool.put(chunk.getId(), chunk);
-        observers.forEach(observer -> deliverNonFinalizedBlock(block, weight));
+        observers.forEach(observer -> observer.deliverNonFinalizedBlock(block, weight));
     }
 
     @Override

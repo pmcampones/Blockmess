@@ -64,7 +64,6 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
             throw new RuntimeException(e);
         }
         BlockmessLauncher.launchBlockmess(blockmessProperties, this);
-        MempoolManager.getSingleton().attachObserver(this);
     }
 
     private void uponDeliverFinalizedContentNotification(DeliverFinalizedContentNotification notif, short source) {
@@ -77,6 +76,7 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
         int port = Integer.parseInt(props.getProperty("port"));
         replicaId = concatenate(address.getBytes(), numToBytes(port));
         new Thread(this::processOperations).start();
+        MempoolManager.getSingleton().attachObserver(this);
     }
 
     private static byte[] numToBytes(long num) {
