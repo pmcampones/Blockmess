@@ -14,6 +14,7 @@ public class SyncCounter {
         System.out.println("Usage: java -cp demo.counter.SyncCounter counter_change num_updates [property=value]*");
         System.out.println("counter_change: Update to the value of the shared counter in each update.");
         System.out.println("num_updates: Number of updates to be executed synchronously.");
+        System.out.println("[property=value]*: List of property values to override those in the configuration file.");
     }
 
     private static void execute(String[] args) {
@@ -23,10 +24,10 @@ public class SyncCounter {
         String[] blockmessProperties = Counter.sliceArray(args, 2, args.length);
         Counter counterServer = new Counter(blockmessProperties);
         for (int i = 0; i < numUpdates; i++)
-            updateCounter(counterServer, changeBytes, i);
+            updateDistributedCounter(counterServer, changeBytes, i);
     }
 
-    private static void updateCounter(Counter counterServer, byte[] operation, int i) {
+    private static void updateDistributedCounter(Counter counterServer, byte[] operation, int i) {
         Pair<byte[], Long> res = counterServer.invokeSyncOperation(operation);
         byte[] currCounterBytes = res.getLeft();
         long opIdx = res.getRight();
