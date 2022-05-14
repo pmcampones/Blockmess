@@ -1,6 +1,6 @@
 package ledger.ledgerManager.nodes;
 
-import contentStorage.CMuxMask;
+import cmux.CMuxMask;
 import contentStorage.ComposableContentStorage;
 import contentStorage.ContentStorage;
 import ledger.AppContent;

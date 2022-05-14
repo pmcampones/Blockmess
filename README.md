@@ -78,7 +78,7 @@ The properties on the configurations file can be overwritten upon launching any 
 ### ApplicationInterface
 Blockmess is suited to interact with any application by extending a set of classes.
 
-However, the only mandatory class to be extended is the **ApplicationInterface**.
+However, the only mandatory class to be extended is the **applicationInterface.ApplicationInterface**
 
 #### Instancing
 - public ApplicationInterface(String[] blockmessProperties)
@@ -107,7 +107,7 @@ This operation also allows a replica to submit an operation to be processed by a
 
 In contrast with *invokeSyncOperation*, the *invokeAsyncOperation* does not block the calling thread allowing it to advance while Blockmess handles the processing of the operation.
 
-The result of the operation is returned to the replica which has submitted the operation through the use of a **ReplyListener**, implemented by the application and passed as the second argument.
+The result of the operation is returned to the replica which has submitted the operation through the use of a **applicationInterface.ReplyListener**, implemented by the application and passed as the second argument.
 
 This interface has a single operation:
 - void processReply(Pair<byte[], Long> operationResult);
@@ -163,18 +163,97 @@ If the application desires to access the block content from these identifiers, i
 The first argument provides a list of finalized block identifiers in the order they are finalized. The second argument provide a set of blocks that were discarded because they forked the longest chains.
 
 ### Secondary Extensions
+Beyond the core functionalities required by the application and covered by the *ApplicationInterface* class, there are other functionalities that may benefit from an interaction with the application.
 
+These functionalities have a default simple behaviour managed by Blockmess, but can be overridden by the application by replacing the implementation of a set of key classes. 
 
+#### CMuxIdMapper
+Blockmess deterministically maps application content to specific chains using a data structure we designated **Content Multiplexer (CMux)**.
 
+The submission of content to the *CMux* requires it to be associated with two byte array non-unique values.
 
+These values are not disseminated and must instead be derived from the operations themselves.
+The mapping of content to these *CMux* related numbers are performed by implementations of the **cmux.CMuxIdMapper**.
 
-    - ApplicationInterface
-	
-    - CMuxIdMapper
-	
-    - ApplicationAwareValidator
-	
-    - ApplicationAwareContentStorage
+This interface has two functionalities:
+- byte[] mapToCmuxId1(byte[] operation)
+- byte[] mapToCmuxId2(byte[] operation)
+
+Each of these methods maps the operation to be submitted by a replica and which is received as argument, to a value that determining the placement of the content in the Blockmess.
+
+#### FixedCMuxIdMapper
+The class **cmux.FixedCMuxMapper** implements the *CMuxIdMapper* interface and is used by Blockmess to map the operation content to the values used by the *CMux*.
+
+Besides the functionalities provided by *CMuxIdMapper*, this class provides the following operation:
+
+- public void setCustomMapper(CMuxIdMapper mapper)
+
+With this method, the application can override the
+default behaviour of Blockmess by providing the *CMuxIdMapper* implementation received as parameter.
+
+#### DefaultCMuxMapper
+The default *CMuxIdMapper* behaviour provided by Blockmess is implemented in the class **cmux.DefaultCMuxMapper**.
+
+This implementation ensures that the values used in the *CMux* are uniformly distributed, which in turn ensures the content associated with the several parallel chains is balanced.
+
+Because the *DefaultCMuxMapper* is agnostic to application content it is oblivious to possible patterns in the content that may increase the computational efficiency of the mapping operations.
+
+Additionally, the application may benefit from ensuring specific operations are placed in the same chain, or otherwise ensure some operations are placed in different chains.
+
+If either of these aspects proves beneficial to the application, it should replace the *DefaultCMuxMapper* used by the *FixedCMuxMapper*.
+
+#### ApplicationAwareValidator
+Blockmess validates the structure of blocks to ensure that no invalid block is delivered.
+However, being application agnostic, the system is unable to determine the validity of the operations submitted.
+
+Nevertheless, Blockmess provides the application the opportunity to validate application content by using the **validators.ApplicationAwareValidator** interface.
+
+This interface provides the following functionalities:
+
+- Pair<Boolean, byte[]> validateReceivedOperation(byte[] operation)
+- boolean validateBlockContent(BlockmessBlock block)
+
+The **validateReceivedOperation** method is called whenever a replica receives an operation from the broadcast protocol. This operation is the argument received.
+
+The return value of the operation is a pair whose left-hand side represents whether the operation is valid or not.
+
+If the operation is valid, the right-hand side of the return value is ignored.
+
+Otherwise, the operation is discarded, its dissemination is halted, and the right-hand value is the response to the replica that issued the operation.
+
+The **validateBlockContent** method is called whenever a block is received by a replica. As argument the method receives the block to be validated itself.
+
+The return value indicates whether all content in the block is valid.
+Should this value be false the block is discarded, and it's dissemination ceased.
+
+The operations of the block in of themselves are valid, according to the *validateReceivedOperation* execution. It is only the placement of the operations in the received block that is invalid. For this reason, the replica issuing the operation is not notified of the operation failure, as it will be eventually be placed in another block.
+
+#### FixedApplicationAwareValidator
+The class **validators.FixedApplicationAwareValidator** implements the *ApplicationAwareValidator* interface and is used by Blockmess to validate the operations and blocks as they are broadcast.
+
+Besides the functionalities provided by the *ApplicationAwareValidator*, this class provides the following operation:
+
+- public void setCustomValidator(ApplicationAwareValidator validator)
+
+With this method, the application can override the default behaviour of Blockmess by providing the *ApplicationAwareValidator* implementation received as parameter.
+
+#### DefaultApplicationAwareValidator
+The default *ApplicationAwareValidator* behaviour provided by Blockmess is implemented in the class **validators.DefaultApplicationAwareValidator**.
+
+In this implementation, all operations and blocks are deemed as valid.
+While considering all operations valid may appear unsafe to the point that the application should be forced to provide a more strict implementation for the *ApplicationAwareValidator*, we note that all the harm to the system's safety these operations can cause is done during the processing of the operation, after having been totally ordered.
+
+At such point, during the processing of the operation, the application can validate them.
+This approach is equal to that used in other operation ordering protocols besides Distributed Ledgers and has two advantages:
+
+- The validation of the content is agnostic to the inner workings of the operation ordering system. Validating in the *validateBlockContent* method implicitly forces the application to be aware of the inner workings of the underlying system;
+- During the validation of a block, the validation of the block content is (probably) the most time-consuming step, and thus may significantly increase the dissemination time of a block, which in turn significantly lowers the performance of Blockmess.
+
+The only disadvantage of validating only when operations are processed is the bandwidth waste caused by invalid operations and blocks.
+
+A compromise can be reached by implementing validation logic only for the *validateReceivedOperation* method.
+If this is done, the validation must be repeated when the operations are processed, otherwise, a byzantine replica that placed an invalid operation in a block could attack the state of correct replicas.
+
 
 Parameters:
 	

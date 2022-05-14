@@ -1,5 +1,6 @@
 package applicationInterface;
 
+import cmux.FixedCMuxIdMapper;
 import ledger.AppContent;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;

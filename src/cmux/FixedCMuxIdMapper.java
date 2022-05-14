@@ -1,9 +1,9 @@
-package applicationInterface;
+package cmux;
 
 public class FixedCMuxIdMapper implements CMuxIdMapper {
 
     private static FixedCMuxIdMapper singleton;
-    private CMuxIdMapper mapper = new DefaultMapper();
+    private CMuxIdMapper mapper = new DefaultCMuxIdMapper();
 
 private FixedCMuxIdMapper() {}
 

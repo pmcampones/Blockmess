@@ -1,4 +1,4 @@
-package applicationInterface;
+package cmux;
 
 public interface CMuxIdMapper {
 

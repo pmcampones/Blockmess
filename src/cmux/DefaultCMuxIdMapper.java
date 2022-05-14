@@ -1,8 +1,8 @@
-package applicationInterface;
+package cmux;
 
 import utils.CryptographicUtils;
 
-public class DefaultMapper implements CMuxIdMapper {
+public class DefaultCMuxIdMapper implements CMuxIdMapper {
 
     @Override
     public byte[] mapToCmuxId1(byte[] operation) {
