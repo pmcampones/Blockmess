@@ -141,7 +141,7 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
     }
 
     private AppContent computeAppContent(byte[] operation) {
-        FixedCMuxIdentifierMapper mapper = FixedCMuxIdentifierMapper.getSingleton();
+        FixedCMuxIdMapper mapper = FixedCMuxIdMapper.getSingleton();
         byte[] cmuxId1 = mapper.mapToCmuxId1(operation);
         byte[] cmuxId2 = mapper.mapToCmuxId2(operation);
         byte[] replicaMetadata = makeMetadata();

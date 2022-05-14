@@ -1,6 +1,6 @@
 package applicationInterface;
 
-public interface OperationToCMuxIdentifierMapper {
+public interface CMuxIdMapper {
 
     byte[] mapToCmuxId1(byte[] operation);
 

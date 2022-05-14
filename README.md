@@ -130,6 +130,43 @@ This method is executed sequentially according to the delivery order of the oper
 
 The return value of this method is the left-hand side of the invocation response that will be delivered to the replica that issued the operation.
 
+#### Block Monitoring
+While not required for the correct execution of the system, the application can access blocks as they are received by the application and is notified which blocks are finalized and which are discarded.
+
+To access these functionalities, the application class extending *ApplicationInterface* must override the following methods:
+
+- public void notifyNonFinalizedBlock(BlockmessBlock block)
+
+The argument of in this operation contains a validated block that was just received by this replica, and that is yet to be ordered.
+
+From this block several important metrics can be extracted; such as:
+- The block identifier;
+- The content placed in the block;
+- The parallel chain where the block was placed;
+- The block proposer;
+- The parallel chains in use from the point of the block proposer;
+- Other blocks this one references;
+
+In extremis, with this information, the application can create an accurate representation of the Blockmess internal state and even build its own block ordering mechanism replacing Blockmess.
+
+It cannot however, propose the creation or merge of parallel chains.
+
+The other method the application can override is:
+
+- public void notifyFinalizedBlocks(List\<UUID> finalized, Set\<UUID> discarded)
+
+This method notifies the application which blocks have been finalized and which have been discarded.
+
+The arguments received are not the blocks themselves, but rather the identifiers of the blocks.
+If the application desires to access the block content from these identifiers, it must make use of the *notifyNonFinalizedBlock* method previously described.
+
+The first argument provides a list of finalized block identifiers in the order they are finalized. The second argument provide a set of blocks that were discarded because they forked the longest chains.
+
+### Secondary Extensions
+
+
+
+
 
     - ApplicationInterface
 	

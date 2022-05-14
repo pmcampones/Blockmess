@@ -1,6 +1,6 @@
 package ledger;
 
-import applicationInterface.FixedCMuxIdentifierMapper;
+import applicationInterface.FixedCMuxIdMapper;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
 import contentStorage.CMuxMask;
@@ -31,7 +31,7 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
             in.readBytes(content);
             byte[] replicaMetadata = new byte[in.readShort()];
             in.readBytes(replicaMetadata);
-            FixedCMuxIdentifierMapper mapper = FixedCMuxIdentifierMapper.getSingleton();
+            FixedCMuxIdMapper mapper = FixedCMuxIdMapper.getSingleton();
             return new AppContent(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content), replicaMetadata);
         }
     };
