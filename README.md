@@ -49,9 +49,16 @@ The default implementation simulating PoW is not resistant against an adversary 
 
 If using Blockmess for the deployment of a real application, please modify the implementation of the Sybil Resistant Election protocol (and to do so keep reading untill we mention the modularity features).
 	
-### Parameterizable and dynamic throughput
+### High Dynamic Throughput
+Incorporating performance enhancing mechanisms from the Parallel Chains approach to Distributed Ledger scalability, Blockmess is able to achieve a very high throughput.
 
-### High Configuration Potential
+The use of Parallel Chain solutions by themselves has drawbacks, such that their use with incorrect parameterizations may lead to a deteriorating performance.
+This problem is exacerbated by the variability in application load exerted over Blockmess. What is an optimal parameterization at a given point, may prove sub-optimal in periods of higher load.
+
+The great innovation of Blockmess is that it modifies its internal structure to adapt to the application requirements, thus achieving a nearly optimal balance between throughput and latency.
+
+### Extensive Configuration Potential
+Blockmess is highly configurable.
 
 Application Layer Extentions:
 
