@@ -5,10 +5,20 @@ This repository holds the Java (not yet) open source library with the Distribute
 
 This package contains the source code (src/), jar file (target/BlockmessLib.jar), running scripts (scripts/), and configuration files (config/) for the project. Blockmess requires the Java Runtime Environment version 16 or higher.
 
+### β Considerations
+This is still a work in progress, so all feedback is appreciated.
+
+There is room for improvement, both in the interaction with the applications and in the internal operation of Blockmess.
+Especially in the first front, I may be missing some crucial quality of life features that would massively simplify the end developer's application, while being simple to implement in Blockmess. 
+
+Finally, as much as it pains me to say. There might be some bugs here and there.
+
+Every improvement suggestion and error detected will benefit this project and provide a better product to all who use it.
+
 ## Highlight Features
 
 ### Totally Ordered Operations
-As a Distributed Ledger, Blockmess aggregates operations in blocks that are eventually delivered to the any application replica in a total order.
+As a Distributed Ledger, Blockmess aggregates operations in blocks that are eventually delivered to any application replica in a total order.
 
 By default, application content is not delivered to the application upon receival of the content, or when such content is placed in blocks. The content is only delivered to the application when the blocks they are placed are confirmed/finalized.
 
@@ -44,7 +54,7 @@ Blockmess developers hate harming the environment, and so our default block prop
 
 However, it mimics the functionality of a PoW system, providing the same distribution as these mechanisms, without requiring an high computational load on the replicas.
 
-##### Disclaimer
+**Disclaimer:**
 The default implementation simulating PoW is not resistant against an adversary that modifies Blockmess' code to give itself an advantage.
 
 If using Blockmess for the deployment of a real application, please modify the implementation of the Sybil Resistant Election protocol (and to do so keep reading untill we mention the modularity features).
@@ -53,22 +63,81 @@ If using Blockmess for the deployment of a real application, please modify the i
 Incorporating performance enhancing mechanisms from the Parallel Chains approach to Distributed Ledger scalability, Blockmess is able to achieve a very high throughput.
 
 The use of Parallel Chain solutions by themselves has drawbacks, such that their use with incorrect parameterizations may lead to a deteriorating performance.
-This problem is exacerbated by the variability in application load exerted over Blockmess. What is an optimal parameterization at a given point, may prove sub-optimal in periods of higher load.
+This problem is exacerbated by the variability in application load exerted over Blockmess. What is an optimal parameterization at a given point, may prove suboptimal in periods of higher load.
 
 The great innovation of Blockmess is that it modifies its internal structure to adapt to the application requirements, thus achieving a nearly optimal balance between throughput and latency.
 
 ### Extensive Configuration Potential
-Blockmess is highly configurable.
+Blockmess is highly configurable, allowing tweaks to all software modules.
 
-Application Layer Extentions:
+This parameterization is simple and well documented.
+The properties on the configurations file can be overwritten upon launching any replica, allowing great flexibility when running more than one replica on a single machine, while simultaneously not hindering simpler launch processes of a single replica per host.
 
-	- ApplicationInterface
+## Application Layer Extensions:
+
+### ApplicationInterface
+Blockmess is suited to interact with any application by extending a set of classes.
+
+However, the only mandatory class to be extended is the **ApplicationInterface**.
+
+#### Instancing
+- public ApplicationInterface(String[] blockmessProperties)
+
+When creating an instance of this class, the Blockmess system is launched. The argument *blockmessProperties* contains a list of properties that are to override those in the configuration file.
+
+There can only be a single *ApplicationInterface* instance in the program.
+
+#### Operation Submission
+Operations are submitted to Blockmess in an application agnostic manner.
+
+To do so, the *ApplicationInterface* will receive all operations as byte arrays.
+
+- public Pair<byte[], Long> invokeSyncOperation(byte[] operation)
+
+This instruction allows a replica to submit the **operation** in the parameter to the Blockmess.
+After this operation is ordered with the remaining operations it is delivered to every correct replica, which then process it in a total order.
+
+The return value **Pair<byte[],Long>** contains the response to the operation submitted in the left-hand side and the global operation index on the right-hand side.  
+
+This method blocks the calling software thread until the operation is processed and the return value is delivered.
+
+- public void invokeAsyncOperation(byte[] operation, ReplyListener listener)
+
+This operation also allows a replica to submit an operation to be processed by all replicas.
+
+In contrast with *invokeSyncOperation*, the *invokeAsyncOperation* does not block the calling thread allowing it to advance while Blockmess handles the processing of the operation.
+
+The result of the operation is returned to the replica which has submitted the operation through the use of a **ReplyListener**, implemented by the application and passed as the second argument.
+
+This interface has a single operation:
+- void processReply(Pair<byte[], Long> operationResult);
+
+The *processReply* argument parameter corresponds to the return value of *invokeSyncOperation*.
+
+The processing of the responses in a replica by the *ReplyListener* is sequential, following the order operations were processed.
+
+#### Operation Processing
+Being application agnostic, Blockmess does not know how to process the operations submitted by the application.
+As a result, it is the application responsibility to process them.
+
+The *ApplicationInterface* provides the following abstract method to allow the processing of operations.
+
+- public abstract byte[] processOperation(byte[] operation)
+
+This method is executed by all correct replicas, not only the replica that has submitted the operation.
+The received as argument represents an *operation* submitted by a replica (using either of the operation submission methods presented earlier).
+This method is executed sequentially according to the delivery order of the operations, ensuring all replicas process the operations in a total order.
+
+The return value of this method is the left-hand side of the invocation response that will be delivered to the replica that issued the operation.
+
+
+    - ApplicationInterface
 	
-	- CMuxIdMapper
+    - CMuxIdMapper
 	
-	- ApplicationAwareValidator
+    - ApplicationAwareValidator
 	
-	- ApplicationAwareContentStorage
+    - ApplicationAwareContentStorage
 
 Parameters:
 	
