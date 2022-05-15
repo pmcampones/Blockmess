@@ -15,6 +15,14 @@ Finally, as much as it pains me to say. There might be some bugs here and there.
 
 Every improvement suggestion and error detected will benefit this project and provide a better product to all who use it.
 
+***
+
+## Quick Start Example
+
+
+
+***
+
 ## Highlight Features
 
 ### Totally Ordered Operations
@@ -58,7 +66,7 @@ However, it mimics the functionality of a PoW system, providing the same distrib
 The default implementation simulating PoW is not resistant against an adversary that modifies Blockmess' code to give itself an advantage.
 
 If using Blockmess for the deployment of a real application, please modify the implementation of the Sybil Resistant Election protocol (and to do so keep reading untill we mention the modularity features).
-	
+
 ### High Dynamic Throughput
 Incorporating performance enhancing mechanisms from the Parallel Chains approach to Distributed Ledger scalability, Blockmess is able to achieve a very high throughput.
 
@@ -72,6 +80,8 @@ Blockmess is highly configurable, allowing tweaks to all software modules.
 
 This parameterization is simple and well documented.
 The properties on the configurations file can be overwritten upon launching any replica, allowing great flexibility when running more than one replica on a single machine, while simultaneously not hindering simpler launch processes of a single replica per host.
+
+***
 
 ## Application Layer Extensions:
 
@@ -162,6 +172,8 @@ If the application desires to access the block content from these identifiers, i
 
 The first argument provides a list of finalized block identifiers in the order they are finalized. The second argument provide a set of blocks that were discarded because they forked the longest chains.
 
+***
+
 ### Secondary Extensions
 Beyond the core functionalities required by the application and covered by the *ApplicationInterface* class, there are other functionalities that may benefit from an interaction with the application.
 
@@ -201,6 +213,8 @@ Because the *DefaultCMuxMapper* is agnostic to application content it is oblivio
 Additionally, the application may benefit from ensuring specific operations are placed in the same chain, or otherwise ensure some operations are placed in different chains.
 
 If either of these aspects proves beneficial to the application, it should replace the *DefaultCMuxMapper* used by the *FixedCMuxMapper*.
+
+***
 
 #### ApplicationAwareValidator
 Blockmess validates the structure of blocks to ensure that no invalid block is delivered.
@@ -254,6 +268,8 @@ The only disadvantage of validating only when operations are processed is the ba
 A compromise can be reached by implementing validation logic only for the *validateReceivedOperation* method.
 If this is done, the validation must be repeated when the operations are processed, otherwise, a byzantine replica that placed an invalid operation in a block could attack the state of correct replicas.
 
+***
+
 #### TODO: OperationStorage
 Currently, Blockmess stores operations submitted by the application in memory until they are delivered to the application.
 If the application load is very high in relation to the throughput of Blockmess, maintaining these operations in memory may prove too expensive.
@@ -274,13 +290,192 @@ Besides this interface there would be two classes with functionalities analogous
 - FixedOperationStorage
 - DefaultOperationStorage
 
+***
 
 ## Parameters:
-	
-	Global:
-	
-	Instance specific:
-	
+Blockmess provides a series of parameters to configure both how each replica will run and global parameters influencing the performance and security of the replicas.
+
+These parameters are placed in the **config/confg.properties** file.
+
+### Global:
+The global properties define the general behaviour of the system.
+These properties must be equal among all correct replicas, otherwise they will not be able to communicate correctly.  
+
+#### contact=[IP:port]
+The contact property indicates the IP address and port of the contact node. 
+The contact node answers connections of joining nodes to form the P2P overlay network.
+
+When running the Blockmess, one must ensure that the contact node is initialized before adding other nodes. 
+
+***Example:*** contact=127.0.0.1:6000
+
+#### minNumChains=[Val]
+This property indicates the minimum number of chains to be used by Blockmess.
+Independently of the application load, the number of chains in use will never fall bellow the value attributed to *minNumChains*.
+
+By keeping this value low, Blockmess can optimize the latency of operation delivery when the application throughput demands are low.
+However, if there is a spike in application load, Blockmess will take a longer time to adapt the number of chains in use to the application needs.
+
+***Example:*** minNumChains=1 
+
+#### maxNumChains=[Val]
+This property indicates the maximum allowed number of parallel chains in use.
+Independently of application load, the number of chains in use will never exceed the value attributed to *maxNumChains*.
+
+The higher the number of parallel chains, the greater the amount of metadata sent in blocks.
+At a given point, the amount of metadata transmitted ensures that increasing the number of parallel chains reduces the achievable throughput.
+
+The value in this parameter should be the cutoff point beyond which the throughput deteriorates with an increase in the number of chains.
+
+***Note:*** The greater the maximum allowed block size, the higher the number of parallel chains that can be employed before deteriorating the throughput.
+
+***Example:*** maxNumChains=85
+
+#### initialNumChains=[Val]
+This property indicates the number of parallel chains employed when a replica is launched.
+The value attributed to *initialNumChains* should not be lower than the value of *minNumChains* nor higher than the value associated with *maxNumChains*.
+
+The hierarchical structure of the generated chains follows the expected theoretical model for the chain tree when the content is uniformly distributed.
+To maintain the structure balanced, the number of initial chains should belong to the following succession:
+
+<img src="https://latex.codecogs.com/svg.image?\large&space;\bg{black}chains\_epoch(epoch)=&space;\left\{\begin{array}{ll}&space;&space;&space;&space;&space;&space;1&space;&&space;epoch&space;=&space;0&space;\\&space;&space;&space;&space;&space;&space;3&space;&&space;epoch&space;=&space;1\\&space;&space;&space;&space;&space;&space;2&space;chains\_epoch(epoch&space;-&space;2)&space;&plus;&space;chains\_epoch(epoch&space;-&space;1)&space;&&space;epoch&space;\geq&space;2&space;\\\end{array}&space;\right." title="https://latex.codecogs.com/svg.image?\large \bg{black}chains\_epoch(epoch)= \left\{\begin{array}{ll} 1 & epoch = 0 \\ 3 & epoch = 1\\ 2 chains\_epoch(epoch - 2) + chains\_epoch(epoch - 1) & epoch \geq 2 \\\end{array} \right."  alt=""/>
+
+***Example:*** initialNumChains=11
+
+#### finalizedWeight=[Val]
+This parameter indicates how deep a block must be within the longest chain of a blockchain to be finalized in it.
+It should be noted that a block is not delivered to the application as soon as it is finalized within its own blockchain.
+It must first be ordered against the finalized blocks of all other parallel chains.
+
+Its value depends on the adversary presence and the ratio between the block dissemination time and block proposal time.
+
+***Example:*** finalizedWeight=6
+
+#### genesisUUID=[UUID String Representation]
+This property defines the identifier of the original chain in the Blockmess system.
+Currently, there is no reason to change the default value, however, should in the future the system evolve to having several Blockmesses in parallel, these need to have different ids.
+
+The chain identifiers are UUID instances that have a specific String representation.
+
+***Example:*** genesisUUID=00000000-0000-0000-0000-000000000000
+
+#### expectedNumNodes=[Val]
+In PoW based Distributed Ledgers, the difficulty of the cryptographic puzzles dictating the proposal of new blocks are dependent on the total computational power of the system replicas.
+
+Similarly, Blockmess requires an estimate of the number of replicas in order to determine the difficulty of the cryptographic puzzles of the algorithm simulating PoW.
+
+This property indicates an estimate of how many replicas are active in the system.
+
+***Example:*** expectedNumNodes=200
+
+#### timeBetweenQueries=[Milliseconds]
+The algorithm employed to simulate PoW also consists on having replicas attempt to find verifiable solutions to a cryptographic puzzle in order to propose blocks.
+
+Unlike PoW solutions where the process to identify these solutions is resource intensive, in Blockmess replicas wait a given amount of time between every attempt to find a valid solution to the cryptographic puzzle.
+
+The value in this property indicates the amount of time replicas wait between attempts to find a valid solution.
+
+***Note:*** This value should be low when there are few nodes and the average time between block proposals is short.
+
+#### expectedTimeBetweenBlocks=[Milliseconds]
+In Distributed Ledgers, the safety properties and performance metrics of the system are maintained by guaranteeing the average time between block proposals follows a certain amount of time.
+
+This property indicates the average time interval between block proposals.
+
+***Example:*** expectedTimeBetweenBlocks=20000
+
+#### maxBlockSize=[Bytes]
+In Distributed Ledgers, blocks have a maximum size beyond which they are deemed invalid.
+This property indicates the maximum allowed size of a valid block.
+
+The size of a block is a very important and nuanced factor in the performance of a Distributed Ledger.
+It both determines the amount of application content that can be delivered in each block, but also the time a block requires to be disseminated throughout the network.
+
+***Example:*** maxBlockSize=100000
+
+#### delayedValueTimer=[Miliseconds]
+In *Lazy-Push* broadcast protocols, a node can request a value from another upon having received a notification that content is available to be disseminated.
+
+This property determines the amount of time a node waits for the response of a content request before attempting to contact another node to retrieve the content.
+
+***Note:*** Our implementation of the *Lazy-Push* broadcast is greedy in the sense that when it receives a block, a replica disseminates to its neighboors that it has a valid block, and only then validates it. If the block validation is a slow process, the value of this timer should be considerable. 
+
+***Example:*** delayedValueTimer=2000
+
+***
+
+###	Instance specific:
+The instance specific properties refer only to a single replica.
+Different replicas must have some values different in these configurations, otherwise they'd be indistinguishable to the system and other replicas.
+
+When running several replicas in the same machine or through a script, these are the properties that will be overridden while launching the replica.
+
+#### interface=[InterfaceName]
+This property indicates the network interface being used by the replica in the communications of the program.
+
+***Note:*** In Linux distros, the interfaces available can be seen running the command *ip addr*.
+When running locally, it's recommended that the interface *lo* is used.
+This interface routes the messages back to the machine that sent them.
+When running this program on containers or in a distributed deployment, use other interfaces.
+
+***Example:*** interface=lo
+
+#### address=[IP]
+This property indicates the IP address of used by this replica in the interface provided in the previous property.
+
+***Warning:*** Program has not been tested with IPV6 addresses.  
+
+***Example:*** address=localhost
+
+#### port=[Val]
+This property indicates the port where this node opens connections in the *Peer Sampling Protocol*.
+
+***Example:*** port=6000
+
+#### redirectFile=[Pathname]
+Blockmess redirects output logs to a file for future processing.
+This property indicates the pathname of the file the logs will be redirected to.
+
+***Example:*** redirectFile=outputLogs/redirectLog.log
+
+#### (Deprecated) isBootstraped=[T/F]
+This property indicates whether Blockmess should load content initial content from a file.
+
+The responsibility to load this initial content is from the application, Blockmess should not be involved.
+
+***Example:*** isBootstraped=F
+
+#### (Deprecated) bootstrapFile=[Pathname]
+This property indicates the file Blockmess should load the content from.
+The content in this file must contain data specific to how Blockmess handles unfinalized content, and thus it should not be generated outside previous runs of Blockmess.
+
+***Example:*** bootstrapFile=./bootstrapContent/bootstrapFile.txt
+
+#### generateKeys=[T/F]
+This property indicates whether this replica should generate an ECDSA key pair and use it, or load it from a file.
+
+***Example:*** generateKeys=F
+
+#### myPublic=[Pathname]
+If this replica is not generating its own ECDSA keys, as defined by the former configuration, this property indicates the pathname of the file containing the public key of the replica.
+
+***Example:*** myPublic=./keys/public.pem
+
+#### mySecret=[Pathname]
+If this replica is not generating its own ECDSA keys, as defined by the former configuration, this property indicates the pathname of the file containing the private key of the replica.
+
+***Example:*** mySecret=./keys/secret.pem
+
+#### initializationTime=[Miliseconds]
+Currently, Blockmess does not have a mechanism to retrieve proposed blocks for a replica entering the system.
+Instead, all replicas must join the system before the first blocks are proposed.
+
+The value in this property indicates the interval of time between the launch of a replica until it starts to propose blocks.
+
+***Example:*** initializationTime=10000
+
+***
+
 Operation:
 
 	- Overlay Network:
