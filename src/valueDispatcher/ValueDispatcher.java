@@ -99,7 +99,6 @@ public class ValueDispatcher extends GenericProtocol {
         try {
             logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
             sendEagerRequest(req, ValType.APP_CONTENT);
-            //sendLazyRequest(req, ValType.APP_CONTENT);
         } catch (IOException e) {
             e.printStackTrace();
         }

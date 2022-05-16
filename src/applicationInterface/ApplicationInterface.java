@@ -13,6 +13,7 @@ import org.thavam.util.concurrent.blockingMap.BlockingMap;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
+import validators.FixedApplicationAwareValidator;
 import valueDispatcher.ValueDispatcher;
 
 import java.nio.ByteBuffer;
@@ -101,10 +102,8 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
     private void replyOperationResults(AppContent currentOp, byte[] operationResult) {
         ReplyListener listener = operationListeners.remove(currentOp.getId());
         Pair<byte[], Long> operationReply = Pair.of(operationResult, globalOpIdx);
-        if (listener != null)
-            listener.processReply(operationReply);
-        else
-            completedSyncOperations.put(currentOp.getId(), operationReply);
+        if (listener != null) listener.processReply(operationReply);
+        else completedSyncOperations.put(currentOp.getId(), operationReply);
     }
 
     /**
@@ -116,13 +115,18 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
      */
     public Pair<byte[], Long> invokeSyncOperation(byte @NotNull [] operation) {
         try {
-            return tryToInvokeOperation(operation);
+            return tryToInvokeSyncOperation(operation);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private Pair<byte[], Long> tryToInvokeOperation(byte[] operation) throws InterruptedException {
+    private Pair<byte[], Long> tryToInvokeSyncOperation(byte[] operation) throws InterruptedException {
+        var isValid = FixedApplicationAwareValidator.getSingleton().validateReceivedOperation(operation);
+        return isValid.getLeft() ? invokeValidSyncOperation(operation) : Pair.of(isValid.getRight(), -1L);
+    }
+
+    private Pair<byte[], Long> invokeValidSyncOperation(byte[] operation) throws InterruptedException {
         AppContent content = computeAppContent(operation);
         operationsWaitingResponse.add(content.getId());
         ValueDispatcher.getSingleton().disseminateAppContentRequest(content);
@@ -135,6 +139,12 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
      * @param listener The structure that will receive and process the result of the operation.
      */
     public void invokeAsyncOperation(byte @NotNull [] operation, @NotNull ReplyListener listener) {
+        var isValid = FixedApplicationAwareValidator.getSingleton().validateReceivedOperation(operation);
+        if (isValid.getLeft()) invokeValidAsyncOperation(operation, listener);
+        else listener.processReply(Pair.of(isValid.getRight(), -1L));
+    }
+
+    private void invokeValidAsyncOperation(byte @NotNull [] operation, @NotNull ReplyListener listener) {
         AppContent content = computeAppContent(operation);
         operationsWaitingResponse.add(content.getId());
         operationListeners.put(content.getId(), listener);

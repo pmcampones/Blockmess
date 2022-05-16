@@ -15,6 +15,7 @@ import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import validators.FixedApplicationAwareValidator;
 
 import java.io.IOException;
 import java.util.*;
@@ -362,7 +363,9 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
 
     @Override
     public void submitContent(AppContent content) {
-        getOrigin().submitContent(content);
+        var isValid = FixedApplicationAwareValidator.getSingleton().validateReceivedOperation(content.getContent());
+        if (isValid.getLeft())
+            getOrigin().submitContent(content);
     }
 
     @Override
