@@ -8,66 +8,71 @@ This package contains the source code (src/), jar file (target/BlockmessLib.jar)
 ### β Considerations
 This is still a work in progress, so all feedback is appreciated.
 
+We consider the package ready for use in the context of the integration with projects in the CSD course (DI/FCT/UNL, 2021/2022).
+
 There is room for improvement, both in the interaction with the applications and in the internal operation of Blockmess.
-Especially in the first front, I may be missing some crucial quality of life features that would massively simplify the end developer's application, while being simple to implement in Blockmess. 
+Especially in the first front, I may be missing some crucial quality of life features that would massively simplify the end developer's application, while being simple to implement in Blockmess.
+The case for the above integration on CSD projects will be also a relevant testbench for this purpose, being certainly an interesting research task.
 
 Finally, as much as it pains me to say. There might be some bugs here and there.
+Should this be the case we will help to overcome or to help with any issue in the context of the CSD course.
 
 Every improvement suggestion and error detected will benefit this project and provide a better product to all who use it.
 
 ***
 
-## Quick Start Example
+## 1 - Quick Start Example
 
 As a library, Blockmess should be incorporated into other programs rather than running as a standalone program.
 
-With this said, Blockmess makes available some simple distributed applications as demonstrations of the underlying system behaviour and application interface.
+For example, concerning the requirements of CSD project, the provided library allows for an integration model similar to the architectural model initially developed.
 
-This example explains how to run one such demo designated **AsyncCounter**.
-In this demo a distributed counter is increased by a series of remote replicas.
+Section 3.1 and its subsections explain the **ApplicationInterface** class.
+It is through this class that the developed applications can access Blockmess' functionalities.
 
-### Configurations:
-The replicas are configured by 
+Sections 4.1 and 4.2 present a detailed description of all the configuration properties that can be found in the file **config/config.properties**.
+Section 4.3 shows how to override the properties in the configuration file and finally section 4.5 suggests the minimum configurations that should be modified to complete the CSD project.
 
-
+Finally, section 5 presents a walkthrough of the AsyncCounter demo application.
+In this demo we put in practice the information presented in the previously mentioned sections.  
 
 ***
 
-## Highlight Features
+## 2 - Highlight Features
 
-### Totally Ordered Operations
+### 2.1 - Totally Ordered Operations
 As a Distributed Ledger, Blockmess aggregates operations in blocks that are eventually delivered to any application replica in a total order.
 
 By default, application content is not delivered to the application upon receival of the content, or when such content is placed in blocks. The content is only delivered to the application when the blocks they are placed are confirmed/finalized.
 
 Following this behaviour, we guarantee that all replicas execute operations in the same order and no duplicate operations are delivered.
 
-#### Liberty to have lower consistency guarantees
+#### 2.1.1 - Liberty to have lower consistency guarantees
 Altough the default behaviour of Blockmess ensures a total order of operations, our system allows the application to extract content during its ordering process; reducing the latency in the delivery of content, at the cost of having lower consistency guarantees.
 
 We must emphasise that as of this release, the application interface for the retrieval of content following these mechanisms is not as clean as with totally ordered operations.
 
-##### FIFO Content Retrieval:
+##### 2.1.2 - FIFO Content Retrieval:
 As soon as content is received in a replica during its dissemination, it can be extracted and processed. This ensures a FIFO delivery of content guaranteeing application operations are processed as soon as they are available.
 
-##### Speculative Total Order:
+##### 2.1.3 - Speculative Total Order:
 The application has access to blocks as soon as they are received by the replicas. The application can use the content on these blocks as soon as they are received or wait for some further blocks, processing them with no guarantees the content in them will actually be delivered; however being aware that the probability the content is delivered is high.
 
 We emphasise that depending on the parameterization of Blockmess, the delivery of content not yet finalized can open some attack vectors to the application, that would otherwise be detected by simple Blockchain implementations.
 One such example is the Double Spend attack found in cryptocurrency applications.
 
-### Application oblivious
+### 2.2 - Application oblivious
 Blockmess was designed as a replication module able to service any application.
 The system does not require specific types of content and gives the application the freedom to process its information however it sees fit.
 
 As long as the application content can be serialized it is accepted by Blockmess.
 
-### Plugable Modularity
+### 2.3 - Plugable Modularity
 Despite being a functional and scalable Distributed Ledger implementation out of the box, Blockmess its components to be swapped by other implementations granting unprecedented freedom to the developer beyond what can be achieved through simple parameterization.
 
 The Blockmess was designed with modularity as one of its core tenets from the ground up, facilitating the plugability of these modules.
 	
-### PoW abstraction
+### 2.4 - PoW abstraction
 Blockmess developers hate harming the environment, and so our default block proposal protocol is not a PoW variant.
 
 However, it mimics the functionality of a PoW system, providing the same distribution as these mechanisms, without requiring an high computational load on the replicas.
@@ -77,7 +82,7 @@ The default implementation simulating PoW is not resistant against an adversary 
 
 If using Blockmess for the deployment of a real application, please modify the implementation of the Sybil Resistant Election protocol (and to do so keep reading untill we mention the modularity features).
 
-### High Dynamic Throughput
+### 2.5 - High Dynamic Throughput
 Incorporating performance enhancing mechanisms from the Parallel Chains approach to Distributed Ledger scalability, Blockmess is able to achieve a very high throughput.
 
 The use of Parallel Chain solutions by themselves has drawbacks, such that their use with incorrect parameterizations may lead to a deteriorating performance.
@@ -85,7 +90,7 @@ This problem is exacerbated by the variability in application load exerted over 
 
 The great innovation of Blockmess is that it modifies its internal structure to adapt to the application requirements, thus achieving a nearly optimal balance between throughput and latency.
 
-### Extensive Configuration Potential
+### 2.6 - Extensive Configuration Potential
 Blockmess is highly configurable, allowing tweaks to all software modules.
 
 This parameterization is simple and well documented.
@@ -93,21 +98,21 @@ The properties on the configurations file can be overwritten upon launching any 
 
 ***
 
-## Application Layer Extensions:
+## 3 - Application Layer Extensions:
 
-### ApplicationInterface
+### 3.1 - ApplicationInterface
 Blockmess is suited to interact with any application by extending a set of classes.
 
 However, the only mandatory class to be extended is the **applicationInterface.ApplicationInterface**
 
-#### Instancing
+#### 3.1.1 - Instancing
 - public ApplicationInterface(String[] blockmessProperties)
 
 When creating an instance of this class, the Blockmess system is launched. The argument *blockmessProperties* contains a list of properties that are to override those in the configuration file.
 
 There can only be a single *ApplicationInterface* instance in the program.
 
-#### Operation Submission
+#### 3.1.2 - Operation Submission
 Operations are submitted to Blockmess in an application agnostic manner.
 
 To do so, the *ApplicationInterface* will receive all operations as byte arrays.
@@ -136,7 +141,7 @@ The *processReply* argument parameter corresponds to the return value of *invoke
 
 The processing of the responses in a replica by the *ReplyListener* is sequential, following the order operations were processed.
 
-#### Operation Processing
+#### 3.1.3 - Operation Processing
 Being application agnostic, Blockmess does not know how to process the operations submitted by the application.
 As a result, it is the application responsibility to process them.
 
@@ -150,7 +155,7 @@ This method is executed sequentially according to the delivery order of the oper
 
 The return value of this method is the left-hand side of the invocation response that will be delivered to the replica that issued the operation.
 
-#### Block Monitoring
+#### 3.1.4 - Block Monitoring
 While not required for the correct execution of the system, the application can access blocks as they are received by the application and is notified which blocks are finalized and which are discarded.
 
 To access these functionalities, the application class extending *ApplicationInterface* must override the following methods:
@@ -184,12 +189,12 @@ The first argument provides a list of finalized block identifiers in the order t
 
 ***
 
-### Secondary Extensions
+### 3.2 - Secondary Extensions
 Beyond the core functionalities required by the application and covered by the *ApplicationInterface* class, there are other functionalities that may benefit from an interaction with the application.
 
 These functionalities have a default simple behaviour managed by Blockmess, but can be overridden by the application by replacing the implementation of a set of key classes. 
 
-#### CMuxIdMapper
+#### 3.2.1 - CMuxIdMapper
 Blockmess deterministically maps application content to specific chains using a data structure we designated **Content Multiplexer (CMux)**.
 
 The submission of content to the *CMux* requires it to be associated with two byte array non-unique values.
@@ -203,7 +208,7 @@ This interface has two functionalities:
 
 Each of these methods maps the operation to be submitted by a replica and which is received as argument, to a value that determining the placement of the content in the Blockmess.
 
-#### FixedCMuxIdMapper
+#### 3.2.2 - FixedCMuxIdMapper
 The class **cmux.FixedCMuxMapper** implements the *CMuxIdMapper* interface and is used by Blockmess to map the operation content to the values used by the *CMux*.
 
 Besides the functionalities provided by *CMuxIdMapper*, this class provides the following operation:
@@ -213,7 +218,7 @@ Besides the functionalities provided by *CMuxIdMapper*, this class provides the 
 With this method, the application can override the
 default behaviour of Blockmess by providing the *CMuxIdMapper* implementation received as parameter.
 
-#### DefaultCMuxMapper
+#### 3.2.3 - DefaultCMuxMapper
 The default *CMuxIdMapper* behaviour provided by Blockmess is implemented in the class **cmux.DefaultCMuxMapper**.
 
 This implementation ensures that the values used in the *CMux* are uniformly distributed, which in turn ensures the content associated with the several parallel chains is balanced.
@@ -226,7 +231,7 @@ If either of these aspects proves beneficial to the application, it should repla
 
 ***
 
-#### ApplicationAwareValidator
+#### 3.2.4 - ApplicationAwareValidator
 Blockmess validates the structure of blocks to ensure that no invalid block is delivered.
 However, being application agnostic, the system is unable to determine the validity of the operations submitted.
 
@@ -252,7 +257,7 @@ Should this value be false the block is discarded, and it's dissemination ceased
 
 The operations of the block in of themselves are valid, according to the *validateReceivedOperation* execution. It is only the placement of the operations in the received block that is invalid. For this reason, the replica issuing the operation is not notified of the operation failure, as it will be eventually be placed in another block.
 
-#### FixedApplicationAwareValidator
+#### 3.2.5 - FixedApplicationAwareValidator
 The class **validators.FixedApplicationAwareValidator** implements the *ApplicationAwareValidator* interface and is used by Blockmess to validate the operations and blocks as they are broadcast.
 
 Besides the functionalities provided by the *ApplicationAwareValidator*, this class provides the following operation:
@@ -261,7 +266,7 @@ Besides the functionalities provided by the *ApplicationAwareValidator*, this cl
 
 With this method, the application can override the default behaviour of Blockmess by providing the *ApplicationAwareValidator* implementation received as parameter.
 
-#### DefaultApplicationAwareValidator
+#### 3.2.6 - DefaultApplicationAwareValidator
 The default *ApplicationAwareValidator* behaviour provided by Blockmess is implemented in the class **validators.DefaultApplicationAwareValidator**.
 
 In this implementation, all operations and blocks are deemed as valid.
@@ -280,7 +285,7 @@ If this is done, the validation must be repeated when the operations are process
 
 ***
 
-#### TODO: OperationStorage
+#### 3.2.7 - TODO: OperationStorage
 Currently, Blockmess stores operations submitted by the application in memory until they are delivered to the application.
 If the application load is very high in relation to the throughput of Blockmess, maintaining these operations in memory may prove too expensive.
 
@@ -302,12 +307,12 @@ Besides this interface there would be two classes with functionalities analogous
 
 ***
 
-## Parameters:
+## 4 - Parameters:
 Blockmess provides a series of parameters to configure both how each replica will run and global parameters influencing the performance and security of the replicas.
 
 These parameters are placed in the **config/confg.properties** file.
 
-### Global:
+### 4.1 - Global:
 The global properties define the general behaviour of the system.
 These properties must be equal among all correct replicas, otherwise they will not be able to communicate correctly.  
 
@@ -414,7 +419,7 @@ This property determines the amount of time a node waits for the response of a c
 
 ***
 
-###	Instance specific:
+###	4.2 - Instance specific:
 The instance specific properties refer only to a single replica.
 Different replicas must have some values different in these configurations, otherwise they'd be indistinguishable to the system and other replicas.
 
@@ -486,7 +491,7 @@ The value in this property indicates the interval of time between the launch of 
 
 ***
 
-### Overriding Configuration File
+### 4.3 - Overriding Configuration File
 Having all configurations in a single static file restrains a developer deploying several replicas on a same machine or through a script.
 
 In order to avoid this problem, the properties in the configuration file can be overridden when launching a replica.
@@ -509,8 +514,317 @@ In the example we replaced the instance specific properties:
 
 Notice that not all instance specific properties need to be overridden.
 Replicas being launched from the same host can use the same network interface and IP address.
+Even the overridden values of the keys pathname could be obviated if the **generateKeys** configuration is set to its default value of true.
 
-Careful considerations of what should be placed in the configuration file and what should be overridden at launch significantly simplifies the deployment process. 
+Careful considerations of what should be placed in the configuration file and what should be overridden at launch significantly simplifies the deployment process.
+
+### 4.4 - Logs
+Blockmess uses a logging library for debug and monitoring purposes.
+The configurations of the logging library are found in **config/log4j2.xml**.
+
+#### 4.4.1 - Increase Logging Output
+
+By default, Blockmess is only logging error messages (which hopefully will not be seen).
+To increase the logging of messages, the **log4j2.xml** file must be modified by adding or modifying a line in the **Loggers** scope in the file
+
+***Example:***<Logger level=[Level] name=[Pathname to Package or File]/>
+
+the *Level* fields can be:
+- error
+- debug
+- info
+
+***Note:*** The logging library has more levels but Blockmess does not use them.
+
+#### 4.4.2 - Redirect Logging Output
+As stated in the *redirectFile* parameter in section 4.2, the outputs of the logging library will be redirected to a file.
+
+The file where the logger used will redirect the output will be given by the aforementioned parameter.
+
+### 4.5 - Minimal Configuration Tweaks
+In the CSD project, there are few configurations that need to be adapted in order to complete the project.
+The configurations that need to be adapted depend on whether the replicas are run locally in the bare-metal host or are containerized.
+
+#### 4.5.1 - contact, port, address, and interface
+If the replicas are running in the bare-metal host, they must have the same IP address and consequently, different ports.
+
+With this in consideration, when running several replicas the port used by each must override the configuration file default.
+
+When running the replicas in a containerized environment, they can have different IP addresses while using the same ports.
+The default configuration for Blockmess considers the replicas are being run in the bare-metal machine, and thus the **contact** and **interface** parameters must be modified in the configuration file.
+
+Additionally, in containerized deployments, the **address** of each replica must be overridden.
+
+#### 4.5.2 - redirectFile
+The *redirectFile* indicates where the logging information will be redirected to.
+When running the replicas in the bare-metal host the value of this property should be overridden.
+
+When deploying replicas in a containerized environment, the files across containers will be isolated and thus there is no need to modify the configurations.
+
+#### 4.5.3 - expectedTimeBetweenBlocks
+The default time interval between block proposals is fairly low.
+The reason for this parameterization is that we configured Blockmess to be run in a bare-metal host which we assume is unable to run a large amount of replicas concurrently.
+
+If the number of replicas increases considerably and if the latency between replicas is high or the bandwidth low, the value of this parameter should be modified.
+
+***
+
+## 5 - Demo AsyncCounter
+Several demo applications are made available to exemplify the functionalities and application interface of Blockmess.
+One such demo application is a distributed counter which is consistent across all correct replicas in the Blockmess network.
+
+### 5.1 - Code Guide
+The **AsyncCounter** is an application example where replicas update the value of a distributed counter by adding some value to its previous content.
+
+The *main* of this program received two mandatory arguments:
+The operation over the counter to be executed and the number of operations the replica will execute.
+
+Initially, an instance of **Counter** will be created:
+
+```
+Counter counterServer = new Counter(blockmessProperties);
+```
+
+The *Counter* is a class that extends **ApplicationInterface**, which, as seen in section 3.1 allows the application to communicate with Blockmess and is the endpoint where the underlying system sends the ordered operations to be processed.
+
+#### 5.1.1 - Operation Submission
+
+After having initialized Blockmess through the creation of the *Counter*, the program will update the value in the counter by invoking the operation *invokeAsyncOperation* in the *Counter*:
+
+```
+counterServer.invokeAsyncOperation(changeBytes, operationResult -> {...});
+```
+
+The arguments in this operation are in order, the operation to be submitted to Blockmess and an implementation of the *ReplyListener* to process the operation response.
+This last argument will be discussed later.
+
+The value in *changeBytes* is represented as a byte array instead of a number.
+The reason beyond this conversion is the fact that Blockmess is application agnostic and only receives byte arrays, leaving the handling of content representation to the application.
+
+#### 5.1.2 - Operation Processing
+The *Counter* class has an implementation of the *processOperation* method declared in the *ApplicationInterface*.
+It is in this method that the processing of the operations submitted by all replicas takes place.
+
+```
+public byte[] processOperation(byte[] operation) {
+    int change = bytesToInt(operation);
+    counter += change;
+    return numToBytes(counter);
+}
+```
+
+The processing of the operation is very simple.
+The method receives the operation itself as an argument in the form of a byte array.
+Because *Counter* knows the format of the operation, it knows the argument must be converted to a numerical value to update the local.
+
+Each replica updates its local counter knowing that other correct replicas will have the same value in their when concluding the processing of the operation.
+
+An important aspect to notice is that the local counters of the replicas are not thread safe.
+Because operations are executed sequentially, the application can be sure that no two threads will be processing an operation at the same time.
+
+The result of the operation is the updated value of the replica's counter, which is transformed into a byte array representation.
+
+#### 5.1.3 - Process Response
+When an operation is processed, the replica that issued the operation is notified and given the answer to the operation request.
+
+With an async operation, the response to the operation is received in the *ReplyListener* instance passed as argument in the *invokeAsyncOperation* call.
+
+*AsyncCounter*'s implementation of the *ReplyListener* is the following:
+
+```
+operationResult -> {
+            byte[] currCounterBytes = operationResult.getLeft();
+            long opIdx = operationResult.getRight();
+            int currCounter = Counter.bytesToInt(currCounterBytes);
+            System.out.printf("Counter with value %d on local update %d and global operation %d%n", currCounter, i, opIdx);
+        }
+```
+
+The *ReplyListener* only method receives the **Pair<byte[], Long> operationResult** as argument.
+This argument indicates the value in the distributed counter when the invoked operation was processed and the number of the operation index globally.
+
+The *ReplyListener* simply extracts this information and prints it to the default output stream.
+Additionally, it adds the number of the local operation submission to the output.
+
+### 5.2 - Deploy Single Instance
+The *main* of the demo is located in the class **demo.counter.AsyncCounter.java**.
+To run the application with a single replica a few configurations must be modified from their default value.
+
+```
+numExpectedReplicas=1
+timeBetweenQueries=100
+initializationTime=0
+```
+
+The change to **numExpectedReplicas** reflects that there is a single replica being run.
+Because there is a single replica, using a large **timeBetweenQueries** may reduce the statistical accuracy of the emulation of the PoW protocol; and thus we choose a lower value for this parameter.
+
+Finally, the **initializationTime** is set to 0 because no other replica needs to join the system before this starts proposing blocks.
+
+Another parameter that could be changed is the **expectedTimeBetweenBlocks**.
+Given that a single replica is in use, the interval between block proposals could be as low as the time required to process a block.
+With this said, lowering this value to such a point would not comply with the spirit of the experiment.
+In extremis, with a single replica, Blockmess could be ignored altogether.
+
+With the jar containing Blockmess in the target directory, the instance of *AsyncCounter* is launched by running the following command from the project root:
+
+```
+java -cp BlockmessLib.jar demo.counter.AsyncCounter 2 100
+```
+
+This command launches the code in **BlockmessLib.jar** from the **main** in *demo.counter.AsyncCounter*.
+The command also receives the arguments 2 and 10.
+
+The first of these arguments indicates the operations executed on the distributed counter; 
+in this particular instance, the replica will add 2 to the value in the counter.
+
+The last argument indicates how many repetitions of the operation the replica will execute; 
+in this particular instance the replica will add 2 to the counter 10 times, which will result in a counter value of 20.
+
+Upon running the command and waiting for the operations to be processed the output will be the following:
+
+```
+Counter with value 2 on local update 6 and global operation 0
+Counter with value 4 on local update 1 and global operation 1
+Counter with value 6 on local update 9 and global operation 2
+Counter with value 8 on local update 8 and global operation 3
+Counter with value 10 on local update 3 and global operation 4
+Counter with value 12 on local update 0 and global operation 5
+Counter with value 14 on local update 5 and global operation 6
+Counter with value 16 on local update 4 and global operation 7
+Counter with value 18 on local update 2 and global operation 8
+Counter with value 20 on local update 7 and global operation 9
+```
+
+Observing this output we can see that in each operation executed the value of the counter increases by two, starting with the value 2 after the first operation, and terminated with the expected value of 20.
+
+The *global operations* increase monotonically as the program executes.
+This information logs the order in which Blockmess processes the operations.
+
+The remaining information we can extract from the output are the *local updates*.
+This information indicates the order operations were submitted to Blockmess by the replica.
+The first operation submitted is the *local update 0*, while the last is the *local update 9*.
+
+Because this demo does not block the thread invoking the operations, they are submitted to Blockmess at similar times.
+The underlying system makes no guarantees about maintaining an order of submitted operations, merely that the operations are delivered for processing in a total order.
+
+### 5.3 - Deploy Several Instances
+When running the demo with several instances, some configurations from the *config* file must be modified.
+
+```
+numExpectedReplicas=5
+timeBetweenQueries=250
+initializationTime=1000
+```
+
+The first modified parameter indicates the system expects 5 replicas, which is accurate given that is number of replicas that will be launched.
+
+With 5 replicas being used, these need not perform PoW solution attempts as frequently as in the single replica example in order to provide an accurate execution; 
+and so the value in *timeBetweenQueries* has been increased to *250* milliseconds.
+
+Finally, because now there are several replicas in the system, it must be ensured that the last replica is launched before a valid block is proposed.
+For this reason the *initializationTime* was set to *1* second.
+
+This value is very conservative, given that the replicas will be launched from a script and take very little time to be initialized.
+Nevertheless, it's better to be safe than sorry.
+
+There are other two important parameters that should be modified, namely the **port** and the **redirectionFile**.
+However, these configurations are specific for each replica, and thus will be overridden during the launch of the instances in the deployment script.
+
+When running a large number of replicas (hundreds rather than *5*), another parameter which is a candidate to be overridden is the aforementioned *initializationTime*.
+The last replicas to be launched should have a lower initialization time than the first.
+This is however an optimization that should not be considered when running only *5* replicas.
+
+To deploy the *5* replicas, the following script can be run:
+
+```
+FILE_LOC="demo.counter.AsyncCounter"
+CONTACT_PORT=6000
+OPS_PER_REPLICA=10
+
+for I in {1..5}
+do
+        PORT=$(( CONTACT_PORT + I - 1 ))
+        eval "java -cp BlockmessLib.jar $FILE_LOC $I $OPS_PER_REPLICA port=$PORT redirectFile=./outputLogs/node$I.txt 2>&1 | sed 's/^/[replica$I] /' &"
+done
+```
+
+In this script *5* replicas will be launched, and each will execute *10* operations.
+The operations that each replica will execute is to add its index value to the distributed counter.
+Replica *1* will add *1* ten times while replica *5* will add *5* ten times.
+
+Like in the previous deployment, the *BlockmessLib* jar will be run on the *main* in *demo.counter.AsyncCounter* and receiving as arguments the operations each replica will execute, as well as how many times the operation will be executed.
+
+Additionally, the commands also receive override values for the *port* and *redirectFile* properties.
+We ensure that the first replica's port is the same as the contact node.
+
+The final part of the command does not pertain to Blockmess and simply indicates the name of the replica that has produced a given output during the program's execution.
+
+Running this script we obtain the following output:
+
+```
+[replica1] Counter with value 1 on local update 3 and global operation 0
+[replica1] Counter with value 2 on local update 0 and global operation 1
+[replica1] Counter with value 3 on local update 1 and global operation 2
+[replica1] Counter with value 4 on local update 8 and global operation 3
+[replica1] Counter with value 5 on local update 5 and global operation 4
+[replica1] Counter with value 6 on local update 4 and global operation 5
+[replica1] Counter with value 7 on local update 9 and global operation 6
+[replica1] Counter with value 8 on local update 2 and global operation 7
+[replica1] Counter with value 9 on local update 6 and global operation 8
+[replica1] Counter with value 10 on local update 7 and global operation 9
+[replica5] Counter with value 55 on local update 7 and global operation 20
+[replica4] Counter with value 14 on local update 6 and global operation 10
+[replica4] Counter with value 18 on local update 7 and global operation 11
+[replica4] Counter with value 22 on local update 9 and global operation 12
+[replica5] Counter with value 60 on local update 2 and global operation 21
+[replica5] Counter with value 65 on local update 3 and global operation 22
+[replica5] Counter with value 70 on local update 8 and global operation 23
+[replica5] Counter with value 75 on local update 5 and global operation 24
+[replica5] Counter with value 80 on local update 1 and global operation 25
+[replica5] Counter with value 85 on local update 4 and global operation 26
+[replica4] Counter with value 26 on local update 3 and global operation 13
+[replica5] Counter with value 90 on local update 9 and global operation 27
+[replica5] Counter with value 95 on local update 6 and global operation 28
+[replica4] Counter with value 30 on local update 5 and global operation 14
+[replica4] Counter with value 34 on local update 0 and global operation 15
+[replica4] Counter with value 38 on local update 8 and global operation 16
+[replica5] Counter with value 100 on local update 0 and global operation 29
+[replica4] Counter with value 42 on local update 4 and global operation 17
+[replica4] Counter with value 46 on local update 1 and global operation 18
+[replica4] Counter with value 50 on local update 2 and global operation 19
+[replica2] Counter with value 102 on local update 8 and global operation 30
+[replica2] Counter with value 104 on local update 9 and global operation 31
+[replica2] Counter with value 106 on local update 6 and global operation 32
+[replica2] Counter with value 108 on local update 4 and global operation 33
+[replica2] Counter with value 110 on local update 7 and global operation 34
+[replica2] Counter with value 112 on local update 2 and global operation 35
+[replica2] Counter with value 114 on local update 0 and global operation 36
+[replica2] Counter with value 116 on local update 1 and global operation 37
+[replica2] Counter with value 118 on local update 3 and global operation 38
+[replica2] Counter with value 120 on local update 5 and global operation 39
+[replica3] Counter with value 123 on local update 2 and global operation 40
+[replica3] Counter with value 126 on local update 5 and global operation 41
+[replica3] Counter with value 129 on local update 1 and global operation 42
+[replica3] Counter with value 132 on local update 8 and global operation 43
+[replica3] Counter with value 135 on local update 3 and global operation 44
+[replica3] Counter with value 138 on local update 9 and global operation 45
+[replica3] Counter with value 141 on local update 4 and global operation 46
+[replica3] Counter with value 144 on local update 7 and global operation 47
+[replica3] Counter with value 147 on local update 6 and global operation 48
+[replica3] Counter with value 150 on local update 0 and global operation 49
+```
+
+Observing this output we can see that *50* operations were executed globally, all replicas executed *10* operations, and the counter has reached its expected value of *150* upon the completion of the operations.
+
+An aspect that differs from the execution with a single replica is that some *global operation* indexes do not follow the expected sequence from output line to output line.
+Is Blockmess broken?
+
+No (at least not from this evidence).
+Because each thread is processing the results of the operations in its own separate OS thread, the output is subject to the scheduling of the operating system, which may cause discrepancies in the expected behaviour.
+
+Nevertheless, the correct execution of the program can be observed by noticing that within each replica the global operation index increases monotonically.
+
 
 ***
 ##### Disclaimer
