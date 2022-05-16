@@ -4,7 +4,6 @@ import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import ledger.blocks.BlockmessBlock;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
-import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import sybilResistantElection.ChainSeed;
 import sybilResistantElection.SybilResistantElectionProof;
 import sybilResistantElection.difficultyComputers.MultiChainDifficultyComputerImp;
@@ -13,7 +12,6 @@ import utils.IDGenerator;
 import utils.merkleTree.MerkleRoot;
 import utils.merkleTree.MerkleTree;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,11 +35,11 @@ public class ApplicationObliviousValidator extends GenericProtocol {
     }
 
     @Override
-    public void init(Properties properties) throws HandlerRegistrationException, IOException {}
+    public void init(Properties properties) {}
 
     public boolean isBlockValid(BlockmessBlock block) {
         boolean isValid = isProofValid(block)
-                && block.getContentList().hasValidSemantics();
+                && FixedApplicationAwareValidator.getSingleton().validateBlockContent(block);
         notifyBlockValidity(block);
         return isValid;
     }
