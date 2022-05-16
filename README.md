@@ -825,6 +825,68 @@ Because each thread is processing the results of the operations in its own separ
 
 Nevertheless, the correct execution of the program can be observed by noticing that within each replica the global operation index increases monotonically.
 
+***
+
+## 6 - Research Fronts/Possible Thesis
+There are several aspects of Blockmess that can be improved and that represent interesting research challenges.
+Some of these challenges would be good projects for a master's thesis, providing a rich state of the art to study, requiring considerable implementation effort, and needing validation through experimental evaluation.
+
+### 6.1 - Efficient lazy-push broadcast with Invertible Bloom Filters (or equivalent)
+
+Bandwidth use and block dissemination latency are some of the most important aspects limiting modern Distributed Ledgers architectures.
+
+An important research front is how to accelerate the dissemination of a block while lowering (or not aggravating) bandwidth waste.
+
+A way to do this is to limit the redundant information transmitted when disseminating a block.
+This can be done by avoiding the transmission of operations that other replicas already own.
+
+An approach for doing this is using Invertible Bloom Lookup Tables (IBLT) to determine which operation content needs to be transmitted on a node by node basis during the lazy-push broadcast of a block.
+
+The potential thesis would entail the study of broadcast protocols and the study and implementation of data structures with lookup properties on summarized data.
+
+The performance properties of the several solutions would then be tested under different network conditions and adversarial presence.
+
+Finally, the resulting broadcast protocols could be trivially be integrated with Blockmess.
+
+### 6.2 - Fast transaction settlement with application specific content allocation
+Blockmess allows applications using this platform to define, to some extent, the chain where content is placed.
+The algorithm designed for content allocation was initially based on transactions for cryptocurrency applications, and it allows some optimizations specific to it.
+In particular, it would allow the delivery of some transactions to the application before the block they were placed in was finalized.
+
+As Blockmess evolved to be more application agnostic, this research front was temporarily placed aside.
+However, the potential of this approach is still present and is something we want to explore.
+
+A thesis covering this front would entail a study of transaction settlement strategies in parallel chain distributed ledgers and how Blockmess works internally.
+
+As an implementation onus, you'd have to delve into the internals of Blockmess to add the functionality of delivering content based on rules that go beyond those dictating the delivery order of blocks, and which are application specific.
+
+In the best case scenario which would greatly improve the potential of the thesis, new content allocation rules could be proposed that improve even further the transaction settlement benefits.
+
+Finally, the benefits of this solution should be tested when compared with other solutions.
+
+### 6.3 - Multi-purpose chains in Blockmess
+In Blockmess the use of parallel chains is restricted to the improvement of throughput by having the network propose blocks at a faster rate.
+However, there are several use cases for parallel chains in this area's literature.
+Some works use parallel chains to improve throughput (like ours), other improve latency in block delivery, and finally other improve transaction settlement without providing total order for operation processing.
+
+As far as we know, no work developed uses the parallel chains for more than one purpose.
+In Blockmess we already addapt the number of chains in use to correspond to the throughput application demands. We can extend the idea further and have different chain functionalities that optimize the performance metrics of the system depending on the application demands.
+
+This work would entail the study in general of parallel chain solutions and the implementation of deep modifications on the Blockmess platform in order to create new types of chains.
+
+The experimental work on this thesis would show the effects of the use of the different kinds of parallel chains under varying application loads, amount of adversarial presence, and rules for the instantiation of different types of chains.
+
+### 6.4 - Integration of parallel chains with other scalability solutions
+This proposal is admittedly more open-ended than the previous.
+There exist many scalability proposals and research fronts over the original Blockchain design introduced in Bitcoin.
+Each of them has a set of upsides and downsides (yes, even Blockmess).
+
+In this thesis we would study the integration of several scalability solutions to optimize the system and extract some synergy from their concurrent use.
+
+We have no predefined plan for this research front.
+However, if you are interested in the area and want to study some alternative scalability solutions to parallel chains, a thesis in this area provides boundless space for innovation and implementation freedom.
+
+On a personal recommendation, it was following this general aimless: "Let's see what exists in Distributed Ledger scalability papers", that Blockmess was thought of.
 
 ***
 ##### Disclaimer
