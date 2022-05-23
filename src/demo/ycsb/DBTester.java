@@ -17,11 +17,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DBTester {
 
-    private final DBClient db = DBClient.getSingleton();
+    private final DBClient db = new DBClient();
 
     @BeforeAll
     static void beforeAll() {
-        DBClient.getSingleton().reset();
+        new DBClient().reset();
     }
 
     @AfterEach

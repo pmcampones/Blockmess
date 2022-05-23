@@ -4,7 +4,6 @@ import applicationInterface.ApplicationInterface;
 import demo.ycsb.pojos.DeleteRequest;
 import demo.ycsb.pojos.PostRequest;
 import demo.ycsb.serializers.GenericPojoSerializer;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,13 +14,21 @@ public class OperationProcessor extends ApplicationInterface {
 
     private Map<String, Table> tables = new HashMap<>();
 
-    public OperationProcessor(@NotNull String[] blockmessProperties) {
-        super(blockmessProperties);
+    private static OperationProcessor singleton;
+
+    private OperationProcessor() {
+        super(new String[0]);
+    }
+
+    public static OperationProcessor getSingleton() {
+        if (singleton == null)
+            singleton = new OperationProcessor();
+        return singleton;
     }
 
     public byte[] invokeOp(byte[] operation) {
-        //return super.invokeSyncOperation(operation).getLeft();
-        return processOperation(operation);
+        return super.invokeSyncOperation(operation).getLeft();
+        //return processOperation(operation);
     }
 
     @Override

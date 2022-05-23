@@ -19,17 +19,7 @@ import static java.util.stream.Collectors.toMap;
 
 public class DBClient extends DB {
 
-    private static DBClient singleton;
-
-    private DBClient() {}
-
-    public static DBClient getSingleton() {
-        if (singleton == null)
-            singleton = new DBClient();
-        return singleton;
-    }
-
-    private final OperationProcessor proxy = new OperationProcessor(new String[0]);
+    private final OperationProcessor proxy = OperationProcessor.getSingleton();
 
     @Override
     public Status read(String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
