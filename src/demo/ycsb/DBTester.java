@@ -26,26 +26,25 @@ public class DBTester {
     }
 
     @Test
-    void shouldNotFindRead() {
-        Set<String> fields = new HashSet<>();
-        var status = db.read("users", "pablo", fields, new HashMap<>());
+    void shouldNotFindTableInRead() {
+        var status = db.read("users", "pablo", new HashSet<>(), new HashMap<>());
         assertEquals(Status.NOT_FOUND, status);
     }
 
     @Test
-    void shouldNotFindScan() {
+    void shouldNotFindTableInScan() {
         var status = db.scan("users", "pablo", 10, new HashSet<>(), new Vector<>());
         assertEquals(Status.NOT_FOUND, status);
     }
 
     @Test
-    void shouldNotFindUpdate() {
+    void shouldNotFindTableInUpdate() {
         var status = db.update("users", "pablo", new HashMap<>());
         assertEquals(Status.NOT_FOUND, status);
     }
 
     @Test
-    void shouldNotFindDelete() {
+    void shouldNotFindTableInDelete() {
         var status = db.delete("users", "pablo");
         assertEquals(Status.NOT_FOUND, status);
 
@@ -55,6 +54,34 @@ public class DBTester {
     void shouldInsertInNonExistentTable() {
         var status = db.insert("users", "pablo", new HashMap<>());
         assertEquals(Status.OK, status);
+    }
+
+    @Test
+    void shouldNotFindUserInRead() {
+        db.insert("users", "not_pablo", new HashMap<>());
+        var status = db.read("users", "pablo", new HashSet<>(), new HashMap<>());
+        assertEquals(Status.NOT_FOUND, status);
+    }
+
+    @Test
+    void shouldNotFindUserInScan() {
+        db.insert("users", "not_pablo", new HashMap<>());
+        var status = db.scan("users", "pablo", 10, new HashSet<>(), new Vector<>());
+        assertEquals(Status.NOT_FOUND, status);
+    }
+
+    @Test
+    void shouldNotFindUserInUpdate() {
+        db.insert("users", "not_pablo", new HashMap<>());
+        var status = db.update("users", "pablo", new HashMap<>());
+        assertEquals(Status.NOT_FOUND, status);
+    }
+
+    @Test
+    void shouldNotFindUserInDelete() {
+        db.insert("users", "not_pablo", new HashMap<>());
+        var status = db.delete("users", "pablo");
+        assertEquals(Status.NOT_FOUND, status);
     }
 
     @Test

@@ -79,7 +79,10 @@ public class OperationProcessor extends ApplicationInterface {
 
     public Optional<List<Map<String,byte[]>>> processScanRequest(String tableKey, String startKey, int recordCount, Set<String> fields) {
         var table = tables.get(tableKey);
-        return table == null ? Optional.empty() : Optional.of(table.scanRecords(startKey, recordCount, fields));
+        if (table == null)
+            return Optional.empty();
+        var records = table.scanRecords(startKey, recordCount, fields);
+        return records.isEmpty() ? Optional.empty() : Optional.of(records);
     }
 
     public Optional<Map<String,byte[]>> processReadRequest(String tableKey, String recordKey, Set<String> fields) {
