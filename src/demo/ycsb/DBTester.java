@@ -1,21 +1,32 @@
 package demo.ycsb;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
 import site.ycsb.Status;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class DBTester {
 
+    private final DBClient db = DBClient.getSingleton();
+
+    @BeforeAll
+    static void beforeAll() {
+        DBClient.getSingleton().reset();
+    }
+
+    @AfterEach
+    void afterEach() {
+        db.reset();
+    }
+
     @Test
     void shouldNotFindRead() {
-        var db = new DBClient();
         Set<String> fields = new HashSet<>();
         var status = db.read("users", "pablo", fields, new HashMap<>());
         assertEquals(Status.NOT_FOUND, status);
@@ -23,45 +34,69 @@ public class DBTester {
 
     @Test
     void shouldNotFindScan() {
-        var db = new DBClient();
         var status = db.scan("users", "pablo", 10, new HashSet<>(), new Vector<>());
         assertEquals(Status.NOT_FOUND, status);
     }
 
     @Test
     void shouldNotFindUpdate() {
-        var db = new DBClient();
         var status = db.update("users", "pablo", new HashMap<>());
         assertEquals(Status.NOT_FOUND, status);
     }
 
     @Test
     void shouldNotFindDelete() {
-        var db = new DBClient();
         var status = db.delete("users", "pablo");
         assertEquals(Status.NOT_FOUND, status);
 
     }
 
     @Test
-    void shouldInsertNonExistentTable() {
-        var db = new DBClient();
+    void shouldInsertInNonExistentTable() {
         var status = db.insert("users", "pablo", new HashMap<>());
         assertEquals(Status.OK, status);
     }
 
     @Test
+    void shouldInsertInExistentTable() {
+        db.insert("users", "a", new HashMap<>());
+        var status = db.insert("users", "b", new HashMap<>());
+        assertEquals(Status.OK, status);
+    }
+
+    @Test
+    void shouldInsertOverExistentUser() {
+        db.insert("users", "pablo", new HashMap<>());
+        var status = db.insert("users", "pablo", new HashMap<>());
+        assertEquals(Status.OK, status);
+    }
+
+    @Test
+    void shouldInsertWithFields() {
+        Map<String, ByteIterator> fields = new HashMap<>();
+        fields.put("f1", new ByteArrayByteIterator(new byte[]{1,2,3}));
+        var status = db.insert("users", "pablo", fields);
+        assertEquals(Status.OK, status);
+    }
+
+    @Test
+    void shouldInsertExistentTableWithFields() {
+        db.insert("users", "pablo", new HashMap<>());
+        Map<String, ByteIterator> fields = new HashMap<>();
+        fields.put("f1", new ByteArrayByteIterator(new byte[]{1,2,3}));
+        var status = db.insert("users", "pablo", fields);
+        assertEquals(Status.OK, status);
+    }
+
+    @Test
     void shouldReadExistentUser() {
-        var db = new DBClient();
         db.insert("users", "pablo", new HashMap<>());
         var status = db.read("users", "pablo", new HashSet<>(), new HashMap<>());
         assertEquals(Status.OK, status);
     }
 
-
     @Test
     void shouldScanExistentUsers() {
-        var db = new DBClient();
         db.insert("users", "a", new HashMap<>());
         db.insert("users", "c", new HashMap<>());
         Vector<HashMap<String, ByteIterator>> output = new Vector<>();
@@ -72,10 +107,53 @@ public class DBTester {
 
     @Test
     void shouldUpdateExistentUser() {
-        var db = new DBClient();
         db.insert("users", "pablo", new HashMap<>());
-        var status = db.update("users", "pablo", new HashMap<>());
+        Map<String, ByteIterator> fields = new HashMap<>();
+        fields.put("f1", new ByteArrayByteIterator(new byte[]{1,2,3}));
+        var status = db.update("users", "pablo", fields);
         assertEquals(Status.OK, status);
+    }
+
+    @Test
+    void shouldReadAllFieldsImplicit() {
+        Map<String, ByteIterator> fields = new HashMap<>(10);
+        for (int i = 0; i < 10; i++)
+            fields.put("f" + i, new ByteArrayByteIterator(new byte[]{(byte) i}));
+        db.insert("users", "pablo", fields);
+        Map<String, ByteIterator> extracted = new HashMap<>(10);
+        var status = db.read("users", "pablo", new HashSet<>(), extracted);
+        assertEquals(Status.OK, status);
+        for (int i = 0; i < 10; i++)
+            assertTrue(extracted.containsKey("f" + i));
+    }
+
+    @Test
+    void shouldReadAllFieldsExplicit() {
+        Map<String, ByteIterator> fields = new HashMap<>(10);
+        for (int i = 0; i < 10; i++)
+            fields.put("f" + i, new ByteArrayByteIterator(new byte[]{(byte) i}));
+        db.insert("users", "pablo", fields);
+        Map<String, ByteIterator> extracted = new HashMap<>(10);
+        var status = db.read("users", "pablo", fields.keySet(), extracted);
+        assertEquals(Status.OK, status);
+        for (int i = 0; i < 10; i++)
+            assertTrue(extracted.containsKey("f" + i));
+    }
+
+    @Test
+    void shouldReadSomeFields() {
+        Map<String, ByteIterator> fields = new HashMap<>(10);
+        for (int i = 0; i < 10; i++)
+            fields.put("f" + i, new ByteArrayByteIterator(new byte[]{(byte) i}));
+        db.insert("users", "pablo", fields);
+        Set<String> queriedFields = new HashSet<>(5);
+        for (int i = 0; i < 10; i+= 2)
+            queriedFields.add("f" + i);
+        Map<String, ByteIterator> extracted = new HashMap<>(5);
+        var status = db.read("users", "pablo", queriedFields, extracted);
+        assertEquals(Status.OK, status);
+        for (int i = 0; i < 10; i += 2) assertTrue(extracted.containsKey("f" + i));
+        for (int i = 1; i < 10; i += 2) assertFalse(extracted.containsKey("f" + i));
     }
 
 }

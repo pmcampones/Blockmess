@@ -17,7 +17,7 @@ public class Table {
     }
 
     private Map<String, byte[]> filterUnusedFields(Set<String> fields, Map<String, byte[]> record) {
-        return record.entrySet().stream().filter(e -> !fields.contains(e.getKey()))
+        return record.entrySet().stream().filter(e -> fields.contains(e.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 

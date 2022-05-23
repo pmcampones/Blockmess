@@ -9,12 +9,11 @@ import org.jetbrains.annotations.NotNull;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
 import java.util.*;
 
 public class OperationProcessor extends ApplicationInterface {
 
-    private final TreeMap<String, Table> tables = new TreeMap<>();
+    private Map<String, Table> tables = new HashMap<>();
 
     public OperationProcessor(@NotNull String[] blockmessProperties) {
         super(blockmessProperties);
@@ -53,8 +52,8 @@ public class OperationProcessor extends ApplicationInterface {
         if (table == null)
             return new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()};
         var record = table.deleteRecord(delete.getKey());
-        return record.map(stringMap -> GenericPojoSerializer.serializePojoResponse(DBClient.RETURN_CODES.OK, (Serializable) stringMap))
-                .orElseGet(() -> new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()});
+        return record.isPresent() ? new byte[] {(byte) DBClient.RETURN_CODES.OK.ordinal()}
+                : new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()};
     }
 
     private byte[] processInsert(ObjectInputStream oin) throws IOException {
@@ -64,9 +63,8 @@ public class OperationProcessor extends ApplicationInterface {
             table = new Table();
             tables.put(insert.getTable(), table);
         }
-        var record = table.insertRecord(insert.getKey(), insert.getFields());
-        return record.map(stringMap -> GenericPojoSerializer.serializePojoResponse(DBClient.RETURN_CODES.OK, (Serializable) stringMap))
-                .orElseGet(() -> new byte[]{(byte) DBClient.RETURN_CODES.OK.ordinal()});
+        table.insertRecord(insert.getKey(), insert.getFields());
+        return new byte[]{(byte) DBClient.RETURN_CODES.OK.ordinal()};
     }
 
     private byte[] processUpdateRequest(ObjectInputStream oin) throws IOException {
@@ -75,8 +73,8 @@ public class OperationProcessor extends ApplicationInterface {
         if (table == null)
             return new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()};
         var record = table.updateRecord(update.getKey(), update.getFields());
-        return record.map(stringMap -> GenericPojoSerializer.serializePojoResponse(DBClient.RETURN_CODES.OK, (Serializable) stringMap))
-                .orElseGet(() -> new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()});
+        return record.isPresent() ? new byte[] {(byte) DBClient.RETURN_CODES.OK.ordinal()}
+                : new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()};
     }
 
     public Optional<List<Map<String,byte[]>>> processScanRequest(String tableKey, String startKey, int recordCount, Set<String> fields) {
@@ -87,6 +85,10 @@ public class OperationProcessor extends ApplicationInterface {
     public Optional<Map<String,byte[]>> processReadRequest(String tableKey, String recordKey, Set<String> fields) {
         var table = tables.get(tableKey);
         return table == null ? Optional.empty() : table.readRecord(recordKey, fields);
+    }
+
+    public void reset() {
+        this.tables = new HashMap<>();
     }
 
 }

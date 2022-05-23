@@ -19,6 +19,16 @@ import static java.util.stream.Collectors.toMap;
 
 public class DBClient extends DB {
 
+    private static DBClient singleton;
+
+    private DBClient() {}
+
+    public static DBClient getSingleton() {
+        if (singleton == null)
+            singleton = new DBClient();
+        return singleton;
+    }
+
     private final OperationProcessor proxy = new OperationProcessor(new String[0]);
 
     @Override
@@ -83,6 +93,10 @@ public class DBClient extends DB {
             default:
                 return Status.ERROR;
         }
+    }
+
+    public void reset() {
+        proxy.reset();
     }
 
     public enum OP {
