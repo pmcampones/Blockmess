@@ -4,8 +4,6 @@ package demo.ycsb;
 import applicationInterface.ApplicationInterface;
 import demo.ycsb.pojos.DeleteRequest;
 import demo.ycsb.pojos.PostRequest;
-import demo.ycsb.pojos.ReadRequest;
-import demo.ycsb.pojos.ScanRequest;
 import demo.ycsb.serializers.GenericPojoSerializer;
 import org.jetbrains.annotations.NotNull;
 
@@ -13,8 +11,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.TreeMap;
+import java.util.*;
 
 public class OperationProcessor extends ApplicationInterface {
 
@@ -37,10 +34,6 @@ public class OperationProcessor extends ApplicationInterface {
                 return new byte[0];
             DBClient.OP op = DBClient.OP.values()[opIdx];
             switch (op) {
-                case READ:
-                    return processReadRequest(oin);
-                case SCAN:
-                    return processScanRequest(oin);
                 case UPDATE:
                     return processUpdateRequest(oin);
                 case INSERT:
@@ -87,26 +80,14 @@ public class OperationProcessor extends ApplicationInterface {
                 .orElseGet(() -> new byte[0]);
     }
 
-    private byte[] processScanRequest(ObjectInputStream oin) throws IOException {
-        ScanRequest scan = GenericPojoSerializer.deserialize(oin);
-        var table = tables.get(scan.getTable());
-        if (table == null)
-            return new byte[0];
-        var record = table.scanRecords(scan.getStartKey(), scan.getRecordCount(), scan.getFields());
-        if (!(record instanceof Serializable))
-            record = new ArrayList<>(record);
-        return GenericPojoSerializer.serializePojo((Serializable) record);
+    public Optional<List<Map<String,byte[]>>> processScanRequest(String tableKey, String startKey, int recordCount, Set<String> fields) {
+        var table = tables.get(tableKey);
+        return table == null ? Optional.empty() : Optional.of(table.scanRecords(startKey, recordCount, fields));
     }
 
-    private byte[] processReadRequest(ObjectInputStream oin) throws IOException {
-        ReadRequest read = GenericPojoSerializer.deserialize(oin);
-        var table = tables.get(read.getTable());
-        if (table == null)
-            return new byte[0];
-        var record = table.readRecord(read.getKey(), read.getFields());
-        return record.map(stringMap -> GenericPojoSerializer.serializePojo((Serializable) stringMap))
-                .orElseGet(() -> new byte[0]);
+    public Optional<Map<String,byte[]>> processReadRequest(String tableKey, String recordKey, Set<String> fields) {
+        var table = tables.get(tableKey);
+        return table == null ? Optional.empty() : table.readRecord(recordKey, fields);
     }
-
 
 }
