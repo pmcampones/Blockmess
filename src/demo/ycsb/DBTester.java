@@ -8,8 +8,12 @@ import site.ycsb.ByteIterator;
 import site.ycsb.Status;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static java.util.stream.Collectors.toSet;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DBTester {
 
@@ -143,44 +147,58 @@ public class DBTester {
 
     @Test
     void shouldReadAllFieldsImplicit() {
-        Map<String, ByteIterator> fields = new HashMap<>(10);
-        for (int i = 0; i < 10; i++)
-            fields.put("f" + i, new ByteArrayByteIterator(new byte[]{(byte) i}));
+        Map<String, ByteIterator> fields = IntStream.range(0,10).boxed().collect(Collectors.toMap(i -> "f" + i,
+                i -> new ByteArrayByteIterator(new byte[]{i.byteValue()})));
         db.insert("users", "pablo", fields);
         Map<String, ByteIterator> extracted = new HashMap<>(10);
         var status = db.read("users", "pablo", new HashSet<>(), extracted);
         assertEquals(Status.OK, status);
-        for (int i = 0; i < 10; i++)
-            assertTrue(extracted.containsKey("f" + i));
+        assertTrue(IntStream.range(0, 10).mapToObj(i -> "f" + i).allMatch(extracted::containsKey));
     }
 
     @Test
     void shouldReadAllFieldsExplicit() {
-        Map<String, ByteIterator> fields = new HashMap<>(10);
-        for (int i = 0; i < 10; i++)
-            fields.put("f" + i, new ByteArrayByteIterator(new byte[]{(byte) i}));
+        Map<String, ByteIterator> fields = IntStream.range(0,10).boxed().collect(Collectors.toMap(i -> "f" + i,
+                i -> new ByteArrayByteIterator(new byte[]{i.byteValue()})));
         db.insert("users", "pablo", fields);
         Map<String, ByteIterator> extracted = new HashMap<>(10);
         var status = db.read("users", "pablo", fields.keySet(), extracted);
         assertEquals(Status.OK, status);
-        for (int i = 0; i < 10; i++)
-            assertTrue(extracted.containsKey("f" + i));
+        assertTrue(IntStream.range(0, 10).mapToObj(i -> "f" + i).allMatch(extracted::containsKey));
     }
 
     @Test
     void shouldReadSomeFields() {
-        Map<String, ByteIterator> fields = new HashMap<>(10);
-        for (int i = 0; i < 10; i++)
-            fields.put("f" + i, new ByteArrayByteIterator(new byte[]{(byte) i}));
+        Map<String, ByteIterator> fields = IntStream.range(0,10).boxed().collect(Collectors.toMap(i -> "f" + i,
+                i -> new ByteArrayByteIterator(new byte[]{i.byteValue()})));
         db.insert("users", "pablo", fields);
-        Set<String> queriedFields = new HashSet<>(5);
-        for (int i = 0; i < 10; i+= 2)
-            queriedFields.add("f" + i);
+        Set<String> queriedFields = IntStream.range(0, 10).filter(i -> i % 2 == 0)
+                .mapToObj(i -> "f" + i).collect(toSet());
         Map<String, ByteIterator> extracted = new HashMap<>(5);
         var status = db.read("users", "pablo", queriedFields, extracted);
         assertEquals(Status.OK, status);
-        for (int i = 0; i < 10; i += 2) assertTrue(extracted.containsKey("f" + i));
-        for (int i = 1; i < 10; i += 2) assertFalse(extracted.containsKey("f" + i));
+        assertTrue(IntStream.range(0, 10).filter(i -> i % 2 == 0)
+                .mapToObj(i -> "f" + i).allMatch(extracted::containsKey));
+        assertTrue(IntStream.range(0, 10).filter(i -> i % 2 == 1)
+                .mapToObj(i -> "f" + i).noneMatch(extracted::containsKey));
+    }
+
+    @Test
+    void shouldScanFullExtent() {
+        IntStream.range(0, 10).mapToObj(String::valueOf).forEach(key -> db.insert("users", key, new HashMap<>()));
+        Vector<HashMap<String, ByteIterator>> extracted = new Vector<>();
+        var status = db.scan("users", "1", 5, new HashSet<>(), extracted);
+        assertEquals(Status.OK, status);
+        assertEquals(5, extracted.size());
+    }
+
+    @Test
+    void shouldScanUntilEnd() {
+        IntStream.range(0, 10).mapToObj(String::valueOf).forEach(key -> db.insert("users", key, new HashMap<>()));
+        Vector<HashMap<String, ByteIterator>> extracted = new Vector<>();
+        var status = db.scan("users", "6", 5, new HashSet<>(), extracted);
+        assertEquals(Status.OK, status);
+        assertEquals(4, extracted.size());
     }
 
 }
