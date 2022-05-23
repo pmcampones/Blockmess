@@ -130,6 +130,21 @@
             <version>0.91</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/com.github.brianfrankcooper.YCSB/core -->
+        <dependency>
+            <groupId>com.github.brianfrankcooper.YCSB</groupId>
+            <artifactId>core</artifactId>
+            <version>0.17.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.18.20</version>
+            <scope>provided</scope>
+        </dependency>
+
+
     </dependencies>
 
     <build>
