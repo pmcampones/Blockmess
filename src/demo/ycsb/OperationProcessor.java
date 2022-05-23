@@ -1,6 +1,5 @@
 package demo.ycsb;
 
-
 import applicationInterface.ApplicationInterface;
 import demo.ycsb.pojos.DeleteRequest;
 import demo.ycsb.pojos.PostRequest;
@@ -31,7 +30,7 @@ public class OperationProcessor extends ApplicationInterface {
         try (var in = new ByteArrayInputStream(operation); var oin = new ObjectInputStream(in)) {
             byte opIdx = oin.readByte();
             if (opIdx < 0 || opIdx > DBClient.OP.values().length)
-                return new byte[0];
+                return new byte[] {(byte) DBClient.RETURN_CODES.ERROR.ordinal()};
             DBClient.OP op = DBClient.OP.values()[opIdx];
             switch (op) {
                 case UPDATE:
@@ -41,10 +40,10 @@ public class OperationProcessor extends ApplicationInterface {
                 case DELETE:
                     return processDelete(oin);
                 default:
-                    return new byte[0];
+                    return new byte[] {(byte) DBClient.RETURN_CODES.ERROR.ordinal()};
             }
         } catch (IOException e) {
-            return new byte[0];
+            return new byte[] {(byte) DBClient.RETURN_CODES.ERROR.ordinal()};
         }
     }
 
@@ -52,10 +51,10 @@ public class OperationProcessor extends ApplicationInterface {
         DeleteRequest delete = GenericPojoSerializer.deserialize(oin);
         var table = tables.get(delete.getTable());
         if (table == null)
-            return new byte[0];
+            return new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()};
         var record = table.deleteRecord(delete.getKey());
-        return record.map(stringMap -> GenericPojoSerializer.serializePojo((Serializable) stringMap))
-                .orElseGet(() -> new byte[0]);
+        return record.map(stringMap -> GenericPojoSerializer.serializePojoResponse(DBClient.RETURN_CODES.OK, (Serializable) stringMap))
+                .orElseGet(() -> new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()});
     }
 
     private byte[] processInsert(ObjectInputStream oin) throws IOException {
@@ -66,18 +65,18 @@ public class OperationProcessor extends ApplicationInterface {
             tables.put(insert.getTable(), table);
         }
         var record = table.insertRecord(insert.getKey(), insert.getFields());
-        return record.map(stringMap -> GenericPojoSerializer.serializePojo((Serializable) stringMap))
-                .orElseGet(() -> new byte[0]);
+        return record.map(stringMap -> GenericPojoSerializer.serializePojoResponse(DBClient.RETURN_CODES.OK, (Serializable) stringMap))
+                .orElseGet(() -> new byte[]{(byte) DBClient.RETURN_CODES.OK.ordinal()});
     }
 
     private byte[] processUpdateRequest(ObjectInputStream oin) throws IOException {
         PostRequest update = GenericPojoSerializer.deserialize(oin);
         var table = tables.get(update.getTable());
         if (table == null)
-            return new byte[0];
+            return new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()};
         var record = table.updateRecord(update.getKey(), update.getFields());
-        return record.map(stringMap -> GenericPojoSerializer.serializePojo((Serializable) stringMap))
-                .orElseGet(() -> new byte[0]);
+        return record.map(stringMap -> GenericPojoSerializer.serializePojoResponse(DBClient.RETURN_CODES.OK, (Serializable) stringMap))
+                .orElseGet(() -> new byte[] {(byte) DBClient.RETURN_CODES.NOT_FOUND.ordinal()});
     }
 
     public Optional<List<Map<String,byte[]>>> processScanRequest(String tableKey, String startKey, int recordCount, Set<String> fields) {

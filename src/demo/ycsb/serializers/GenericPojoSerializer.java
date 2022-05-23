@@ -8,7 +8,7 @@ import java.io.*;
 public class GenericPojoSerializer {
 
     @SneakyThrows
-    public static byte[] serializePojoCode(DBClient.OP op, Serializable obj) {
+    public static byte[] serializePojoRequest(DBClient.OP op, Serializable obj) {
         try (var out = new ByteArrayOutputStream(); var oout = new ObjectOutputStream(out)) {
             oout.writeByte(op.ordinal());
             oout.writeObject(obj);
@@ -19,8 +19,9 @@ public class GenericPojoSerializer {
     }
 
     @SneakyThrows
-    public static byte[] serializePojo(Serializable obj) {
+    public static byte[] serializePojoResponse(DBClient.RETURN_CODES op, Serializable obj) {
         try (var out = new ByteArrayOutputStream(); var oout = new ObjectOutputStream(out)) {
+            oout.writeByte(op.ordinal());
             oout.writeObject(obj);
             oout.flush();
             out.flush();
@@ -32,13 +33,6 @@ public class GenericPojoSerializer {
     @SneakyThrows
     public static <E extends Serializable> E deserialize(ObjectInputStream in) throws IOException {
         return (E) in.readObject();
-    }
-
-    @SneakyThrows
-    public static <E extends Serializable> E deserialize(byte[] content) throws IOException{
-        try(var in = new ByteArrayInputStream(content); var oin = new ObjectInputStream(in)) {
-            return (E) oin.readObject();
-        }
     }
 
 }

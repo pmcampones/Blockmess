@@ -3,6 +3,7 @@ package demo.ycsb;
 import demo.ycsb.pojos.DeleteRequest;
 import demo.ycsb.pojos.PostRequest;
 import demo.ycsb.serializers.GenericPojoSerializer;
+import org.jetbrains.annotations.NotNull;
 import site.ycsb.ByteArrayByteIterator;
 import site.ycsb.ByteIterator;
 import site.ycsb.DB;
@@ -46,8 +47,8 @@ public class DBClient extends DB {
         var fields = values.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, e -> e.getValue().toArray()));
         var updateReq = new PostRequest(table, key, fields);
-        var reply = proxy.invokeOp(GenericPojoSerializer.serializePojoCode(OP.UPDATE, updateReq));
-        return reply.length == 0 ? Status.NOT_FOUND : Status.OK;
+        var reply = proxy.invokeOp(GenericPojoSerializer.serializePojoRequest(OP.UPDATE, updateReq));
+        return getStatus(reply);
     }
 
     @Override
@@ -55,18 +56,40 @@ public class DBClient extends DB {
         var fields = values.entrySet().stream()
                 .collect(toMap(Map.Entry::getKey, e -> e.getValue().toArray()));
         var insertReq = new PostRequest(table, key, fields);
-        proxy.invokeOp(GenericPojoSerializer.serializePojoCode(OP.INSERT, insertReq));
-        return Status.OK;
+        var reply = proxy.invokeOp(GenericPojoSerializer.serializePojoRequest(OP.INSERT, insertReq));
+        return getStatus(reply);
     }
 
     @Override
     public Status delete(String table, String key) {
         var deleteReq = new DeleteRequest(table, key);
-        var reply = proxy.invokeOp(GenericPojoSerializer.serializePojoCode(OP.DELETE, deleteReq));
-        return reply.length == 0 ? Status.NOT_FOUND : Status.OK;
+        var reply = proxy.invokeOp(GenericPojoSerializer.serializePojoRequest(OP.DELETE, deleteReq));
+        return getStatus(reply);
+    }
+
+    @NotNull
+    private Status getStatus(byte[] reply) {
+        if (reply.length == 0)
+            return Status.ERROR;
+        byte byteStatus = reply[0];
+        if (byteStatus < 0 || byteStatus >= RETURN_CODES.values().length)
+            return Status.ERROR;
+        RETURN_CODES code = RETURN_CODES.values()[byteStatus];
+        switch (code) {
+            case OK:
+                return Status.OK;
+            case NOT_FOUND:
+                return Status.NOT_FOUND;
+            default:
+                return Status.ERROR;
+        }
     }
 
     public enum OP {
         UPDATE, INSERT, DELETE
+    }
+
+    public enum RETURN_CODES {
+        OK, NOT_FOUND, ERROR
     }
 }
