@@ -3,7 +3,7 @@ Blockmess is a scalable and modular Distributed Ledger used as an application ag
 
 This repository holds the Java (not yet) open source library with the Distributed Ledger logic.
 
-This package contains the source code (src/), jar file (target/BlockmessLib.jar), running scripts (scripts/), and configuration files (config/) for the project. Blockmess requires the Java Runtime Environment version 16 or higher.
+This package contains the source code (src/), jar file (target/BlockmessLib.jar), running scripts (scripts/), and configuration files (config/) for the project. Blockmess requires the Java Runtime Environment version 11 or higher.
 
 ### β Considerations
 This is still a work in progress, so all feedback is appreciated.
@@ -33,8 +33,11 @@ It is through this class that the developed applications can access Blockmess' f
 Sections 4.1 and 4.2 present a detailed description of all the configuration properties that can be found in the file **config/config.properties**.
 Section 4.3 shows how to override the properties in the configuration file and finally section 4.5 suggests the minimum configurations that should be modified to complete the CSD project.
 
-Finally, section 5 presents a walkthrough of the AsyncCounter demo application.
-In this demo we put in practice the information presented in the previously mentioned sections.  
+Section 5 presents a walkthrough of the AsyncCounter demo application.
+In this demo we put in practice the information presented in the previously mentioned sections.
+
+Finally, section 7 explains the scripts provided to run Blockmess.
+Note that when changing from baremetal executions to containerized executions, some knowledge of the parameters shown in section 4 is required.
 
 ***
 
@@ -827,15 +830,33 @@ Nevertheless, the correct execution of the program can be observed by noticing t
 
 ***
 
-## 6 - Launch Scripts
+## 6 - Container Execution (Docker)
+To ease the execution of Blockmess we make available a simple docker image to run the tests.
+
+The image can be built by running the following command in the project root:
+
+    docker build -t blockmess_csd .
+
+**Note** The name of the image is set to in the provided command is set to *blockmess_csd*, however, any choice of name is valid.
+With this said, the scripts provided to run the containers assume the image is called *blockmess_csd*.
+
+Some configurations to beware when changing from a bare-metal execution to a containerized one are:
+
+- interface: Modify from *lo* to *eth0*. I don't know if this will work for every setup. *It works on my machine*.
+- address: Modify from *localhost* to comply with the address range of the network where the nodes are running. In the scripts we create a network with the prefix *192.168.0.0/24*. Note that every container should have a different address, unlike in the bare-metal deployments.
+- contact: Change the address of the contact node in accordance with the previous config.
+
+## 7 - Launch Scripts
 A series of scripts were made available to help run Blockmess.
 
-All scripts are located in the *scripts/* directory but must be run from the project root directory.
+All scripts are located in the *scripts/* directory and subdirectories but must be run from the project root directory.
 
-### 6.1 - Counter
+For each example demo we provide scripts to run replicas both in the bare-metal machine and in a containerized environment.
+
+### 7.1 - Counter
 As seen in a previous section, the *Counter* demo consists on maintaining a shared distributed *MRMW* counter between several replicas. 
 
-The two scripts to run the demo are *scripts/run_sync_counter.sh* and *scripts/run_async_counter.sh*, the first running the *Counter* demo which issues operations with the blocking *ApplicationInterface.invokeSync*, while the latter issues operations with the non-blocking method *ApplicationInterface.invokeAsync*.
+The scripts to run the demo are *scripts/counter/baremetal/sync.sh*, *scripts/counter/container/sync.sh*, *scripts/counter/baremetal/async.sh*  and *scripts/counter/container/async.sh*, the first two runs the *Counter* demo which issues operations with the blocking *ApplicationInterface.invokeSync*, while the latter two issue operations with the non-blocking method *ApplicationInterface.invokeAsync*.
 
 The two scripts take two arguments.
 - The number of replicas in operation;
@@ -845,15 +866,15 @@ In both scripts, each replica will add its index to the distributed *counter* se
 
 The scripts can be run thus:
     
-    ./scripts/run_async_counter.sh 3 100
+    ./scripts/counter/container/async.sh 3 100
 
-### 6.2 - Register
+### 7.2 - Register
 In the *Counter* demo, all operations are commutative, and therefore the order operations take place has no bearing in the final value of the counter when all operations are executed.
 
 In the *Register* demo, a distributed *MRMW* register is shared across all replicas.
 On this register, the replicas can execute operations of addition and multiplication, which are not commutative between themselves.
 
-Analogous to the previous section, two scripts are made available: *scripts/run_sync_register.sh* and *scripts/run_async_register.sh*.
+Analogous to the previous section, four scripts are made available: *scripts/register/baremetal/sync.sh*, *scripts/register/container/sync.sh*, *scripts/register/baremetal/async.sh* and *scripts/register/container/async.sh*.
 
 The scripts take the same arguments as those presented in the previous section.
 
@@ -865,9 +886,9 @@ Like in the previous scripts the index of the replicas will determine the change
 
 The scripts can be run thus:
 
-    ./scripts/run_async_register 3 100
+    ./scripts/register/container/async.sh 3 100
 
-### 6.3 - YCSB
+### 7.3 - YCSB
 The *Yahoo Cloud Serving Benchmark (YCSB)* is a benchmarking tool widely used to test the efficiency of databased (mostly No-SQL) under different workloads.
 
 Using a uniform benchmarking tool, biases caused by the choice of workloads and internal processing of the benchmarks are mitigated, thus leaving the database tests more representative of the expected performance of the databases in real deployments and allowing a more accurate comparison between database systems, across a variety of workloads.
@@ -878,9 +899,9 @@ Often distributed operation ordering mechanisms (Paxos, PBFT, BFT-SMaRT, HotStuf
 The nature of the *YCSB* tests require a synchronous execution calling the *ApplicationInterface.invokeSync* operation.
 As such, the metrics retrieved significantly downplay Blockmess' performance, as the threads issuing the operations will be blocked.
 
-Nevertheless, we provide the script *scripts/run_ycsb.sh* to run a *YCSB* test.
+Nevertheless, we provide the scripts *scripts/ycsb/baremetal.sh* and *scripts/ycsb/container.sh* to run a *YCSB* test.
 
-This script receives no arguments and runs a single replica.
+This scripts receives no arguments and run a single replica.
 The operations executed follow the workload defined in *config/workloads/workloada*.
 
 The configurations used follow the description found in:
@@ -893,13 +914,52 @@ The script can be run thus:
 
     ./scripts/run_ycsb.sh
 
+### 7.4 - Stopping Replicas
 
+Other than in the *YCSB* tests, the replicas will not stop their execution when the operations proposed are finished. 
+Instead, more blocks are made and the system keeps evolving.
 
-## 7 - Research Fronts/Possible Thesis
+#### Baremetal
+To stop the replicas in a baremetal deployment we must identify their *process id (pid)* and manually terminate the execution.
+
+Running the command:
+    
+    pidof java
+
+We can see the *pid* values of all active processes running *java*.
+Among those will be the replicas.
+The *pid* of the replicas should be close to one another.
+
+To stop the replicas copy their *pid* values and paste them following the command:
+
+    kill -9
+
+Alternatively, if the replicas are the only *java* processes in execution, the following command is recomended:
+
+    killall java
+
+#### Container
+
+The containers created using the provided scripts can be stopped running the command:
+
+    docker container stop $(docker container ls -q -f name='replica')
+
+After having stopped the containers and extracted all useful information, the containers can be deleted by issuing the command:
+
+    docker container prune
+
+Alternatively, for convenience it's possible to delete the containers without stopping them:
+
+    docker container rm -f $(docker container ls -q -f name='replica')
+
+Unlike with the solution presented to stop the replicas in the baremetal scenario, where the commands presented can stop any replica execution, these only work when the replicas have a *name* attribute starting with *replica*.
+This behaviour is the default in the provided scripts, but beware when running something that is not in the scripts.
+
+## 8 - Research Fronts/Possible Thesis
 There are several aspects of Blockmess that can be improved and that represent interesting research challenges.
 Some of these challenges would be good projects for a master's thesis, providing a rich state of the art to study, requiring considerable implementation effort, and needing validation through experimental evaluation.
 
-### 7.1 - Efficient lazy-push broadcast with Invertible Bloom Filters (or equivalent)
+### 8.1 - Efficient lazy-push broadcast with Invertible Bloom Filters (or equivalent)
 
 Bandwidth use and block dissemination latency are some of the most important aspects limiting modern Distributed Ledgers architectures.
 
@@ -916,7 +976,7 @@ The performance properties of the several solutions would then be tested under d
 
 Finally, the resulting broadcast protocols could be trivially be integrated with Blockmess.
 
-### 7.2 - Fast transaction settlement with application specific content allocation
+### 8.2 - Fast transaction settlement with application specific content allocation
 Blockmess allows applications using this platform to define, to some extent, the chain where content is placed.
 The algorithm designed for content allocation was initially based on transactions for cryptocurrency applications, and it allows some optimizations specific to it.
 In particular, it would allow the delivery of some transactions to the application before the block they were placed in was finalized.
@@ -932,7 +992,7 @@ In the best case scenario which would greatly improve the potential of the thesi
 
 Finally, the benefits of this solution should be tested when compared with other solutions.
 
-### 7.3 - Multi-purpose chains in Blockmess
+### 8.3 - Multi-purpose chains in Blockmess
 In Blockmess the use of parallel chains is restricted to the improvement of throughput by having the network propose blocks at a faster rate.
 However, there are several use cases for parallel chains in this area's literature.
 Some works use parallel chains to improve throughput (like ours), other improve latency in block delivery, and finally other improve transaction settlement without providing total order for operation processing.
@@ -944,7 +1004,7 @@ This work would entail the study in general of parallel chain solutions and the 
 
 The experimental work on this thesis would show the effects of the use of the different kinds of parallel chains under varying application loads, amount of adversarial presence, and rules for the instantiation of different types of chains.
 
-### 7.4 - Integration of parallel chains with other scalability solutions
+### 8.4 - Integration of parallel chains with other scalability solutions
 This proposal is admittedly more open-ended than the previous.
 There exist many scalability proposals and research fronts over the original Blockchain design introduced in Bitcoin.
 Each of them has a set of upsides and downsides (yes, even Blockmess).
