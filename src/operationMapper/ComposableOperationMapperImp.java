@@ -1,6 +1,6 @@
-package contentMapper;
+package operationMapper;
 
-import cmux.AppContent;
+import cmux.AppOperation;
 import cmux.CMuxMask;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -10,22 +10,22 @@ import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ComposableContentMapperImp implements ComposableContentMapper {
+public class ComposableOperationMapperImp implements ComposableOperationMapper {
 
-    private final ContentMapper inner;
+    private final OperationMapper inner;
 
     private final ReadWriteLock innerLock = new ReentrantReadWriteLock();
 
-    public ComposableContentMapperImp() {
-        this.inner = new BaseContentMapper();
+    public ComposableOperationMapperImp() {
+        this.inner = new BaseOperationMapper();
     }
 
-    public ComposableContentMapperImp(ContentMapper inner) {
+    public ComposableOperationMapperImp(OperationMapper inner) {
         this.inner = inner;
     }
 
     @Override
-    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
         try {
             innerLock.readLock().lock();
@@ -36,7 +36,7 @@ public class ComposableContentMapperImp implements ComposableContentMapper {
     }
 
     @Override
-    public void submitContent(Collection<AppContent> content) {
+    public void submitContent(Collection<AppOperation> content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -46,7 +46,7 @@ public class ComposableContentMapperImp implements ComposableContentMapper {
     }
 
     @Override
-    public void submitContent(AppContent content) {
+    public void submitContent(AppOperation content) {
         try {
             innerLock.writeLock().lock();
             inner.submitContent(content);
@@ -66,7 +66,7 @@ public class ComposableContentMapperImp implements ComposableContentMapper {
     }
 
     @Override
-    public Collection<AppContent> getStoredContent() {
+    public Collection<AppOperation> getStoredContent() {
         try {
             innerLock.readLock().lock();
             return inner.getStoredContent();
@@ -76,10 +76,10 @@ public class ComposableContentMapperImp implements ComposableContentMapper {
     }
 
     @Override
-    public Pair<ComposableContentMapper, ComposableContentMapper>
-    separateContent(CMuxMask mask, ContentMapper innerLft, ContentMapper innerRgt) {
-        ComposableContentMapper lft = new ComposableContentMapperImp(innerLft);
-        ComposableContentMapper rgt = new ComposableContentMapperImp(innerRgt);
+    public Pair<ComposableOperationMapper, ComposableOperationMapper>
+    separateContent(CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
+        ComposableOperationMapper lft = new ComposableOperationMapperImp(innerLft);
+        ComposableOperationMapper rgt = new ComposableOperationMapperImp(innerRgt);
         try {
             innerLock.writeLock().lock();
             Set<UUID> migrated = redistributeContent(mask, lft, rgt);
@@ -91,10 +91,10 @@ public class ComposableContentMapperImp implements ComposableContentMapper {
     }
 
     @NotNull
-    private Set<UUID> redistributeContent(CMuxMask mask, ComposableContentMapper lft, ComposableContentMapper rgt) {
-        Collection<AppContent> allValues = inner.getStoredContent();
+    private Set<UUID> redistributeContent(CMuxMask mask, ComposableOperationMapper lft, ComposableOperationMapper rgt) {
+        Collection<AppOperation> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
-        for (AppContent val : inner.getStoredContent()) {
+        for (AppOperation val : inner.getStoredContent()) {
             CMuxMask.MaskResult res = mask.matchIds(val.getCmuxId1(), val.getCmuxId2());
             if (res.equals(CMuxMask.MaskResult.LEFT)) {
                 migrated.add(val.getId());
@@ -108,7 +108,7 @@ public class ComposableContentMapperImp implements ComposableContentMapper {
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentMapper> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableOperationMapper> composableBlockConstructors) {
         try {
             innerLock.writeLock().lock();
             for (var blockConstructor : composableBlockConstructors)

@@ -1,8 +1,6 @@
 package ledger.ledgerManager;
 
-import cmux.AppContent;
-import contentMapper.ComposableContentMapperImp;
-import contentMapper.ContentMapper;
+import cmux.AppOperation;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
@@ -12,6 +10,8 @@ import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
 import main.GlobalProperties;
+import operationMapper.ComposableOperationMapperImp;
+import operationMapper.OperationMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
@@ -28,7 +28,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, ContentMapper {
+public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, OperationMapper {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 
@@ -59,7 +59,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     private LedgerManager(UUID ogChainId) {
         Properties props = GlobalProperties.getProps();
         var originChain = new ReferenceNode(props, ogChainId, this, 0, 1, 0,
-                new ComposableContentMapperImp());
+                new ComposableOperationMapperImp());
         originChain.attachObserver(this);
         this.minNumChains = parseInt(props.getProperty("minNumChains", "1"));
         this.maxNumChains = parseInt(props.getProperty("maxNumChains", String.valueOf(Integer.MAX_VALUE)));
@@ -351,18 +351,18 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     }
 
     @Override
-    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return getOrigin().generateContentList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppContent> content) {
+    public void submitContent(Collection<AppOperation> content) {
         getOrigin().submitContent(content);
     }
 
     @Override
-    public void submitContent(AppContent content) {
+    public void submitContent(AppOperation content) {
         var isValid = FixedApplicationAwareValidator.getSingleton().validateReceivedOperation(content.getContent());
         if (isValid.getLeft())
             getOrigin().submitContent(content);
@@ -374,9 +374,9 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     }
 
     @Override
-    public Collection<AppContent> getStoredContent() {
+    public Collection<AppOperation> getStoredContent() {
         return chains.values().stream()
-                .map(ContentMapper::getStoredContent)
+                .map(OperationMapper::getStoredContent)
                 .flatMap(Collection::stream)
                 .collect(toList());
     }

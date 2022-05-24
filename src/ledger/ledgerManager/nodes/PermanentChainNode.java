@@ -1,12 +1,12 @@
 package ledger.ledgerManager.nodes;
 
-import cmux.AppContent;
+import cmux.AppOperation;
 import cmux.CMuxMask;
-import contentMapper.ComposableContentMapper;
-import contentMapper.ContentMapper;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
+import operationMapper.ComposableOperationMapper;
+import operationMapper.OperationMapper;
 import org.apache.commons.lang3.tuple.Pair;
 
 import java.io.IOException;
@@ -163,7 +163,7 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void submitContentDirectly(Collection<AppContent> content) {
+    public void submitContentDirectly(Collection<AppOperation> content) {
         inner.submitContentDirectly(content);
     }
 
@@ -248,18 +248,18 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return inner.generateContentList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppContent> content) {
+    public void submitContent(Collection<AppOperation> content) {
         content.forEach(this::submitContent);
     }
 
     @Override
-    public void submitContent(AppContent content) {
+    public void submitContent(AppOperation content) {
         CMuxMask.MaskResult res = content.matchIds();
         content.advanceMask();
         switch (res) {
@@ -282,18 +282,18 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Collection<AppContent> getStoredContent() {
+    public Collection<AppOperation> getStoredContent() {
         return inner.getStoredContent();
     }
 
     @Override
-    public Pair<ComposableContentMapper, ComposableContentMapper> separateContent(
-            CMuxMask mask, ContentMapper innerLft, ContentMapper innerRgt) {
+    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateContent(
+            CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentMapper> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableOperationMapper> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }

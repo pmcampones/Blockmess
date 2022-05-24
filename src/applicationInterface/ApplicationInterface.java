@@ -1,6 +1,6 @@
 package applicationInterface;
 
-import cmux.AppContent;
+import cmux.AppOperation;
 import cmux.FixedCMuxIdMapper;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -47,7 +47,7 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
 
     private final Set<UUID> operationsWaitingResponse = ConcurrentHashMap.newKeySet();
 
-    private final BlockingQueue<AppContent> queuedOperations = new LinkedBlockingQueue<>();
+    private final BlockingQueue<AppOperation> queuedOperations = new LinkedBlockingQueue<>();
 
     private byte[] replicaId;
 
@@ -88,7 +88,7 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
     private void processOperations() {
         while(true) {
             try {
-                AppContent currentOp = queuedOperations.take();
+                AppOperation currentOp = queuedOperations.take();
                 byte[] operationResult = processOperation(currentOp.getContent());
                 if (operationsWaitingResponse.remove(currentOp.getId()))
                     replyOperationResults(currentOp, operationResult);
@@ -99,7 +99,7 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
         }
     }
 
-    private void replyOperationResults(AppContent currentOp, byte[] operationResult) {
+    private void replyOperationResults(AppOperation currentOp, byte[] operationResult) {
         ReplyListener listener = operationListeners.remove(currentOp.getId());
         Pair<byte[], Long> operationReply = Pair.of(operationResult, globalOpIdx);
         if (listener != null) listener.processReply(operationReply);
@@ -127,7 +127,7 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
     }
 
     private Pair<byte[], Long> invokeValidSyncOperation(byte[] operation) throws InterruptedException {
-        AppContent content = computeAppContent(operation);
+        AppOperation content = computeAppContent(operation);
         operationsWaitingResponse.add(content.getId());
         ValueDispatcher.getSingleton().disseminateAppContentRequest(content);
         return completedSyncOperations.take(content.getId());
@@ -144,19 +144,19 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
         else listener.processReply(Pair.of(isValid.getRight(), -1L));
     }
 
-    private void invokeValidAsyncOperation(byte @NotNull [] operation, @NotNull ReplyListener listener) {
-        AppContent content = computeAppContent(operation);
-        operationsWaitingResponse.add(content.getId());
-        operationListeners.put(content.getId(), listener);
-        ValueDispatcher.getSingleton().disseminateAppContentRequest(content);
-    }
-
-    private AppContent computeAppContent(byte[] operation) {
+    private AppOperation computeAppContent(byte[] operation) {
         FixedCMuxIdMapper mapper = FixedCMuxIdMapper.getSingleton();
         byte[] cmuxId1 = mapper.mapToCmuxId1(operation);
         byte[] cmuxId2 = mapper.mapToCmuxId2(operation);
         byte[] replicaMetadata = makeMetadata();
-        return new AppContent(operation, cmuxId1, cmuxId2, replicaMetadata);
+        return new AppOperation(operation, cmuxId1, cmuxId2, replicaMetadata);
+    }
+
+    private void invokeValidAsyncOperation(byte @NotNull [] operation, @NotNull ReplyListener listener) {
+        AppOperation content = computeAppContent(operation);
+        operationsWaitingResponse.add(content.getId());
+        operationListeners.put(content.getId(), listener);
+        ValueDispatcher.getSingleton().disseminateAppContentRequest(content);
     }
 
     private byte[] makeMetadata() {

@@ -1,16 +1,16 @@
 package ledger.ledgerManager.nodes;
 
-import cmux.AppContent;
-import contentMapper.ComposableContentMapper;
+import cmux.AppOperation;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
+import operationMapper.ComposableOperationMapper;
 
 import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BlockmessChain extends Ledger, ComposableContentMapper {
+public interface BlockmessChain extends Ledger, ComposableOperationMapper {
 
     UUID getChainId();
 
@@ -91,7 +91,7 @@ public interface BlockmessChain extends Ledger, ComposableContentMapper {
      * <p>This is used to test the wasted performance of other parallel chain solutions that
      * allow repeated transactions in several chains.</p>
      */
-    void submitContentDirectly(Collection<AppContent> content);
+    void submitContentDirectly(Collection<AppOperation> content);
 
     int countReferencedPermanent();
 

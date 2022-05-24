@@ -1,6 +1,6 @@
 package mempoolManager;
 
-import cmux.AppContent;
+import cmux.AppOperation;
 
 import java.util.List;
 import java.util.Set;
@@ -16,14 +16,14 @@ public class MempoolChunk {
 
     private final Set<UUID> usedIds;
 
-    private final List<AppContent> addedContent;
+    private final List<AppOperation> addedContent;
 
     private final int weight;
 
-    public MempoolChunk(UUID stateID, Set<UUID> previous, List<AppContent> addedContent) {
+    public MempoolChunk(UUID stateID, Set<UUID> previous, List<AppOperation> addedContent) {
         this.stateID = stateID;
         this.previous = previous;
-        this.usedIds = addedContent.stream().map(AppContent::getId).collect(toSet());
+        this.usedIds = addedContent.stream().map(AppOperation::getId).collect(toSet());
         this.addedContent = addedContent;
         this.weight = 1;
     }
@@ -40,7 +40,7 @@ public class MempoolChunk {
         return usedIds;
     }
 
-    public List<AppContent> getAddedContent() {
+    public List<AppOperation> getAddedContent() {
         return addedContent;
     }
 

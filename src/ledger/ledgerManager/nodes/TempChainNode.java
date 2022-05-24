@@ -1,12 +1,12 @@
 package ledger.ledgerManager.nodes;
 
-import cmux.AppContent;
+import cmux.AppOperation;
 import cmux.CMuxMask;
-import contentMapper.ComposableContentMapper;
-import contentMapper.ContentMapper;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
+import operationMapper.ComposableOperationMapper;
+import operationMapper.OperationMapper;
 import org.apache.commons.lang3.tuple.Pair;
 import utils.CryptographicUtils;
 
@@ -34,7 +34,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
      * <p>Eventually, one and only one of the root blocks in this DS will originate a valid Chain.</p>
      */
     private final Map<UUID, Pair<ReferenceNode, ReferenceNode>> tentativeChains = new HashMap<>();
-    private final Pair<ComposableContentMapper, ComposableContentMapper> contentStoragePair;
+    private final Pair<ComposableOperationMapper, ComposableOperationMapper> contentStoragePair;
     private ParentTreeNode parent;
 
     private final int finalizedWeight;
@@ -50,7 +50,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     public TempChainNode(
             Properties props, BlockmessChain inner, ParentTreeNode parent,
             UUID ChainOriginatorBlockId, int chainDepth,
-            Pair<ComposableContentMapper, ComposableContentMapper> contentStoragePair) {
+            Pair<ComposableOperationMapper, ComposableOperationMapper> contentStoragePair) {
         this.props = props;
         this.inner = inner;
         inner.attachObserver(this);
@@ -271,7 +271,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public void submitContentDirectly(Collection<AppContent> content) {
+    public void submitContentDirectly(Collection<AppOperation> content) {
         inner.submitContentDirectly(content);
     }
 
@@ -358,18 +358,18 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return inner.generateContentList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppContent> content) {
+    public void submitContent(Collection<AppOperation> content) {
         content.forEach(this::submitContent);
     }
 
     @Override
-    public void submitContent(AppContent content) {
+    public void submitContent(AppOperation content) {
         CMuxMask.MaskResult res = content.matchIds();
         content.advanceMask();
         switch (res) {
@@ -394,18 +394,18 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public Collection<AppContent> getStoredContent() {
+    public Collection<AppOperation> getStoredContent() {
         return inner.getStoredContent();
     }
 
     @Override
-    public Pair<ComposableContentMapper, ComposableContentMapper> separateContent(
-            CMuxMask mask, ContentMapper innerLft, ContentMapper innerRgt) {
+    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateContent(
+            CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentMapper> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableOperationMapper> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }

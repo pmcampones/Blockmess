@@ -4,7 +4,7 @@ import applicationInterface.ApplicationInterface;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
-import cmux.AppContent;
+import cmux.AppOperation;
 import ledger.BabelLedger;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
@@ -158,7 +158,7 @@ public class BlockmessLauncher {
         BroadcastValue.pojoSerializers.put(BlockmessBlock.ID, BlockmessBlock.serializer);
         BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
         BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
-        BroadcastValue.pojoSerializers.put(AppContent.ID, AppContent.serializer);
+        BroadcastValue.pojoSerializers.put(AppOperation.ID, AppOperation.serializer);
     }
 
     private static List<GenericProtocol> addBroadcastProtocols(Host myself)

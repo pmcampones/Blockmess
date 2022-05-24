@@ -1,6 +1,6 @@
 package applicationInterface;
 
-import cmux.AppContent;
+import cmux.AppOperation;
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import utils.IDGenerator;
 
@@ -10,14 +10,14 @@ public class DeliverFinalizedContentNotification extends ProtoNotification {
 
     public static final short ID = IDGenerator.genId();
 
-    private final List<AppContent> finalizedContent;
+    private final List<AppOperation> finalizedContent;
 
-    public DeliverFinalizedContentNotification(List<AppContent> finalizedContent) {
+    public DeliverFinalizedContentNotification(List<AppOperation> finalizedContent) {
         super(ID);
         this.finalizedContent = finalizedContent;
     }
 
-    public List<AppContent> getFinalizedContent() {
+    public List<AppOperation> getFinalizedContent() {
         return finalizedContent;
     }
 }

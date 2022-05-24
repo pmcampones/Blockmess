@@ -1,7 +1,7 @@
 package sybilResistantElection;
 
 import broadcastProtocols.BroadcastValue;
-import cmux.AppContent;
+import cmux.AppOperation;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
@@ -210,7 +210,7 @@ public class SybilResistantElection implements LedgerObserver {
     private ChainSeed computeChainRandomSeed(BlockmessChain chain)
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
-        List<AppContent> contentLst = chain.generateContentList(prevBlocks, getAproximateProofSize());
+        List<AppOperation> contentLst = chain.generateContentList(prevBlocks, getAproximateProofSize());
         ContentList content = new ContentList(contentLst);
         return new ChainSeed(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
     }
@@ -260,7 +260,7 @@ public class SybilResistantElection implements LedgerObserver {
     private void replaceChain(ChainSeed oldSeed, Set<UUID> newPrevs) throws IOException {
         UUID newPrev = newPrevs.iterator().next();
         BlockmessChain chain = oldSeed.getChain();
-        List<AppContent> contentLst = chain.generateContentList(newPrevs, getAproximateProofSize());
+        List<AppOperation> contentLst = chain.generateContentList(newPrevs, getAproximateProofSize());
         ContentList newContent = new ContentList(contentLst);
         ChainSeed newChainSeed = new ChainSeed(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
         chainSeeds.replace(oldSeed.getChainId(), newChainSeed);

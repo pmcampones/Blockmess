@@ -6,7 +6,7 @@ import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
-import cmux.AppContent;
+import cmux.AppOperation;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.LedgerManager;
 import org.apache.logging.log4j.LogManager;
@@ -74,8 +74,8 @@ public class ValueDispatcher extends GenericProtocol {
     private void notifyUpperProtocols(ValType type, BroadcastValue val) {
         switch (type) {
             case APP_CONTENT:
-                if (val instanceof AppContent)
-                    LedgerManager.getSingleton().submitContent((AppContent) val);
+                if (val instanceof AppOperation)
+                    LedgerManager.getSingleton().submitContent((AppOperation) val);
                 break;
             case SIGNED_BLOCK:
                 if (val instanceof BlockmessBlock)
@@ -95,7 +95,7 @@ public class ValueDispatcher extends GenericProtocol {
         }
     }
 
-    public void disseminateAppContentRequest(AppContent req) {
+    public void disseminateAppContentRequest(AppOperation req) {
         try {
             logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
             sendEagerRequest(req, ValType.APP_CONTENT);

@@ -2,7 +2,7 @@ package ledger.blocks;
 
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
-import cmux.AppContent;
+import cmux.AppOperation;
 import io.netty.buffer.ByteBuf;
 import lombok.Getter;
 import pt.unl.fct.di.novasys.network.ISerializer;
@@ -23,11 +23,11 @@ public class ContentList extends BroadcastValueAbstract {
         public void serialize(BroadcastValue broadcastValue, ByteBuf out) throws IOException {
             ContentList ContentListList = (ContentList) broadcastValue;
             out.writeInt(ContentListList.contentList.size());
-            for (AppContent elem : ContentListList.contentList)
+            for (AppOperation elem : ContentListList.contentList)
                 serializeElement(elem, out);
         }
 
-        private void serializeElement(AppContent elem, ByteBuf out) throws IOException {
+        private void serializeElement(AppOperation elem, ByteBuf out) throws IOException {
             out.writeShort(elem.getClassId());
             elem.getSerializer().serialize(elem, out);
         }
@@ -35,30 +35,30 @@ public class ContentList extends BroadcastValueAbstract {
         @Override
         public BroadcastValue deserialize(ByteBuf in) throws IOException {
             int numElems = in.readInt();
-            List<AppContent> contentLst = new ArrayList<>(numElems);
+            List<AppOperation> contentLst = new ArrayList<>(numElems);
             for (int i = 0; i < numElems; i++)
                 contentLst.add(deserializeElem(in));
             return new ContentList(contentLst);
         }
 
-        private AppContent deserializeElem(ByteBuf in) throws IOException {
+        private AppOperation deserializeElem(ByteBuf in) throws IOException {
             short elemClass = in.readShort();
             ISerializer<BroadcastValue> serializer = BroadcastValue.pojoSerializers.get(elemClass);
-            return (AppContent) serializer.deserialize(in);
+            return (AppOperation) serializer.deserialize(in);
         }
     };
 
     @Getter
-    private final List<AppContent> contentList;
+    private final List<AppOperation> contentList;
 
-    public ContentList(List<AppContent> contentList) {
+    public ContentList(List<AppOperation> contentList) {
         super(ID);
         this.contentList = contentList;
     }
 
     public byte[] getContentHash() {
         List<byte[]> contentHashes = contentList.stream()
-                .map(AppContent::getHashVal)
+                .map(AppOperation::getHashVal)
                 .collect(Collectors.toList());
         return new MerkleRoot(contentHashes).getHashValue();
     }
@@ -70,7 +70,7 @@ public class ContentList extends BroadcastValueAbstract {
 
     public int getSerializedSize() throws IOException {
         int accum = 0;
-        for (AppContent elem : contentList)
+        for (AppOperation elem : contentList)
             accum += elem.getSerializedSize();
         return accum;
     }

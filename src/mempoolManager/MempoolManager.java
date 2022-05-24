@@ -2,7 +2,7 @@ package mempoolManager;
 
 import applicationInterface.DeliverFinalizedContentNotification;
 import broadcastProtocols.BroadcastValue;
-import cmux.AppContent;
+import cmux.AppOperation;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
@@ -64,7 +64,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
     }
 
     private MempoolChunk createChunk(LedgerBlock block) {
-        List<AppContent> unwrappedContent = block.getContentList().getContentList();
+        List<AppOperation> unwrappedContent = block.getContentList().getContentList();
         return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()), unwrappedContent);
     }
 
@@ -90,11 +90,11 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
         discarded.forEach(mempool::remove);
         List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
         finalizedChunks.stream().map(MempoolChunk::getId).forEach(mempool::remove);
-        List<AppContent> finalizedContent = finalizedChunks.stream()
+        List<AppOperation> finalizedContent = finalizedChunks.stream()
                 .map(MempoolChunk::getAddedContent)
                 .flatMap(Collection::stream)
                 .collect(toList());
-        LedgerManager.getSingleton().deleteContent(finalizedContent.stream().map(AppContent::getId).collect(toSet()));
+        LedgerManager.getSingleton().deleteContent(finalizedContent.stream().map(AppOperation::getId).collect(toSet()));
         observers.forEach(observer -> observer.deliverFinalizedBlocks(finalized, discarded));
         triggerNotification(new DeliverFinalizedContentNotification(finalizedContent));
     }

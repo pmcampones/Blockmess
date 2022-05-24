@@ -1,17 +1,17 @@
 package ledger.ledgerManager.nodes;
 
-import cmux.AppContent;
+import cmux.AppOperation;
 import cmux.CMuxMask;
-import contentMapper.BaseContentMapper;
-import contentMapper.ComposableContentMapper;
-import contentMapper.ComposableContentMapperImp;
-import contentMapper.ContentMapper;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
+import operationMapper.BaseOperationMapper;
+import operationMapper.ComposableOperationMapper;
+import operationMapper.ComposableOperationMapperImp;
+import operationMapper.OperationMapper;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -60,7 +60,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
      */
     private final Map<UUID, BlockmessBlock> blocks = new ConcurrentHashMap<>();
 
-    private final ComposableContentMapper contentStorage;
+    private final ComposableOperationMapper contentStorage;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
@@ -113,13 +113,13 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     public LeafNode(
             Properties props, UUID ChainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentMapper contentStorage) {
+            long minRank, long minNextRank, int depth, ComposableOperationMapper contentStorage) {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentMapper contentStorage, UUID prevBlock) {
+            long minRank, long minNextRank, int depth, ComposableOperationMapper contentStorage, UUID prevBlock) {
         this.props = props;
         this.chainId = chainId;
         this.ledger = new Blockchain(chainId);
@@ -188,10 +188,10 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     @Override
     public void spawnChildren(UUID originator) {
         CMuxMask mask = new CMuxMask(depth);
-        ContentMapper lft = new BaseContentMapper();
-        ContentMapper rgt = new BaseContentMapper();
+        OperationMapper lft = new BaseOperationMapper();
+        OperationMapper rgt = new BaseOperationMapper();
         depth++;
-        Pair<ComposableContentMapper, ComposableContentMapper> spawnedChainDirectors =
+        Pair<ComposableOperationMapper, ComposableOperationMapper> spawnedChainDirectors =
                 contentStorage.separateContent(mask, lft, rgt);
         TempChainNode encapsulating =
                 new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
@@ -265,12 +265,22 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         return maxBlockSize / 2;
     }
 
-    private Set<UUID> getFinalizedContent(List<UUID> finalized) {
-        return getTxsInBufferedFinalizedBlocks(
-                finalized.stream()
-                .map(blocks::get))
-                .map(AppContent::getId)
-                .collect(toSet());
+    @Override
+    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
+        depth++;
+        ParentTreeNode treeRoot = parent.getTreeRoot();
+        ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
+                0, 1, depth, new ComposableOperationMapperImp(),
+                new UUID(0,0));
+        ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
+                0, 1, depth, new ComposableOperationMapperImp(),
+                new UUID(0,0));
+        PermanentChainNode encapsulating =
+                new PermanentChainNode(this.parent, this, lft, rgt);
+        parent.replaceChild(encapsulating);
+        this.parent = encapsulating;
+        resetSamples();
+        parent.createChains(List.of(lft, rgt));
     }
 
     private void deliverFinalizedBlocksToObservers(List<UUID> finalized, Set<UUID> discarded) {
@@ -308,28 +318,16 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
-        depth++;
-        ParentTreeNode treeRoot = parent.getTreeRoot();
-        ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
-                0, 1, depth, new ComposableContentMapperImp(),
-                new UUID(0,0));
-        ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
-                0, 1, depth, new ComposableContentMapperImp(),
-                new UUID(0,0));
-        PermanentChainNode encapsulating =
-                new PermanentChainNode(this.parent, this, lft, rgt);
-        parent.replaceChild(encapsulating);
-        this.parent = encapsulating;
-        resetSamples();
-        parent.createChains(List.of(lft, rgt));
+    public void submitContentDirectly(Collection<AppOperation> content) {
+        contentStorage.submitContent(content);
     }
 
-    private Stream<AppContent> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock> stream) {
-        return stream
-                .map(BlockmessBlock::getContentList)
-                .map(ContentList::getContentList)
-                .flatMap(Collection::stream);
+    private Set<UUID> getFinalizedContent(List<UUID> finalized) {
+        return getTxsInBufferedFinalizedBlocks(
+                finalized.stream()
+                .map(blocks::get))
+                .map(AppOperation::getId)
+                .collect(toSet());
     }
 
     private void updateNextRank() {
@@ -451,19 +449,21 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         return (int) samples.stream().filter(s -> s).count();
     }
 
-    @Override
-    public void submitContentDirectly(Collection<AppContent> content) {
-        contentStorage.submitContent(content);
+    private Stream<AppOperation> getTxsInBufferedFinalizedBlocks(Stream<BlockmessBlock> stream) {
+        return stream
+                .map(BlockmessBlock::getContentList)
+                .map(ContentList::getContentList)
+                .flatMap(Collection::stream);
     }
 
     @Override
-    public List<AppContent> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
             throws IOException {
         return contentStorage.generateContentList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppContent> content) {
+    public void submitContent(Collection<AppOperation> content) {
         contentStorage.submitContent(content);
     }
 
@@ -473,12 +473,12 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public void submitContent(AppContent content) {
+    public void submitContent(AppOperation content) {
         contentStorage.submitContent(content);
     }
 
     @Override
-    public Collection<AppContent> getStoredContent() {
+    public Collection<AppOperation> getStoredContent() {
         return Stream.concat(
                 contentStorage.getStoredContent().stream(),
                 getTxsInBufferedFinalizedBlocks(finalizedBuffer.stream())
@@ -486,15 +486,15 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public Pair<ComposableContentMapper, ComposableContentMapper> separateContent(
+    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateContent(
             CMuxMask mask,
-            ContentMapper innerLft,
-            ContentMapper innerRgt) {
+            OperationMapper innerLft,
+            OperationMapper innerRgt) {
         return contentStorage.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentMapper> blockConstructors) {
+    public void aggregateContent(Collection<ComposableOperationMapper> blockConstructors) {
         contentStorage.aggregateContent(blockConstructors);
     }
 

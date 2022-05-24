@@ -9,7 +9,7 @@ import utils.CryptographicUtils;
 
 import java.util.UUID;
 
-public class AppContent extends BroadcastValueAbstract implements BroadcastValue {
+public class AppOperation extends BroadcastValueAbstract implements BroadcastValue {
 
     public static final short ID = 1982;
 
@@ -17,11 +17,11 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
 
         @Override
         public void serialize(BroadcastValue broadcastValue, ByteBuf out) {
-            AppContent appContent = (AppContent) broadcastValue;
-            out.writeInt(appContent.content.length);
-            out.writeBytes(appContent.content);
-            out.writeShort(appContent.replicaMetadata.length);
-            out.writeBytes(appContent.replicaMetadata);
+            AppOperation appOperation = (AppOperation) broadcastValue;
+            out.writeInt(appOperation.content.length);
+            out.writeBytes(appOperation.content);
+            out.writeShort(appOperation.replicaMetadata.length);
+            out.writeBytes(appOperation.replicaMetadata);
         }
 
         @Override
@@ -31,7 +31,7 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
             byte[] replicaMetadata = new byte[in.readShort()];
             in.readBytes(replicaMetadata);
             FixedCMuxIdMapper mapper = FixedCMuxIdMapper.getSingleton();
-            return new AppContent(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content), replicaMetadata);
+            return new AppOperation(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content), replicaMetadata);
         }
     };
 
@@ -45,7 +45,7 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
     @Getter
     private final byte[] content, replicaMetadata;
 
-    public AppContent(byte[] content, byte[] cmuxId1, byte[] cmuxId2, byte[] replicaMetadata) {
+    public AppOperation(byte[] content, byte[] cmuxId1, byte[] cmuxId2, byte[] replicaMetadata) {
         super(ID);
         byte[] fullOperation = concatenate(content, replicaMetadata);
         this.hashVal = CryptographicUtils.hashInput(fullOperation);
