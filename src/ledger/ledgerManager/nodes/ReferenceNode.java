@@ -241,40 +241,40 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return leaf.generateContentList(states, usedSpace);
+        return leaf.generateOperationList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppOperation> content) {
-        nodeState.submitContent(content);
+    public void submitOperations(Collection<AppOperation> operations) {
+        nodeState.submitOperations(operations);
     }
 
     @Override
-    public void submitContent(AppOperation content) {
-        nodeState.submitContent(content);
+    public void submitOperation(AppOperation operation) {
+        nodeState.submitOperation(operation);
     }
 
     @Override
-    public void deleteContent(Set<UUID> contentIds) {
-        nodeState.deleteContent(contentIds);
+    public void deleteOperations(Set<UUID> operatationIds) {
+        nodeState.deleteOperations(operatationIds);
     }
 
     @Override
-    public Collection<AppOperation> getStoredContent() {
-        return leaf.getStoredContent();
+    public Collection<AppOperation> getStoredOperations() {
+        return leaf.getStoredOperations();
     }
 
     @Override
-    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateContent(
+    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
             CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
-        return leaf.separateContent(mask, innerLft, innerRgt);
+        return leaf.separateOperations(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableOperationMapper> blockConstructors) {
-        leaf.aggregateContent(blockConstructors);
+    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
+        leaf.aggregateOperations(operationMappers);
     }
 
 }

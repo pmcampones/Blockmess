@@ -192,7 +192,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         OperationMapper rgt = new BaseOperationMapper();
         depth++;
         Pair<ComposableOperationMapper, ComposableOperationMapper> spawnedChainDirectors =
-                contentStorage.separateContent(mask, lft, rgt);
+                contentStorage.separateOperations(mask, lft, rgt);
         TempChainNode encapsulating =
                 new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
         parent.replaceChild(encapsulating);
@@ -319,7 +319,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     @Override
     public void submitContentDirectly(Collection<AppOperation> content) {
-        contentStorage.submitContent(content);
+        contentStorage.submitOperations(content);
     }
 
     private Set<UUID> getFinalizedContent(List<UUID> finalized) {
@@ -421,7 +421,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         List<BlockmessBlock> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
         finalizedBuffer.addAll(finalizedBlocks);
         updateNextRank();
-        contentStorage.deleteContent(getFinalizedContent(finalized));
+        contentStorage.deleteOperations(getFinalizedContent(finalized));
         finalized.forEach(blocks::remove);
         logger.info("Delivering finalized blocks {} in Chain {}",
                 finalized, chainId);
@@ -457,45 +457,45 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return contentStorage.generateContentList(states, usedSpace);
+        return contentStorage.generateOperationList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppOperation> content) {
-        contentStorage.submitContent(content);
+    public void submitOperations(Collection<AppOperation> operations) {
+        contentStorage.submitOperations(operations);
     }
 
     @Override
-    public void deleteContent(Set<UUID> contentIds) {
-        contentStorage.deleteContent(contentIds);
+    public void submitOperation(AppOperation operation) {
+        contentStorage.submitOperation(operation);
     }
 
     @Override
-    public void submitContent(AppOperation content) {
-        contentStorage.submitContent(content);
+    public void deleteOperations(Set<UUID> operatationIds) {
+        contentStorage.deleteOperations(operatationIds);
     }
 
     @Override
-    public Collection<AppOperation> getStoredContent() {
+    public Collection<AppOperation> getStoredOperations() {
         return Stream.concat(
-                contentStorage.getStoredContent().stream(),
+                contentStorage.getStoredOperations().stream(),
                 getTxsInBufferedFinalizedBlocks(finalizedBuffer.stream())
                 ).collect(toSet());
     }
 
     @Override
-    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateContent(
+    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
             CMuxMask mask,
             OperationMapper innerLft,
             OperationMapper innerRgt) {
-        return contentStorage.separateContent(mask, innerLft, innerRgt);
+        return contentStorage.separateOperations(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableOperationMapper> blockConstructors) {
-        contentStorage.aggregateContent(blockConstructors);
+    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
+        contentStorage.aggregateOperations(operationMappers);
     }
 
 }

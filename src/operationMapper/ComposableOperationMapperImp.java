@@ -25,51 +25,51 @@ public class ComposableOperationMapperImp implements ComposableOperationMapper {
     }
 
     @Override
-    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
             throws IOException {
         try {
             innerLock.readLock().lock();
-            return inner.generateContentList(states, usedSpace);
+            return inner.generateOperationList(states, usedSpace);
         } finally {
             innerLock.readLock().unlock();
         }
     }
 
     @Override
-    public void submitContent(Collection<AppOperation> content) {
+    public void submitOperations(Collection<AppOperation> operations) {
         try {
             innerLock.writeLock().lock();
-            inner.submitContent(content);
+            inner.submitOperations(operations);
         } finally {
             innerLock.writeLock().unlock();
         }
     }
 
     @Override
-    public void submitContent(AppOperation content) {
+    public void submitOperation(AppOperation operation) {
         try {
             innerLock.writeLock().lock();
-            inner.submitContent(content);
+            inner.submitOperation(operation);
         } finally {
             innerLock.writeLock().unlock();
         }
     }
 
     @Override
-    public void deleteContent(Set<UUID> contentIds) {
+    public void deleteOperations(Set<UUID> operatationIds) {
         try {
             innerLock.writeLock().lock();
-            inner.deleteContent(contentIds);
+            inner.deleteOperations(operatationIds);
         } finally {
             innerLock.writeLock().unlock();
         }
     }
 
     @Override
-    public Collection<AppOperation> getStoredContent() {
+    public Collection<AppOperation> getStoredOperations() {
         try {
             innerLock.readLock().lock();
-            return inner.getStoredContent();
+            return inner.getStoredOperations();
         } finally {
             innerLock.readLock().unlock();
         }
@@ -77,13 +77,13 @@ public class ComposableOperationMapperImp implements ComposableOperationMapper {
 
     @Override
     public Pair<ComposableOperationMapper, ComposableOperationMapper>
-    separateContent(CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
+    separateOperations(CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
         ComposableOperationMapper lft = new ComposableOperationMapperImp(innerLft);
         ComposableOperationMapper rgt = new ComposableOperationMapperImp(innerRgt);
         try {
             innerLock.writeLock().lock();
             Set<UUID> migrated = redistributeContent(mask, lft, rgt);
-            inner.deleteContent(migrated);
+            inner.deleteOperations(migrated);
         } finally {
             innerLock.writeLock().unlock();
         }
@@ -92,27 +92,27 @@ public class ComposableOperationMapperImp implements ComposableOperationMapper {
 
     @NotNull
     private Set<UUID> redistributeContent(CMuxMask mask, ComposableOperationMapper lft, ComposableOperationMapper rgt) {
-        Collection<AppOperation> allValues = inner.getStoredContent();
+        Collection<AppOperation> allValues = inner.getStoredOperations();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
-        for (AppOperation val : inner.getStoredContent()) {
+        for (AppOperation val : inner.getStoredOperations()) {
             CMuxMask.MaskResult res = mask.matchIds(val.getCmuxId1(), val.getCmuxId2());
             if (res.equals(CMuxMask.MaskResult.LEFT)) {
                 migrated.add(val.getId());
-                lft.submitContent(val);
+                lft.submitOperation(val);
             } else if (res.equals(CMuxMask.MaskResult.RIGHT)) {
                 migrated.add(val.getId());
-                rgt.submitContent(val);
+                rgt.submitOperation(val);
             }
         }
         return migrated;
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableOperationMapper> composableBlockConstructors) {
+    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
         try {
             innerLock.writeLock().lock();
-            for (var blockConstructor : composableBlockConstructors)
-                inner.submitContent(blockConstructor.getStoredContent());
+            for (var blockConstructor : operationMappers)
+                inner.submitOperations(blockConstructor.getStoredOperations());
         } finally {
             innerLock.writeLock().unlock();
         }

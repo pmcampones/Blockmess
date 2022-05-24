@@ -351,32 +351,32 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
     }
 
     @Override
-    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return getOrigin().generateContentList(states, usedSpace);
+        return getOrigin().generateOperationList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppOperation> content) {
-        getOrigin().submitContent(content);
+    public void submitOperations(Collection<AppOperation> operations) {
+        getOrigin().submitOperations(operations);
     }
 
     @Override
-    public void submitContent(AppOperation content) {
-        var isValid = FixedApplicationAwareValidator.getSingleton().validateReceivedOperation(content.getContent());
+    public void submitOperation(AppOperation operation) {
+        var isValid = FixedApplicationAwareValidator.getSingleton().validateReceivedOperation(operation.getContent());
         if (isValid.getLeft())
-            getOrigin().submitContent(content);
+            getOrigin().submitOperation(operation);
     }
 
     @Override
-    public void deleteContent(Set<UUID> contentIds) {
-        getOrigin().deleteContent(contentIds);
+    public void deleteOperations(Set<UUID> operatationIds) {
+        getOrigin().deleteOperations(operatationIds);
     }
 
     @Override
-    public Collection<AppOperation> getStoredContent() {
+    public Collection<AppOperation> getStoredOperations() {
         return chains.values().stream()
-                .map(OperationMapper::getStoredContent)
+                .map(OperationMapper::getStoredOperations)
                 .flatMap(Collection::stream)
                 .collect(toList());
     }

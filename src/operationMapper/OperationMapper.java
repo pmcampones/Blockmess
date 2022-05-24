@@ -10,14 +10,14 @@ import java.util.UUID;
 
 public interface OperationMapper {
 
-    List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace) throws IOException;
+    List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace) throws IOException;
 
-    void submitContent(Collection<AppOperation> content);
+    void submitOperations(Collection<AppOperation> operations);
 
-    void submitContent(AppOperation content);
+    void submitOperation(AppOperation operation);
 
-    void deleteContent(Set<UUID> contentIds);
+    void deleteOperations(Set<UUID> operatationIds);
 
-    Collection<AppOperation> getStoredContent();
+    Collection<AppOperation> getStoredOperations();
 
 }

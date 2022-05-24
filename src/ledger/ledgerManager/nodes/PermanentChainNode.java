@@ -203,8 +203,8 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
             skipThisNode();
             //inner.resetSamples();
             inner.lowerLeafDepth();
-            inner.submitContent(lft.getStoredContent());
-            inner.submitContent(rgt.getStoredContent());
+            inner.submitOperations(lft.getStoredOperations());
+            inner.submitOperations(rgt.getStoredOperations());
             return Set.of(lft.getChainId(), rgt.getChainId());
         } else return inner.mergeChildren();
     }
@@ -248,52 +248,52 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return inner.generateContentList(states, usedSpace);
+        return inner.generateOperationList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppOperation> content) {
-        content.forEach(this::submitContent);
+    public void submitOperations(Collection<AppOperation> operations) {
+        operations.forEach(this::submitOperation);
     }
 
     @Override
-    public void submitContent(AppOperation content) {
-        CMuxMask.MaskResult res = content.matchIds();
-        content.advanceMask();
+    public void submitOperation(AppOperation operation) {
+        CMuxMask.MaskResult res = operation.matchIds();
+        operation.advanceMask();
         switch (res) {
             case LEFT:
-                lft.submitContent(content);
+                lft.submitOperation(operation);
                 break;
             case RIGHT:
-                rgt.submitContent(content);
+                rgt.submitOperation(operation);
                 break;
             case CENTER:
-                inner.submitContent(content);
+                inner.submitOperation(operation);
         }
     }
 
     @Override
-    public void deleteContent(Set<UUID> contentIds) {
-        lft.deleteContent(contentIds);
-        rgt.deleteContent(contentIds);
-        inner.deleteContent(contentIds);
+    public void deleteOperations(Set<UUID> operatationIds) {
+        lft.deleteOperations(operatationIds);
+        rgt.deleteOperations(operatationIds);
+        inner.deleteOperations(operatationIds);
     }
 
     @Override
-    public Collection<AppOperation> getStoredContent() {
-        return inner.getStoredContent();
+    public Collection<AppOperation> getStoredOperations() {
+        return inner.getStoredOperations();
     }
 
     @Override
-    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateContent(
+    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
             CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
-        return inner.separateContent(mask, innerLft, innerRgt);
+        return inner.separateOperations(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableOperationMapper> composableBlockConstructors) {
-        inner.aggregateContent(composableBlockConstructors);
+    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
+        inner.aggregateOperations(operationMappers);
     }
 }

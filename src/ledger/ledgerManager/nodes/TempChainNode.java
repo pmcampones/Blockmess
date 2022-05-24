@@ -157,7 +157,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
-        toMerge.forEach(b -> inner.submitContent(b.getStoredContent()));
+        toMerge.forEach(b -> inner.submitOperations(b.getStoredOperations()));
         return toMerge.stream().map(BlockmessChain::getChainId).collect(toSet());
     }
 
@@ -358,54 +358,54 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace)
+    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
             throws IOException {
-        return inner.generateContentList(states, usedSpace);
+        return inner.generateOperationList(states, usedSpace);
     }
 
     @Override
-    public void submitContent(Collection<AppOperation> content) {
-        content.forEach(this::submitContent);
+    public void submitOperations(Collection<AppOperation> operations) {
+        operations.forEach(this::submitOperation);
     }
 
     @Override
-    public void submitContent(AppOperation content) {
-        CMuxMask.MaskResult res = content.matchIds();
-        content.advanceMask();
+    public void submitOperation(AppOperation operation) {
+        CMuxMask.MaskResult res = operation.matchIds();
+        operation.advanceMask();
         switch (res) {
             case LEFT:
-                contentStoragePair.getLeft().submitContent(content);
+                contentStoragePair.getLeft().submitOperation(operation);
                 break;
             case RIGHT:
-                contentStoragePair.getRight().submitContent(content);
+                contentStoragePair.getRight().submitOperation(operation);
                 break;
             case CENTER:
-                inner.submitContent(content);
+                inner.submitOperation(operation);
         }
     }
 
     @Override
-    public void deleteContent(Set<UUID> contentIds) {
+    public void deleteOperations(Set<UUID> operatationIds) {
         for (var pair : tentativeChains.values()) {
-            pair.getLeft().deleteContent(contentIds);
-            pair.getRight().deleteContent(contentIds);
+            pair.getLeft().deleteOperations(operatationIds);
+            pair.getRight().deleteOperations(operatationIds);
         }
-        inner.deleteContent(contentIds);
+        inner.deleteOperations(operatationIds);
     }
 
     @Override
-    public Collection<AppOperation> getStoredContent() {
-        return inner.getStoredContent();
+    public Collection<AppOperation> getStoredOperations() {
+        return inner.getStoredOperations();
     }
 
     @Override
-    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateContent(
+    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
             CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
-        return inner.separateContent(mask, innerLft, innerRgt);
+        return inner.separateOperations(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableOperationMapper> composableBlockConstructors) {
-        inner.aggregateContent(composableBlockConstructors);
+    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
+        inner.aggregateOperations(operationMappers);
     }
 }

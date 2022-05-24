@@ -75,7 +75,7 @@ public class ValueDispatcher extends GenericProtocol {
         switch (type) {
             case APP_CONTENT:
                 if (val instanceof AppOperation)
-                    LedgerManager.getSingleton().submitContent((AppOperation) val);
+                    LedgerManager.getSingleton().submitOperation((AppOperation) val);
                 break;
             case SIGNED_BLOCK:
                 if (val instanceof BlockmessBlock)

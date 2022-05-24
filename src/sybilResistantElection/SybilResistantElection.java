@@ -210,7 +210,7 @@ public class SybilResistantElection implements LedgerObserver {
     private ChainSeed computeChainRandomSeed(BlockmessChain chain)
             throws IOException {
         Set<UUID> prevBlocks = chain.getBlockR();
-        List<AppOperation> contentLst = chain.generateContentList(prevBlocks, getAproximateProofSize());
+        List<AppOperation> contentLst = chain.generateOperationList(prevBlocks, getAproximateProofSize());
         ContentList content = new ContentList(contentLst);
         return new ChainSeed(chain.getChainId(), prevBlocks.iterator().next(), content, chain);
     }
@@ -260,7 +260,7 @@ public class SybilResistantElection implements LedgerObserver {
     private void replaceChain(ChainSeed oldSeed, Set<UUID> newPrevs) throws IOException {
         UUID newPrev = newPrevs.iterator().next();
         BlockmessChain chain = oldSeed.getChain();
-        List<AppOperation> contentLst = chain.generateContentList(newPrevs, getAproximateProofSize());
+        List<AppOperation> contentLst = chain.generateOperationList(newPrevs, getAproximateProofSize());
         ContentList newContent = new ContentList(contentLst);
         ChainSeed newChainSeed = new ChainSeed(oldSeed.getChainId(), newPrev, newContent, oldSeed.getChain());
         chainSeeds.replace(oldSeed.getChainId(), newChainSeed);

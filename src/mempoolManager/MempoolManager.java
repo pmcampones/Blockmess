@@ -94,7 +94,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
                 .map(MempoolChunk::getAddedContent)
                 .flatMap(Collection::stream)
                 .collect(toList());
-        LedgerManager.getSingleton().deleteContent(finalizedContent.stream().map(AppOperation::getId).collect(toSet()));
+        LedgerManager.getSingleton().deleteOperations(finalizedContent.stream().map(AppOperation::getId).collect(toSet()));
         observers.forEach(observer -> observer.deliverFinalizedBlocks(finalized, discarded));
         triggerNotification(new DeliverFinalizedContentNotification(finalizedContent));
     }

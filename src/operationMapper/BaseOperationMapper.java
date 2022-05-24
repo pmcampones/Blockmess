@@ -25,7 +25,7 @@ public class BaseOperationMapper implements OperationMapper {
     }
 
     @Override
-    public List<AppOperation> generateContentList(Collection<UUID> states, int usedSpace) {
+    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace) {
         Set<UUID> used = findUsedContent(states);
         return getContentDeterministicOrderBound(usedSpace, used);
     }
@@ -39,18 +39,18 @@ public class BaseOperationMapper implements OperationMapper {
     }
 
     @Override
-    public void submitContent(Collection<AppOperation> content) {
-        contentMap.putAll(content.stream().collect(toMap(AppOperation::getId, c->c)));
+    public void submitOperations(Collection<AppOperation> operations) {
+        contentMap.putAll(operations.stream().collect(toMap(AppOperation::getId, c->c)));
     }
 
     @Override
-    public void submitContent(AppOperation content) {
-        contentMap.put(content.getId(), content);
+    public void submitOperation(AppOperation operation) {
+        contentMap.put(operation.getId(), operation);
     }
 
     @Override
-    public Collection<AppOperation> getStoredContent() {
-        return contentMap.values();
+    public void deleteOperations(Set<UUID> operatationIds) {
+        operatationIds.forEach(contentMap::remove);
     }
 
     @NotNull
@@ -68,8 +68,8 @@ public class BaseOperationMapper implements OperationMapper {
     }
 
     @Override
-    public void deleteContent(Set<UUID> contentIds) {
-        contentIds.forEach(contentMap::remove);
+    public Collection<AppOperation> getStoredOperations() {
+        return contentMap.values();
     }
 
 }
