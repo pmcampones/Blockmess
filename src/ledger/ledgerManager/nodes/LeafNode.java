@@ -1,10 +1,10 @@
 package ledger.ledgerManager.nodes;
 
 import cmux.CMuxMask;
-import contentStorage.BaseContentStorage;
-import contentStorage.ComposableContentStorage;
-import contentStorage.ComposableContentStorageImp;
-import contentStorage.ContentStorage;
+import contentMapper.BaseContentMapper;
+import contentMapper.ComposableContentMapper;
+import contentMapper.ComposableContentMapperImp;
+import contentMapper.ContentMapper;
 import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
@@ -60,7 +60,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
      */
     private final Map<UUID, BlockmessBlock> blocks = new ConcurrentHashMap<>();
 
-    private final ComposableContentStorage contentStorage;
+    private final ComposableContentMapper contentStorage;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
@@ -113,13 +113,13 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     public LeafNode(
             Properties props, UUID ChainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage) {
+            long minRank, long minNextRank, int depth, ComposableContentMapper contentStorage) {
         this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
     }
 
     public LeafNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage, UUID prevBlock) {
+            long minRank, long minNextRank, int depth, ComposableContentMapper contentStorage, UUID prevBlock) {
         this.props = props;
         this.chainId = chainId;
         this.ledger = new Blockchain(chainId);
@@ -188,10 +188,10 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     @Override
     public void spawnChildren(UUID originator) {
         CMuxMask mask = new CMuxMask(depth);
-        ContentStorage lft = new BaseContentStorage();
-        ContentStorage rgt = new BaseContentStorage();
+        ContentMapper lft = new BaseContentMapper();
+        ContentMapper rgt = new BaseContentMapper();
         depth++;
-        Pair<ComposableContentStorage, ComposableContentStorage> spawnedChainDirectors =
+        Pair<ComposableContentMapper, ComposableContentMapper> spawnedChainDirectors =
                 contentStorage.separateContent(mask, lft, rgt);
         TempChainNode encapsulating =
                 new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
@@ -312,10 +312,10 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         depth++;
         ParentTreeNode treeRoot = parent.getTreeRoot();
         ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
-                0, 1, depth, new ComposableContentStorageImp(),
+                0, 1, depth, new ComposableContentMapperImp(),
                 new UUID(0,0));
         ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
-                0, 1, depth, new ComposableContentStorageImp(),
+                0, 1, depth, new ComposableContentMapperImp(),
                 new UUID(0,0));
         PermanentChainNode encapsulating =
                 new PermanentChainNode(this.parent, this, lft, rgt);
@@ -486,15 +486,15 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
+    public Pair<ComposableContentMapper, ComposableContentMapper> separateContent(
             CMuxMask mask,
-            ContentStorage innerLft,
-            ContentStorage innerRgt) {
+            ContentMapper innerLft,
+            ContentMapper innerRgt) {
         return contentStorage.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage> blockConstructors) {
+    public void aggregateContent(Collection<ComposableContentMapper> blockConstructors) {
         contentStorage.aggregateContent(blockConstructors);
     }
 

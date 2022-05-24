@@ -1,7 +1,7 @@
 package ledger.ledgerManager;
 
-import contentStorage.ComposableContentStorageImp;
-import contentStorage.ContentStorage;
+import contentMapper.ComposableContentMapperImp;
+import contentMapper.ContentMapper;
 import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
@@ -28,7 +28,7 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
-public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, ContentStorage {
+public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, ContentMapper {
 
     private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 
@@ -59,7 +59,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     private LedgerManager(UUID ogChainId) {
         Properties props = GlobalProperties.getProps();
         var originChain = new ReferenceNode(props, ogChainId, this, 0, 1, 0,
-                new ComposableContentStorageImp());
+                new ComposableContentMapperImp());
         originChain.attachObserver(this);
         this.minNumChains = parseInt(props.getProperty("minNumChains", "1"));
         this.maxNumChains = parseInt(props.getProperty("maxNumChains", String.valueOf(Integer.MAX_VALUE)));
@@ -376,7 +376,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Co
     @Override
     public Collection<AppContent> getStoredContent() {
         return chains.values().stream()
-                .map(ContentStorage::getStoredContent)
+                .map(ContentMapper::getStoredContent)
                 .flatMap(Collection::stream)
                 .collect(toList());
     }

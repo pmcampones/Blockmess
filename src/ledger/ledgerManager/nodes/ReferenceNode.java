@@ -1,8 +1,8 @@
 package ledger.ledgerManager.nodes;
 
 import cmux.CMuxMask;
-import contentStorage.ComposableContentStorage;
-import contentStorage.ContentStorage;
+import contentMapper.ComposableContentMapper;
+import contentMapper.ContentMapper;
 import ledger.AppContent;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -39,7 +39,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
 
     public ReferenceNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage) {
+            long minRank, long minNextRank, int depth, ComposableContentMapper contentStorage) {
         this.leaf = new LeafNode(props, chainId, this, minRank, minNextRank, depth, contentStorage);
         this.nodeState = leaf;
         this.parent = parent;
@@ -47,7 +47,7 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
 
     public ReferenceNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableContentStorage contentStorage, UUID prevBlock) {
+            long minRank, long minNextRank, int depth, ComposableContentMapper contentStorage, UUID prevBlock) {
         this.leaf = new LeafNode(props, chainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
         this.nodeState = leaf;
         this.parent = parent;
@@ -267,13 +267,13 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
-            CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
+    public Pair<ComposableContentMapper, ComposableContentMapper> separateContent(
+            CMuxMask mask, ContentMapper innerLft, ContentMapper innerRgt) {
         return leaf.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage> blockConstructors) {
+    public void aggregateContent(Collection<ComposableContentMapper> blockConstructors) {
         leaf.aggregateContent(blockConstructors);
     }
 

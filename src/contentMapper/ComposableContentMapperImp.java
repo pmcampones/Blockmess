@@ -1,4 +1,4 @@
-package contentStorage;
+package contentMapper;
 
 import cmux.CMuxMask;
 import ledger.AppContent;
@@ -10,17 +10,17 @@ import java.util.*;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-public class ComposableContentStorageImp implements ComposableContentStorage {
+public class ComposableContentMapperImp implements ComposableContentMapper {
 
-    private final ContentStorage inner;
+    private final ContentMapper inner;
 
     private final ReadWriteLock innerLock = new ReentrantReadWriteLock();
 
-    public ComposableContentStorageImp() {
-        this.inner = new BaseContentStorage();
+    public ComposableContentMapperImp() {
+        this.inner = new BaseContentMapper();
     }
 
-    public ComposableContentStorageImp(ContentStorage inner) {
+    public ComposableContentMapperImp(ContentMapper inner) {
         this.inner = inner;
     }
 
@@ -76,10 +76,10 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public Pair<ComposableContentStorage, ComposableContentStorage>
-    separateContent(CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
-        ComposableContentStorage lft = new ComposableContentStorageImp(innerLft);
-        ComposableContentStorage rgt = new ComposableContentStorageImp(innerRgt);
+    public Pair<ComposableContentMapper, ComposableContentMapper>
+    separateContent(CMuxMask mask, ContentMapper innerLft, ContentMapper innerRgt) {
+        ComposableContentMapper lft = new ComposableContentMapperImp(innerLft);
+        ComposableContentMapper rgt = new ComposableContentMapperImp(innerRgt);
         try {
             innerLock.writeLock().lock();
             Set<UUID> migrated = redistributeContent(mask, lft, rgt);
@@ -91,7 +91,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @NotNull
-    private Set<UUID> redistributeContent(CMuxMask mask, ComposableContentStorage lft, ComposableContentStorage rgt) {
+    private Set<UUID> redistributeContent(CMuxMask mask, ComposableContentMapper lft, ComposableContentMapper rgt) {
         Collection<AppContent> allValues = inner.getStoredContent();
         Set<UUID> migrated = new HashSet<>((int) (0.6 * allValues.size()));
         for (AppContent val : inner.getStoredContent()) {
@@ -108,7 +108,7 @@ public class ComposableContentStorageImp implements ComposableContentStorage {
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentMapper> composableBlockConstructors) {
         try {
             innerLock.writeLock().lock();
             for (var blockConstructor : composableBlockConstructors)

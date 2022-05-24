@@ -1,8 +1,8 @@
 package ledger.ledgerManager.nodes;
 
 import cmux.CMuxMask;
-import contentStorage.ComposableContentStorage;
-import contentStorage.ContentStorage;
+import contentMapper.ComposableContentMapper;
+import contentMapper.ContentMapper;
 import ledger.AppContent;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -287,13 +287,13 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
-            CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
+    public Pair<ComposableContentMapper, ComposableContentMapper> separateContent(
+            CMuxMask mask, ContentMapper innerLft, ContentMapper innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentMapper> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }

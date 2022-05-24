@@ -1,4 +1,4 @@
-package contentStorage;
+package contentMapper;
 
 import ledger.AppContent;
 
@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-public interface ContentStorage {
+public interface ContentMapper {
 
     List<AppContent> generateContentList(Collection<UUID> states, int usedSpace) throws IOException;
 

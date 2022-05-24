@@ -1,6 +1,6 @@
 package ledger.ledgerManager.nodes;
 
-import contentStorage.ComposableContentStorage;
+import contentMapper.ComposableContentMapper;
 import ledger.AppContent;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
@@ -10,7 +10,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BlockmessChain extends Ledger, ComposableContentStorage {
+public interface BlockmessChain extends Ledger, ComposableContentMapper {
 
     UUID getChainId();
 

@@ -1,4 +1,4 @@
-package contentStorage;
+package contentMapper;
 
 import ledger.AppContent;
 import main.GlobalProperties;
@@ -10,7 +10,7 @@ import java.util.*;
 import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.toMap;
 
-public class BaseContentStorage implements ContentStorage {
+public class BaseContentMapper implements ContentMapper {
 
     public static final int MAX_BLOCK_SIZE = 40000;
 
@@ -18,7 +18,7 @@ public class BaseContentStorage implements ContentStorage {
     private final int maxSizeOffset;
     private final Map<UUID, AppContent> contentMap = Collections.synchronizedMap(new TreeMap<>());
 
-    public BaseContentStorage() {
+    public BaseContentMapper() {
         Properties props = GlobalProperties.getProps();
         this.maxBlockSize = parseInt(props.getProperty("maxBlockSize",String.valueOf(MAX_BLOCK_SIZE)));
         this.maxSizeOffset = 1000;

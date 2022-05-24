@@ -1,8 +1,8 @@
 package ledger.ledgerManager.nodes;
 
 import cmux.CMuxMask;
-import contentStorage.ComposableContentStorage;
-import contentStorage.ContentStorage;
+import contentMapper.ComposableContentMapper;
+import contentMapper.ContentMapper;
 import ledger.AppContent;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
@@ -34,7 +34,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
      * <p>Eventually, one and only one of the root blocks in this DS will originate a valid Chain.</p>
      */
     private final Map<UUID, Pair<ReferenceNode, ReferenceNode>> tentativeChains = new HashMap<>();
-    private final Pair<ComposableContentStorage, ComposableContentStorage> contentStoragePair;
+    private final Pair<ComposableContentMapper, ComposableContentMapper> contentStoragePair;
     private ParentTreeNode parent;
 
     private final int finalizedWeight;
@@ -50,7 +50,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     public TempChainNode(
             Properties props, BlockmessChain inner, ParentTreeNode parent,
             UUID ChainOriginatorBlockId, int chainDepth,
-            Pair<ComposableContentStorage, ComposableContentStorage> contentStoragePair) {
+            Pair<ComposableContentMapper, ComposableContentMapper> contentStoragePair) {
         this.props = props;
         this.inner = inner;
         inner.attachObserver(this);
@@ -399,13 +399,13 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public Pair<ComposableContentStorage, ComposableContentStorage> separateContent(
-            CMuxMask mask, ContentStorage innerLft, ContentStorage innerRgt) {
+    public Pair<ComposableContentMapper, ComposableContentMapper> separateContent(
+            CMuxMask mask, ContentMapper innerLft, ContentMapper innerRgt) {
         return inner.separateContent(mask, innerLft, innerRgt);
     }
 
     @Override
-    public void aggregateContent(Collection<ComposableContentStorage> composableBlockConstructors) {
+    public void aggregateContent(Collection<ComposableContentMapper> composableBlockConstructors) {
         inner.aggregateContent(composableBlockConstructors);
     }
 }
