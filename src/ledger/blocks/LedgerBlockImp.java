@@ -4,6 +4,7 @@ import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import lombok.Getter;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
@@ -18,12 +19,6 @@ public class LedgerBlockImp extends BroadcastValueAbstract implements LedgerBloc
 
     public static final short ID = 9888;
 
-    private final UUID blockId;
-
-    private final int inherentWeight;
-
-    private final List<UUID> prevRefs;
-
     public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {
 
         @Override
@@ -32,7 +27,7 @@ public class LedgerBlockImp extends BroadcastValueAbstract implements LedgerBloc
             out.writeInt(block.getInherentWeight());
             serializePrevs(block.getPrevRefs(), out);
             serializePojo(block.getContentList(), out);
-            serializePojo(block.getSybilElectionProof(), out);
+            serializePojo(block.getProof(), out);
             serializeValidatorSignatures(block.getSignatures(), out);
         }
 
@@ -70,11 +65,16 @@ public class LedgerBlockImp extends BroadcastValueAbstract implements LedgerBloc
         }
 
     };
-
+    @Getter
+    private final UUID blockId;
+    @Getter
+    private final int inherentWeight;
+    @Getter
+    private final List<UUID> prevRefs;
+    @Getter
     private final SybilResistantElectionProof proof;
-    private final ContentList contentList;
-    private final List<ValidatorSignature> validatorSignatures;
 
+    private final List<ValidatorSignature> validatorSignatures;
     /**
      * This constructor is meant to be used by nodes receiving the Block and called during the deserialization.
      */
@@ -145,31 +145,6 @@ public class LedgerBlockImp extends BroadcastValueAbstract implements LedgerBloc
         return in;
     }
 
-    @Override
-    public UUID getBlockId() {
-        return blockId;
-    }
-
-    @Override
-    public int getInherentWeight() {
-        return inherentWeight;
-    }
-
-    @Override
-    public List<UUID> getPrevRefs() {
-        return prevRefs;
-    }
-
-    @Override
-    public ContentList getContentList() {
-        return contentList;
-    }
-
-    @Override
-    public SybilResistantElectionProof getSybilElectionProof() {
-        return proof;
-    }
-
     static List<ValidatorSignature> deserializeValidatorSignatures(ByteBuf in) throws IOException {
         int numValidatorSignatures = in.readShort();
         List<ValidatorSignature> validatorSignatures = new ArrayList<>(numValidatorSignatures);
@@ -236,8 +211,10 @@ public class LedgerBlockImp extends BroadcastValueAbstract implements LedgerBloc
     public ISerializer<BroadcastValue> getSerializer() {
         return serializer;
     }
+    @Getter
+    private final ContentList contentList;
 
-    private int computeValidatorSignaturesSize() throws IOException {
+    private int computeValidatorSignaturesSize() {
         int accum = 0;
         for (ValidatorSignature vs : validatorSignatures)
             accum += vs.getSerializedSize();

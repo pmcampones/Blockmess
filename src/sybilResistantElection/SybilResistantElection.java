@@ -1,7 +1,7 @@
 package sybilResistantElection;
 
 import broadcastProtocols.BroadcastValue;
-import ledger.AppContent;
+import cmux.AppContent;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;

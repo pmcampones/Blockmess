@@ -1,6 +1,6 @@
 package contentMapper;
 
-import ledger.AppContent;
+import cmux.AppContent;
 import main.GlobalProperties;
 import mempoolManager.MempoolManager;
 import org.jetbrains.annotations.NotNull;

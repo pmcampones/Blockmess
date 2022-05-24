@@ -58,7 +58,7 @@ public class ValidatorSignature {
         return false;
     }
 
-    public int getSerializedSize() throws IOException {
+    public int getSerializedSize() {
         return CryptographicUtils.computeKeySize(validator) + Short.BYTES + signedContent.length;
     }
 

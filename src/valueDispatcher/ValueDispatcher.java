@@ -6,7 +6,7 @@ import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
-import ledger.AppContent;
+import cmux.AppContent;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.LedgerManager;
 import org.apache.logging.log4j.LogManager;

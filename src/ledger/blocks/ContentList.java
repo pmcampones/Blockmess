@@ -2,8 +2,9 @@ package ledger.blocks;
 
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
+import cmux.AppContent;
 import io.netty.buffer.ByteBuf;
-import ledger.AppContent;
+import lombok.Getter;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.merkleTree.MerkleRoot;
 
@@ -21,8 +22,8 @@ public class ContentList extends BroadcastValueAbstract {
         @Override
         public void serialize(BroadcastValue broadcastValue, ByteBuf out) throws IOException {
             ContentList ContentListList = (ContentList) broadcastValue;
-            out.writeInt(ContentListList.contentLst.size());
-            for (AppContent elem : ContentListList.contentLst)
+            out.writeInt(ContentListList.contentList.size());
+            for (AppContent elem : ContentListList.contentList)
                 serializeElement(elem, out);
         }
 
@@ -46,27 +47,20 @@ public class ContentList extends BroadcastValueAbstract {
             return (AppContent) serializer.deserialize(in);
         }
     };
-    private final List<AppContent> contentLst;
 
-    public boolean hasValidSemantics() {
-        return contentLst.stream()
-                .allMatch(AppContent::hasValidSemantics);
-    }
+    @Getter
+    private final List<AppContent> contentList;
 
-    public ContentList(List<AppContent> contentLst) {
+    public ContentList(List<AppContent> contentList) {
         super(ID);
-        this.contentLst = contentLst;
+        this.contentList = contentList;
     }
 
     public byte[] getContentHash() {
-        List<byte[]> contentHashes = contentLst.stream()
+        List<byte[]> contentHashes = contentList.stream()
                 .map(AppContent::getHashVal)
                 .collect(Collectors.toList());
         return new MerkleRoot(contentHashes).getHashValue();
-    }
-
-    public List<AppContent> getContentList() {
-        return contentLst;
     }
 
     @Override
@@ -76,7 +70,7 @@ public class ContentList extends BroadcastValueAbstract {
 
     public int getSerializedSize() throws IOException {
         int accum = 0;
-        for (AppContent elem : contentLst)
+        for (AppContent elem : contentList)
             accum += elem.getSerializedSize();
         return accum;
     }

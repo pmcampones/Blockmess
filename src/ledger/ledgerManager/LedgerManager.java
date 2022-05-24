@@ -1,8 +1,8 @@
 package ledger.ledgerManager;
 
+import cmux.AppContent;
 import contentMapper.ComposableContentMapperImp;
 import contentMapper.ContentMapper;
-import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;

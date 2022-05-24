@@ -23,7 +23,7 @@ public class BlockmessBlock implements LedgerBlock {
             out.writeInt(block.getInherentWeight());
             BroadcastValue.serializeUuids(block.getPrevRefs(), out);
             serializePojo(block.getContentList(), out);
-            serializePojo(block.getSybilElectionProof(), out);
+            serializePojo(block.getProof(), out);
             serializeValidatorSignatures(block.getSignatures(), out);
             serializeDestinationChain(block.destinationChain, out);
             out.writeLong(block.currentRank);
@@ -163,8 +163,8 @@ public class BlockmessBlock implements LedgerBlock {
     }
 
     @Override
-    public SybilResistantElectionProof getSybilElectionProof() {
-        return ledgerBlock.getSybilElectionProof();
+    public SybilResistantElectionProof getProof() {
+        return ledgerBlock.getProof();
     }
 
     @Override

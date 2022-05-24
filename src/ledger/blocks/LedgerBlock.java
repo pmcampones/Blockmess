@@ -55,7 +55,7 @@ public interface LedgerBlock extends BroadcastValue {
      * <p>Validation of the proof rests on the Application protocols,
      * as such the Ledger protocol has no information on the internal structure of the proof.</p>
      */
-    SybilResistantElectionProof getSybilElectionProof();
+    SybilResistantElectionProof getProof();
 
     /**
      * Retrieves the signatures of the validators of this block.

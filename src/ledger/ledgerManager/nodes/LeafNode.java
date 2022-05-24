@@ -1,11 +1,11 @@
 package ledger.ledgerManager.nodes;
 
+import cmux.AppContent;
 import cmux.CMuxMask;
 import contentMapper.BaseContentMapper;
 import contentMapper.ComposableContentMapper;
 import contentMapper.ComposableContentMapperImp;
 import contentMapper.ContentMapper;
-import ledger.AppContent;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blockchain.Blockchain;
@@ -290,7 +290,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     private int getProofSize(BlockmessBlock block) {
         try {
-            return block.getSybilElectionProof().getSerializedSize();
+            return block.getProof().getSerializedSize();
         } catch (IOException e) {
             e.printStackTrace();
             throw new Error();

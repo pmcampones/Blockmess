@@ -4,7 +4,7 @@ import applicationInterface.ApplicationInterface;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
-import ledger.AppContent;
+import cmux.AppContent;
 import ledger.BabelLedger;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;

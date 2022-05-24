@@ -1,6 +1,6 @@
 package applicationInterface;
 
-import ledger.AppContent;
+import cmux.AppContent;
 import pt.unl.fct.di.novasys.babel.generic.ProtoNotification;
 import utils.IDGenerator;
 

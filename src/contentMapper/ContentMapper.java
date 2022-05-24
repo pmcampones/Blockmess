@@ -1,6 +1,6 @@
 package contentMapper;
 
-import ledger.AppContent;
+import cmux.AppContent;
 
 import java.io.IOException;
 import java.util.Collection;

@@ -1,7 +1,7 @@
 package ledger.ledgerManager.nodes;
 
+import cmux.AppContent;
 import contentMapper.ComposableContentMapper;
-import ledger.AppContent;
 import ledger.Ledger;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;

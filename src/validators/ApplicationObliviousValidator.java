@@ -53,7 +53,7 @@ public class ApplicationObliviousValidator extends GenericProtocol {
     }
 
     public boolean isProofValid(BlockmessBlock block) {
-        SybilResistantElectionProof proof = block.getSybilElectionProof();
+        SybilResistantElectionProof proof = block.getProof();
         UUID destinationChain = block.getDestinationChain();
         if (proof.getChainSeeds().stream().map(Pair::getLeft).noneMatch(id -> id.equals(destinationChain)))
             return false;
@@ -68,7 +68,7 @@ public class ApplicationObliviousValidator extends GenericProtocol {
         List<byte[]> randomSeedElems = new LinkedList<>();
         randomSeedElems.add(block.getProposer().getEncoded());
         UUID destinationChain = block.getDestinationChain();
-        for (var pair : block.getSybilElectionProof().getChainSeeds()) {
+        for (var pair : block.getProof().getChainSeeds()) {
             byte[] chainSeed = pair.getLeft().equals(destinationChain) ?
                     ChainSeed.computeChainSeed(block.getDestinationChain(),
                             block.getContentList(), block.getPrevRefs().get(0)) :

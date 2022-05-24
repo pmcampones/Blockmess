@@ -1,10 +1,9 @@
-package ledger;
+package cmux;
 
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.BroadcastValueAbstract;
-import cmux.CMuxMask;
-import cmux.FixedCMuxIdMapper;
 import io.netty.buffer.ByteBuf;
+import lombok.Getter;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import utils.CryptographicUtils;
 
@@ -35,9 +34,15 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
             return new AppContent(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content), replicaMetadata);
         }
     };
+
+    @Getter
     private final transient UUID id;
+
+    @Getter
     private transient final byte[] hashVal, cmuxId1, cmuxId2;
     private final transient CMuxMask mask = new CMuxMask();
+
+    @Getter
     private final byte[] content, replicaMetadata;
 
     public AppContent(byte[] content, byte[] cmuxId1, byte[] cmuxId2, byte[] replicaMetadata) {
@@ -56,30 +61,6 @@ public class AppContent extends BroadcastValueAbstract implements BroadcastValue
         System.arraycopy(head, 0, res, 0, head.length);
         System.arraycopy(tail, 0, res, head.length, tail.length);
         return res;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public byte[] getHashVal() {
-        return hashVal;
-    }
-
-    public boolean hasValidSemantics() {
-        return true;
-    }
-
-    public byte[] getCmuxId1() {
-        return cmuxId1;
-    }
-
-    public byte[] getCmuxId2() {
-        return cmuxId2;
-    }
-
-    public byte[] getContent() {
-        return content;
     }
 
     public CMuxMask.MaskResult matchIds() {
