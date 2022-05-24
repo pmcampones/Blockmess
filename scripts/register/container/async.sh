@@ -1,7 +1,6 @@
 #!/bin/bash
 
-source scripts/init_verifier.sh
-source scripts/register_utils.sh
+source scripts/register/container/utils.sh
 
 NUM_REPLICAS=$1
 OPS_PER_REPLICA=$2

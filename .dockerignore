@@ -1,0 +1,11 @@
+.git
+/.gitignore
+!/.idea/
+/outputLogs/
+/src/
+/LICENSE
+
+/pom.xml
+
+/README.md
+/Dockerfile

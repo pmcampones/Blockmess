@@ -1,7 +1,6 @@
 #!/bin/bash
 
-source scripts/init_verifier.sh
-source scripts/counter_utils.sh
+source scripts/counter/baremtal/utils.sh
 
 NUM_REPLICAS=$1
 OPS_PER_REPLICA=$2

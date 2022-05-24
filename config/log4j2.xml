@@ -18,8 +18,8 @@
 	<Logger level="info" name="protocols.apps"/>-->
         <Logger level="error" name="logsGenerators.FinalizedBlocksLog"/>
         <Logger level="error" name="pt.unl.fct.di.novasys.babel.core"/>
-        <Logger level="error" name="broadcastProtocols"/>-->
-        <Logger level="error" name="peerSamplingProtocols"/>-->
+        <Logger level="debug" name="broadcastProtocols"/>-->
+        <Logger level="debug" name="peerSamplingProtocols"/>-->
         <Logger level="error" name="mempoolManager"/>
         <Logger level="error" name="ledger.ledgerManager.LedgerManager"/>
         <Logger level="error" name="ledger"/>
