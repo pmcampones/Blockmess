@@ -827,11 +827,79 @@ Nevertheless, the correct execution of the program can be observed by noticing t
 
 ***
 
-## 6 - Research Fronts/Possible Thesis
+## 6 - Launch Scripts
+A series of scripts were made available to help run Blockmess.
+
+All scripts are located in the *scripts/* directory but must be run from the project root directory.
+
+### 6.1 - Counter
+As seen in a previous section, the *Counter* demo consists on maintaining a shared distributed *MRMW* counter between several replicas. 
+
+The two scripts to run the demo are *scripts/run_sync_counter.sh* and *scripts/run_async_counter.sh*, the first running the *Counter* demo which issues operations with the blocking *ApplicationInterface.invokeSync*, while the latter issues operations with the non-blocking method *ApplicationInterface.invokeAsync*.
+
+The two scripts take two arguments.
+- The number of replicas in operation;
+- The number of operations to be performed by each replica.
+
+In both scripts, each replica will add its index to the distributed *counter* several times.
+
+The scripts can be run thus:
+    
+    ./scripts/run_async_counter.sh 3 100
+
+### 6.2 - Register
+In the *Counter* demo, all operations are commutative, and therefore the order operations take place has no bearing in the final value of the counter when all operations are executed.
+
+In the *Register* demo, a distributed *MRMW* register is shared across all replicas.
+On this register, the replicas can execute operations of addition and multiplication, which are not commutative between themselves.
+
+Analogous to the previous section, two scripts are made available: *scripts/run_sync_register.sh* and *scripts/run_async_register.sh*.
+
+The scripts take the same arguments as those presented in the previous section.
+
+In these scripts, the replicas with an even index will perform addition operations, while those with an odd index perform multiplications.
+
+Like in the previous scripts the index of the replicas will determine the changes executed to the shared *register*.
+
+*Replica 1* will add *1* to the *register* value and *replica 2* will multiply it by *2*.
+
+The scripts can be run thus:
+
+    ./scripts/run_async_register 3 100
+
+### 6.3 - YCSB
+The *Yahoo Cloud Serving Benchmark (YCSB)* is a benchmarking tool widely used to test the efficiency of databased (mostly No-SQL) under different workloads.
+
+Using a uniform benchmarking tool, biases caused by the choice of workloads and internal processing of the benchmarks are mitigated, thus leaving the database tests more representative of the expected performance of the databases in real deployments and allowing a more accurate comparison between database systems, across a variety of workloads.
+
+Blockmess is not a database, however, the same principles can still apply.
+Often distributed operation ordering mechanisms (Paxos, PBFT, BFT-SMaRT, HotStuff) use the *YCSB* benchmark to compare their throughput and latency.
+
+The nature of the *YCSB* tests require a synchronous execution calling the *ApplicationInterface.invokeSync* operation.
+As such, the metrics retrieved significantly downplay Blockmess' performance, as the threads issuing the operations will be blocked.
+
+Nevertheless, we provide the script *scripts/run_ycsb.sh* to run a *YCSB* test.
+
+This script receives no arguments and runs a single replica.
+The operations executed follow the workload defined in *config/workloads/workloada*.
+
+The configurations used follow the description found in:
+
+-https://github.com/brianfrankcooper/YCSB/wiki/Running-a-Workload
+
+-https://github.com/brianfrankcooper/YCSB/wiki/Core-Properties
+
+The script can be run thus:
+
+    ./scripts/run_ycsb.sh
+
+
+
+## 7 - Research Fronts/Possible Thesis
 There are several aspects of Blockmess that can be improved and that represent interesting research challenges.
 Some of these challenges would be good projects for a master's thesis, providing a rich state of the art to study, requiring considerable implementation effort, and needing validation through experimental evaluation.
 
-### 6.1 - Efficient lazy-push broadcast with Invertible Bloom Filters (or equivalent)
+### 7.1 - Efficient lazy-push broadcast with Invertible Bloom Filters (or equivalent)
 
 Bandwidth use and block dissemination latency are some of the most important aspects limiting modern Distributed Ledgers architectures.
 
@@ -848,7 +916,7 @@ The performance properties of the several solutions would then be tested under d
 
 Finally, the resulting broadcast protocols could be trivially be integrated with Blockmess.
 
-### 6.2 - Fast transaction settlement with application specific content allocation
+### 7.2 - Fast transaction settlement with application specific content allocation
 Blockmess allows applications using this platform to define, to some extent, the chain where content is placed.
 The algorithm designed for content allocation was initially based on transactions for cryptocurrency applications, and it allows some optimizations specific to it.
 In particular, it would allow the delivery of some transactions to the application before the block they were placed in was finalized.
@@ -864,7 +932,7 @@ In the best case scenario which would greatly improve the potential of the thesi
 
 Finally, the benefits of this solution should be tested when compared with other solutions.
 
-### 6.3 - Multi-purpose chains in Blockmess
+### 7.3 - Multi-purpose chains in Blockmess
 In Blockmess the use of parallel chains is restricted to the improvement of throughput by having the network propose blocks at a faster rate.
 However, there are several use cases for parallel chains in this area's literature.
 Some works use parallel chains to improve throughput (like ours), other improve latency in block delivery, and finally other improve transaction settlement without providing total order for operation processing.
@@ -876,7 +944,7 @@ This work would entail the study in general of parallel chain solutions and the 
 
 The experimental work on this thesis would show the effects of the use of the different kinds of parallel chains under varying application loads, amount of adversarial presence, and rules for the instantiation of different types of chains.
 
-### 6.4 - Integration of parallel chains with other scalability solutions
+### 7.4 - Integration of parallel chains with other scalability solutions
 This proposal is admittedly more open-ended than the previous.
 There exist many scalability proposals and research fronts over the original Blockchain design introduced in Bitcoin.
 Each of them has a set of upsides and downsides (yes, even Blockmess).

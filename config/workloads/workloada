@@ -26,7 +26,7 @@
 workload=site.ycsb.workloads.CoreWorkload
 operationcount=10
 db=demo.ycsb.DBClient
-threadcount=1
+threadcount=100
 
 readproportion=0.2
 updateproportion=0.4
