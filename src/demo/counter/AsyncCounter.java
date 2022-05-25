@@ -1,5 +1,9 @@
 package demo.counter;
 
+import lombok.SneakyThrows;
+
+import java.util.stream.IntStream;
+
 public class AsyncCounter {
 
     public static void main(String[] args) throws InterruptedException {
@@ -15,17 +19,17 @@ public class AsyncCounter {
         System.out.println("[property=value]*: List of property values to override those in the configuration file.");
     }
 
-    private static void execute(String[] args) throws InterruptedException {
+    private static void execute(String[] args) {
         int change = Integer.parseInt(args[0]);
         byte[] changeBytes = Counter.numToBytes(change);
         int numUpdates = Integer.parseInt(args[1]);
         String[] blockmessProperties = Counter.sliceArray(args, 2, args.length);
         Counter counterServer = new Counter(blockmessProperties);
-        for (int i = 0; i < numUpdates; i++)
-            updateDistributedCounter(changeBytes, counterServer, i);
+        IntStream.range(0, numUpdates).parallel().forEach(i -> updateDistributedCounter(changeBytes, counterServer, i));
     }
 
-    private static void updateDistributedCounter(byte[] changeBytes, Counter counterServer, int i) throws InterruptedException {
+    @SneakyThrows
+    private static void updateDistributedCounter(byte[] changeBytes, Counter counterServer, int i) {
         counterServer.invokeAsyncOperation(changeBytes, operationResult -> {
             byte[] currCounterBytes = operationResult.getLeft();
             long opIdx = operationResult.getRight();

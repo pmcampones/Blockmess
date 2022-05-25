@@ -27,7 +27,7 @@ public class BaseOperationMapper implements OperationMapper {
     @Override
     public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace) {
         Set<UUID> used = findUsedContent(states);
-        return getContentDeterministicOrderBound(usedSpace, used);
+        return getContentDeterministicOrderBound(0, used);
     }
 
     private Set<UUID> findUsedContent(Collection<UUID> states) {
