@@ -49,6 +49,8 @@ public class Blockchain implements Ledger {
     //Effectively being the tips of their forks.
     private final Map<UUID, BlockchainNode> chainTips = new HashMap<>();
 
+    private BlockchainNode priorityTip;
+
     //Kept public to be accessed by the tests, this is not used elsewhere.
     public final Map<UUID, BlockchainNode> blocks = new HashMap<>();
 
@@ -106,6 +108,7 @@ public class Blockchain implements Ledger {
         chainTips.put(genesis.getBlockId(), genesis);
         blocks.put(genesis.getBlockId(), genesis); finalized.put(genesis.getBlockId(), genesis);
         lastFinalized = genesis;
+        priorityTip = genesis;
     }
 
         private void bootstrapBlockchain(List<MempoolChunk> chunks) {
@@ -119,6 +122,7 @@ public class Blockchain implements Ledger {
             blocks.put(block.getBlockId(), block);
             finalized.put(block.getBlockId(), block);
             lastFinalized = block;
+            priorityTip = block;
         }
     }
 
@@ -227,6 +231,8 @@ public class Blockchain implements Ledger {
         prev.getFollowing().add(block.getBlockId());
         chainTips.remove(prev.getBlockId());
         chainTips.put(block.getBlockId(), block);
+        if (block.getWeight() > priorityTip.getWeight())
+            priorityTip = block;
         logger.debug("Inserting: {}", block.getBlockId());
         blocks.put(block.getBlockId(), block);
         finalized.putAll(finalizeBlocks().stream().collect(toMap(BlockchainNode::getBlockId, b -> b)));
@@ -335,11 +341,7 @@ public class Blockchain implements Ledger {
         assert !chainTips.isEmpty();
         try {
             lock.readLock().lock();
-            BlockchainNode maxB = chainTips.values().stream().max((b1, b2) -> {
-                int dif = b1.getWeight() - b2.getWeight();
-                return dif == 0 ? 1 : dif;
-            }).get();
-            return Set.of(maxB.getBlockId());
+            return Set.of(priorityTip.getBlockId());
         } finally {
             lock.readLock().unlock();
         }
