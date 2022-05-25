@@ -9,6 +9,7 @@ import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import main.BlockmessLauncher;
 import main.GlobalProperties;
+import mempoolManager.MempoolManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -66,7 +67,7 @@ public class SybilResistantElection implements LedgerObserver {
         this.chainSeeds = replaceChainSeeds(blockmessRoot.getAvailableChains());
         this.randomSeed = computeRandomSeed();
         BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
-        LedgerManager.getSingleton().attachObserver(this);
+        MempoolManager.getSingleton().attachObserver(this);
         establishQueryTimer();
     }
 
@@ -77,7 +78,6 @@ public class SybilResistantElection implements LedgerObserver {
         ).collect(toList());
         return new ConcurrentMerkleTree(new ConsistentOrderMerkleTree(randomSeedElements));
     }
-
 
     public void establishQueryTimer() {
         Properties props = GlobalProperties.getProps();
@@ -158,11 +158,6 @@ public class SybilResistantElection implements LedgerObserver {
     }
 
     private void updateMetaContentList(BlockmessBlock block) {
-        try {
-            Thread.sleep(100);  //Enough time for the mempool manager to process the block.
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         List<BlockmessChain> chains = blockmessRoot.getAvailableChains();
         if (wereChainsChanged(chains))
             reactToChangeInNumberOfChains(chains);

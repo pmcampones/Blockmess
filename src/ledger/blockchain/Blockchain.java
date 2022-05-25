@@ -79,7 +79,7 @@ public class Blockchain implements Ledger {
     public Blockchain(UUID genesisUUID) {
         Properties props = GlobalProperties.getProps();
         this.finalizedWeight = parseInt(props.getProperty("finalizedWeight",
-                String.valueOf(FINALIZED_WEIGHT)));;
+                String.valueOf(FINALIZED_WEIGHT)));
         createGenesisBlock(genesisUUID);
         bootstrapBlockchain(BootstrapModule.getStoredChunks());
         this.delayVerifier = generateDelayVerifier(props);
@@ -130,6 +130,7 @@ public class Blockchain implements Ledger {
 
     @Override
     public void submitBlock(BlockmessBlock block) {
+        logger.debug("Received block {}, referencing {}", block.getBlockId(), block.getPrevRefs());
         toProcess.add(block);
         processBlocks();
     }
@@ -211,12 +212,12 @@ public class Blockchain implements Ledger {
     private void processValidBlock(BlockmessBlock block, List<UUID> prev) {
         logger.debug("Processing valid block {}", block.getBlockId());
         int weight = blocks.get(prev.get(0)).getWeight() + block.getInherentWeight();
-        deliverNonFinalizedBlocks(block, weight);
         addBlock(new BlockchainNode(block.getBlockId(),
                 new HashSet<>(prev), weight));
+        deliverNonFinalizedBlock(block, weight);
     }
 
-    private void deliverNonFinalizedBlocks(BlockmessBlock block, int weight) {
+    private void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
         for (LedgerObserver observer : this.observers)
             observer.deliverNonFinalizedBlock(block, weight);
     }
