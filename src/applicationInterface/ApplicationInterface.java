@@ -146,10 +146,8 @@ public abstract class ApplicationInterface extends GenericProtocol implements Le
 
     private AppOperation computeAppContent(byte[] operation) {
         FixedCMuxIdMapper mapper = FixedCMuxIdMapper.getSingleton();
-        byte[] cmuxId1 = mapper.mapToCmuxId1(operation);
-        byte[] cmuxId2 = mapper.mapToCmuxId2(operation);
         byte[] replicaMetadata = makeMetadata();
-        return new AppOperation(operation, cmuxId1, cmuxId2, replicaMetadata);
+        return new AppOperation(operation, replicaMetadata);
     }
 
     private void invokeValidAsyncOperation(byte @NotNull [] operation, @NotNull ReplyListener listener) {

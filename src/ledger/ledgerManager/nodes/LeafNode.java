@@ -191,10 +191,8 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         OperationMapper lft = new BaseOperationMapper();
         OperationMapper rgt = new BaseOperationMapper();
         depth++;
-        Pair<ComposableOperationMapper, ComposableOperationMapper> spawnedChainDirectors =
-                contentStorage.separateOperations(mask, lft, rgt);
-        TempChainNode encapsulating =
-                new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
+        var spawnedChainDirectors = contentStorage.separateOperations(mask, lft, rgt);
+        var encapsulating = new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
         parent.replaceChild(encapsulating);
         this.parent = encapsulating;
         resetSamples();

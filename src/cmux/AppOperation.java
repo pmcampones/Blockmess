@@ -30,8 +30,7 @@ public class AppOperation extends BroadcastValueAbstract implements BroadcastVal
             in.readBytes(content);
             byte[] replicaMetadata = new byte[in.readShort()];
             in.readBytes(replicaMetadata);
-            FixedCMuxIdMapper mapper = FixedCMuxIdMapper.getSingleton();
-            return new AppOperation(content, mapper.mapToCmuxId1(content), mapper.mapToCmuxId2(content), replicaMetadata);
+            return new AppOperation(content, replicaMetadata);
         }
     };
 
@@ -45,13 +44,14 @@ public class AppOperation extends BroadcastValueAbstract implements BroadcastVal
     @Getter
     private final byte[] content, replicaMetadata;
 
-    public AppOperation(byte[] content, byte[] cmuxId1, byte[] cmuxId2, byte[] replicaMetadata) {
+    public AppOperation(byte[] content, byte[] replicaMetadata) {
         super(ID);
         byte[] fullOperation = concatenate(content, replicaMetadata);
         this.hashVal = CryptographicUtils.hashInput(fullOperation);
         this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);
-        this.cmuxId1 = cmuxId1;
-        this.cmuxId2 = cmuxId2;
+        CMuxIdMapper mapper = FixedCMuxIdMapper.getSingleton();
+        this.cmuxId1 = mapper.mapToCmuxId1(fullOperation);
+        this.cmuxId2 = mapper.mapToCmuxId2(fullOperation);
         this.content = content;
         this.replicaMetadata = replicaMetadata;
     }

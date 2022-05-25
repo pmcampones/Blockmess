@@ -36,8 +36,6 @@ public class AsyncCounter {
             int currCounter = Counter.bytesToInt(currCounterBytes);
             System.out.printf("Counter with value %d on local update %d and global operation %d%n", currCounter, i, opIdx);
         });
-        //Sleeping between operations increases the interleaving between replicas, but it is not necessary
-        Thread.sleep(10);
     }
 
 }
