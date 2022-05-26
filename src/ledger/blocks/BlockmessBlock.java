@@ -1,14 +1,17 @@
 package ledger.blocks;
 
 import broadcastProtocols.BroadcastValue;
-import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import io.netty.buffer.ByteBuf;
+import lombok.experimental.Delegate;
 import pt.unl.fct.di.novasys.network.ISerializer;
 import sybilResistantElection.SybilResistantElectionProof;
 import utils.CryptographicUtils;
 
 import java.io.IOException;
-import java.security.*;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,6 +87,8 @@ public class BlockmessBlock implements LedgerBlock {
         }
 
     };
+
+    @Delegate(excludes = ExcludeInnerLedger.class)
     private final LedgerBlock ledgerBlock;
     private final UUID destinationChain;
     private final long currentRank;
@@ -93,7 +98,7 @@ public class BlockmessBlock implements LedgerBlock {
                           SybilResistantElectionProof proof, KeyPair proposer, UUID destinationChain, long currentRank, long nextRank)
             throws NoSuchAlgorithmException, SignatureException, InvalidKeyException, IOException {
         UUID blockId = computeBlockId(inherentWeight, prevRefs, contentList, proof, destinationChain);
-        this.ledgerBlock = new LedgerBlockImp(blockId,inherentWeight, prevRefs, contentList, proof, proposer, ID);
+        this.ledgerBlock = new LedgerBlockImp(blockId, inherentWeight, prevRefs, contentList, proof, proposer, ID);
         this.destinationChain = destinationChain;
         this.currentRank = currentRank;
         this.nextRank = nextRank;
@@ -143,56 +148,6 @@ public class BlockmessBlock implements LedgerBlock {
     }
 
     @Override
-    public UUID getBlockId() {
-        return ledgerBlock.getBlockId();
-    }
-
-    @Override
-    public int getInherentWeight() {
-        return ledgerBlock.getInherentWeight();
-    }
-
-    @Override
-    public List<UUID> getPrevRefs() {
-        return ledgerBlock.getPrevRefs();
-    }
-
-    @Override
-    public ContentList getContentList() {
-        return ledgerBlock.getContentList();
-    }
-
-    @Override
-    public SybilResistantElectionProof getProof() {
-        return ledgerBlock.getProof();
-    }
-
-    @Override
-    public List<ValidatorSignature> getSignatures() {
-        return ledgerBlock.getSignatures();
-    }
-
-    @Override
-    public void addValidatorSignature(ValidatorSignature validatorSignature) {
-        ledgerBlock.addValidatorSignature(validatorSignature);
-    }
-
-    @Override
-    public PublicKey getProposer() {
-        return ledgerBlock.getProposer();
-    }
-
-    @Override
-    public boolean hasValidSemantics() {
-        return ledgerBlock.hasValidSemantics();
-    }
-
-    @Override
-    public int getSerializedSize() throws IOException {
-        return ledgerBlock.getSerializedSize();
-    }
-
-    @Override
     public short getClassId() {
         return ID;
     }
@@ -207,9 +162,13 @@ public class BlockmessBlock implements LedgerBlock {
         return true;
     }
 
-    @Override
-    public UUID getBlockingID() throws InnerValueIsNotBlockingBroadcast {
-        return ledgerBlock.getBlockingID();
+    private interface ExcludeInnerLedger {
+        short getClassId();
+
+        ISerializer<BroadcastValue> getSerializer();
+
+        boolean isBlocking();
     }
+
 
 }
