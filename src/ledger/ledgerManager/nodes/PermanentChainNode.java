@@ -2,16 +2,10 @@ package ledger.ledgerManager.nodes;
 
 import cmux.AppOperation;
 import cmux.CMuxMask;
-import ledger.LedgerObserver;
-import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
-import operationMapper.ComposableOperationMapper;
-import operationMapper.OperationMapper;
-import org.apache.commons.lang3.tuple.Pair;
+import lombok.experimental.Delegate;
 
-import java.io.IOException;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,7 +21,9 @@ import static org.apache.commons.collections4.SetUtils.union;
 public class PermanentChainNode implements InnerNode, BlockmessChain{
 
     private final ReferenceNode lft, rgt;
+    @Delegate(excludes = ExcludeParent.class)
     private ParentTreeNode parent;
+    @Delegate(excludes = ExcludeInnerBlockmessChain.class)
     private BlockmessChain inner;
 
     public PermanentChainNode(ParentTreeNode parent, BlockmessChain inner,
@@ -36,46 +32,6 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
         this.inner = inner;
         this.lft = lft;
         this.rgt = rgt;
-    }
-
-    @Override
-    public UUID getChainId() {
-        return inner.getChainId();
-    }
-
-    @Override
-    public Set<UUID> getBlockR() {
-        return inner.getBlockR();
-    }
-
-    @Override
-    public void submitBlock(BlockmessBlock block) {
-        inner.submitBlock(block);
-    }
-
-    @Override
-    public void attachObserver(LedgerObserver observer) {
-        inner.attachObserver(observer);
-    }
-
-    @Override
-    public Set<UUID> getFollowing(UUID block, int distance) throws IllegalArgumentException {
-        return inner.getFollowing(block, distance);
-    }
-
-    @Override
-    public int getWeight(UUID block) throws IllegalArgumentException {
-        return inner.getWeight(block);
-    }
-
-    @Override
-    public boolean isInLongestChain(UUID nodeId) {
-        return inner.isInLongestChain(nodeId);
-    }
-
-    @Override
-    public void close() {
-        inner.close();
     }
 
     @Override
@@ -88,25 +44,6 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
         return false;
     }
 
-    @Override
-    public boolean hasFinalized() {
-        return inner.hasFinalized();
-    }
-
-    @Override
-    public BlockmessBlock peekFinalized() {
-        return inner.peekFinalized();
-    }
-
-    @Override
-    public BlockmessBlock deliverChainBlock() {
-        return inner.deliverChainBlock();
-    }
-
-    @Override
-    public boolean shouldSpawn() {
-        return inner.shouldSpawn();
-    }
 
     @Override
     public boolean shouldMerge() {
@@ -118,54 +55,10 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public boolean isUnderloaded() {
-        return inner.isUnderloaded();
-    }
-
-    @Override
-    public long getMinimumRank() {
-        return inner.getMinimumRank();
-    }
-
-    @Override
-    public Set<BlockmessBlock> getBlocks(Set<UUID> blockIds) {
-        return inner.getBlocks(blockIds);
-    }
-
-    @Override
-    public void resetSamples() {
-        inner.resetSamples();
-    }
-
-    @Override
-    public long getRankFromRefs(Set<UUID> refs) {
-        return inner.getRankFromRefs(refs);
-    }
-
-    @Override
     public Set<BlockmessChain> getPriorityChains() {
         return union(inner.getPriorityChains(), union(lft.getPriorityChains(), rgt.getPriorityChains()));
     }
 
-    @Override
-    public void lowerLeafDepth() {
-        inner.lowerLeafDepth();
-    }
-
-    @Override
-    public long getNextRank() {
-        return inner.getNextRank();
-    }
-
-    @Override
-    public void spawnChildren(UUID originator) {
-        inner.spawnChildren(originator);
-    }
-
-    @Override
-    public void submitContentDirectly(Collection<AppOperation> content) {
-        inner.submitContentDirectly(content);
-    }
 
     @Override
     public int countReferencedPermanent() {
@@ -175,26 +68,6 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     @Override
     public void replaceChild(BlockmessChain newChild) {
         inner = newChild;
-    }
-
-    @Override
-    public void forgetUnconfirmedChains(Set<UUID> discartedChainsIds) {
-        parent.forgetUnconfirmedChains(discartedChainsIds);
-    }
-
-    @Override
-    public void createChains(List<BlockmessChain> createdChains) {
-        parent.createChains(createdChains);
-    }
-
-    @Override
-    public ParentTreeNode getTreeRoot() {
-        return parent.getTreeRoot();
-    }
-
-    @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
-        this.inner.spawnPermanentChildren(lftId, rgtId);
     }
 
     @Override
@@ -220,37 +93,6 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
     private void skipThisNode() {
         parent.replaceChild(inner);
         inner.replaceParent(parent);
-    }
-
-    @Override
-    public Set<UUID> getForkBlocks(int depth) {
-        return inner.getForkBlocks(depth);
-    }
-
-    @Override
-    public int getNumUnderloaded() {
-        return inner.getNumUnderloaded();
-    }
-
-    @Override
-    public int getNumOverloaded() {
-        return inner.getNumOverloaded();
-    }
-
-    @Override
-    public int getFinalizedWeight() {
-        return inner.getFinalizedWeight();
-    }
-
-    @Override
-    public int getNumFinalizedPending() {
-        return inner.getNumFinalizedPending();
-    }
-
-    @Override
-    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
-            throws IOException {
-        return inner.generateOperationList(states, usedSpace);
     }
 
     @Override
@@ -281,19 +123,20 @@ public class PermanentChainNode implements InnerNode, BlockmessChain{
         inner.deleteOperations(operatationIds);
     }
 
-    @Override
-    public Collection<AppOperation> getStoredOperations() {
-        return inner.getStoredOperations();
+    private interface ExcludeParent {
+        void replaceChild(BlockmessChain newChild);
     }
 
-    @Override
-    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
-            CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
-        return inner.separateOperations(mask, innerLft, innerRgt);
+    private interface ExcludeInnerBlockmessChain {
+        void replaceParent(ParentTreeNode parent);
+        boolean isLeaf();
+        boolean shouldMerge();
+        Set<BlockmessChain> getPriorityChains();
+        int countReferencedPermanent();
+        Set<UUID> mergeChildren();
+        void submitOperations(Collection<AppOperation> operations);
+        void submitOperation(AppOperation operation);
+        void deleteOperations(Set<UUID> operatationIds);
     }
 
-    @Override
-    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
-        inner.aggregateOperations(operationMappers);
-    }
 }
