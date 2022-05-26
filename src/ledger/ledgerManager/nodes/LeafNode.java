@@ -8,11 +8,11 @@ import ledger.blockchain.Blockchain;
 import ledger.blocks.BlockmessBlock;
 import ledger.blocks.ContentList;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
+import lombok.experimental.Delegate;
 import operationMapper.BaseOperationMapper;
 import operationMapper.ComposableOperationMapper;
 import operationMapper.ComposableOperationMapperImp;
 import operationMapper.OperationMapper;
-import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -46,6 +46,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     private final UUID chainId;
 
+    @Delegate(excludes = ExcludeInnerLedger.class)
     private final Ledger ledger;
 
     private final List<LedgerObserver> observers = new LinkedList<>();
@@ -60,7 +61,8 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
      */
     private final Map<UUID, BlockmessBlock> blocks = new ConcurrentHashMap<>();
 
-    private final ComposableOperationMapper contentStorage;
+    @Delegate(excludes = ExcludeOperationMapper.class)
+    private final ComposableOperationMapper operationMapper;
     /**
      * Stores the finalized blocks on this Chain.
      * <p>Added as they are finalized in the ledger and removed when they are delivered to the application.</p>
@@ -119,7 +121,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     public LeafNode(
             Properties props, UUID chainId, ParentTreeNode parent,
-            long minRank, long minNextRank, int depth, ComposableOperationMapper contentStorage, UUID prevBlock) {
+            long minRank, long minNextRank, int depth, ComposableOperationMapper operationMapper, UUID prevBlock) {
         this.props = props;
         this.chainId = chainId;
         this.ledger = new Blockchain(chainId);
@@ -132,7 +134,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         this.minRank = minRank;
         this.minNextRank = minNextRank;
         this.depth = depth;
-        this.contentStorage = contentStorage;
+        this.operationMapper = operationMapper;
     }
 
     @Override
@@ -140,15 +142,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         return chainId;
     }
 
-    @Override
-    public Set<UUID> getBlockR() {
-        return ledger.getBlockR();
-    }
-
-    @Override
-    public void submitBlock(BlockmessBlock block) {
-        ledger.submitBlock(block);
-    }
 
     @Override
     public void attachObserver(LedgerObserver observer) {
@@ -158,26 +151,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         } finally {
             observersLock.writeLock().unlock();
         }
-    }
-
-    @Override
-    public Set<UUID> getFollowing(UUID block, int distance) throws IllegalArgumentException {
-        return ledger.getFollowing(block, distance);
-    }
-
-    @Override
-    public int getWeight(UUID block) throws IllegalArgumentException {
-        return ledger.getWeight(block);
-    }
-
-    @Override
-    public boolean isInLongestChain(UUID nodeId) {
-        return ledger.isInLongestChain(nodeId);
-    }
-
-    @Override
-    public void close() {
-        ledger.close();
     }
 
     @Override
@@ -191,7 +164,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         OperationMapper lft = new BaseOperationMapper();
         OperationMapper rgt = new BaseOperationMapper();
         depth++;
-        var spawnedChainDirectors = contentStorage.separateOperations(mask, lft, rgt);
+        var spawnedChainDirectors = operationMapper.separateOperations(mask, lft, rgt);
         var encapsulating = new TempChainNode(props, this, parent, originator, depth, spawnedChainDirectors);
         parent.replaceChild(encapsulating);
         this.parent = encapsulating;
@@ -317,7 +290,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 
     @Override
     public void submitContentDirectly(Collection<AppOperation> content) {
-        contentStorage.submitOperations(content);
+        operationMapper.submitOperations(content);
     }
 
     private Set<UUID> getFinalizedContent(List<UUID> finalized) {
@@ -359,16 +332,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     @Override
     public int getNumOverloaded() {
         return getTrueSamples(overloadedBlocksSample);
-    }
-
-    @Override
-    public int getFinalizedWeight() {
-        return ledger.getFinalizedWeight();
-    }
-
-    @Override
-    public Set<UUID> getForkBlocks(int depth) {
-        return ledger.getForkBlocks(depth);
     }
 
     @Override
@@ -419,7 +382,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
         List<BlockmessBlock> finalizedBlocks = finalized.stream().map(blocks::get).collect(toList());
         finalizedBuffer.addAll(finalizedBlocks);
         updateNextRank();
-        contentStorage.deleteOperations(getFinalizedContent(finalized));
+        operationMapper.deleteOperations(getFinalizedContent(finalized));
         finalized.forEach(blocks::remove);
         logger.info("Delivering finalized blocks {} in Chain {}",
                 finalized, chainId);
@@ -455,45 +418,19 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
     }
 
     @Override
-    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
-            throws IOException {
-        return contentStorage.generateOperationList(states, usedSpace);
-    }
-
-    @Override
-    public void submitOperations(Collection<AppOperation> operations) {
-        contentStorage.submitOperations(operations);
-    }
-
-    @Override
-    public void submitOperation(AppOperation operation) {
-        contentStorage.submitOperation(operation);
-    }
-
-    @Override
-    public void deleteOperations(Set<UUID> operatationIds) {
-        contentStorage.deleteOperations(operatationIds);
-    }
-
-    @Override
     public Collection<AppOperation> getStoredOperations() {
         return Stream.concat(
-                contentStorage.getStoredOperations().stream(),
+                operationMapper.getStoredOperations().stream(),
                 getTxsInBufferedFinalizedBlocks(finalizedBuffer.stream())
                 ).collect(toSet());
     }
 
-    @Override
-    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
-            CMuxMask mask,
-            OperationMapper innerLft,
-            OperationMapper innerRgt) {
-        return contentStorage.separateOperations(mask, innerLft, innerRgt);
+    private interface ExcludeInnerLedger {
+        void attachObserver(LedgerObserver observer);
     }
 
-    @Override
-    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
-        contentStorage.aggregateOperations(operationMappers);
+    private interface ExcludeOperationMapper {
+        Collection<AppOperation> getStoredOperations();
     }
 
 }
