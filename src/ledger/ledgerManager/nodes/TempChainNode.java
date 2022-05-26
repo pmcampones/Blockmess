@@ -5,12 +5,11 @@ import cmux.CMuxMask;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
+import lombok.experimental.Delegate;
 import operationMapper.ComposableOperationMapper;
-import operationMapper.OperationMapper;
 import org.apache.commons.lang3.tuple.Pair;
 import utils.CryptographicUtils;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.stream.Stream;
@@ -35,6 +34,8 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
      */
     private final Map<UUID, Pair<ReferenceNode, ReferenceNode>> tentativeChains = new HashMap<>();
     private final Pair<ComposableOperationMapper, ComposableOperationMapper> contentStoragePair;
+
+    @Delegate(excludes = ExcludeParent.class)
     private ParentTreeNode parent;
 
     private final int finalizedWeight;
@@ -45,6 +46,8 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
      * How deep is this Chain in the Blockmess Tree
      */
     private final int chainDepth;
+
+    @Delegate(excludes = ExcludeInnerBlockmessChain.class)
     private BlockmessChain inner;
 
     public TempChainNode(
@@ -97,53 +100,8 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public Set<UUID> getBlockR() {
-        return inner.getBlockR();
-    }
-
-    @Override
-    public void submitBlock(BlockmessBlock block) {
-        inner.submitBlock(block);
-    }
-
-    @Override
-    public void attachObserver(LedgerObserver observer) {
-        inner.attachObserver(observer);
-    }
-
-    @Override
-    public Set<UUID> getFollowing(UUID block, int distance) throws IllegalArgumentException {
-        return inner.getFollowing(block, distance);
-    }
-
-    @Override
-    public int getWeight(UUID block) throws IllegalArgumentException {
-        return inner.getWeight(block);
-    }
-
-    @Override
-    public boolean isInLongestChain(UUID nodeId) {
-        return inner.isInLongestChain(nodeId);
-    }
-
-    @Override
-    public void close() {
-        inner.close();
-    }
-
-    @Override
-    public UUID getChainId() {
-        return inner.getChainId();
-    }
-
-    @Override
     public void replaceParent(ParentTreeNode parent) {
         this.parent = parent;
-    }
-
-    @Override
-    public void spawnChildren(UUID originator) {
-        inner.spawnChildren(originator);
     }
 
     @Override
@@ -172,16 +130,6 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public boolean hasFinalized() {
-        return inner.hasFinalized();
-    }
-
-    @Override
-    public BlockmessBlock peekFinalized() {
-        return inner.peekFinalized();
-    }
-
-    @Override
     public BlockmessBlock deliverChainBlock() {
         BlockmessBlock delivered = inner.deliverChainBlock();
         Pair<ReferenceNode, ReferenceNode> confirmedChains =
@@ -204,11 +152,6 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public boolean shouldSpawn() {
-        return inner.shouldSpawn();
-    }
-
-    @Override
     public boolean shouldMerge() {
         if (inner.isLeaf())
             return inner.isUnderloaded()
@@ -220,31 +163,6 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public boolean isUnderloaded() {
-        return inner.isUnderloaded();
-    }
-
-    @Override
-    public long getMinimumRank() {
-        return inner.getMinimumRank();
-    }
-
-    @Override
-    public Set<BlockmessBlock> getBlocks(Set<UUID> blockIds) {
-        return inner.getBlocks(blockIds);
-    }
-
-    @Override
-    public void resetSamples() {
-        inner.resetSamples();
-    }
-
-    @Override
-    public long getRankFromRefs(Set<UUID> refs) {
-        return inner.getRankFromRefs(refs);
-    }
-
-    @Override
     public Set<BlockmessChain> getPriorityChains() {
         var priorityChainsOpt = getPreferableTemp();
         if (priorityChainsOpt.isEmpty())
@@ -253,26 +171,6 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
         return union(inner.getPriorityChains(),
                 union(priorityChains.getLeft().getPriorityChains(),
                         priorityChains.getRight().getPriorityChains()));
-    }
-
-    @Override
-    public void lowerLeafDepth() {
-        inner.lowerLeafDepth();
-    }
-
-    @Override
-    public long getNextRank() {
-        return inner.getNextRank();
-    }
-
-    @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
-        this.inner.spawnPermanentChildren(lftId, rgtId);
-    }
-
-    @Override
-    public void submitContentDirectly(Collection<AppOperation> content) {
-        inner.submitContentDirectly(content);
     }
 
     @Override
@@ -298,23 +196,8 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     }
 
     @Override
-    public void forgetUnconfirmedChains(Set<UUID> discartedChainsIds) {
-        parent.forgetUnconfirmedChains(discartedChainsIds);
-    }
-
-    @Override
     public void replaceChild(BlockmessChain newChild) {
         this.inner = newChild;
-    }
-
-    @Override
-    public void createChains(List<BlockmessChain> createdChains) {
-        parent.createChains(createdChains);
-    }
-
-    @Override
-    public ParentTreeNode getTreeRoot() {
-        return parent.getTreeRoot();
     }
 
     @Override
@@ -330,37 +213,6 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
     public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
         //Does nothing because any action taken by this class can only be done after the
         // ledger manager has linearized the blocks.
-    }
-
-    @Override
-    public Set<UUID> getForkBlocks(int depth) {
-        return inner.getForkBlocks(depth);
-    }
-
-    @Override
-    public int getNumUnderloaded() {
-        return inner.getNumUnderloaded();
-    }
-
-    @Override
-    public int getNumOverloaded() {
-        return inner.getNumOverloaded();
-    }
-
-    @Override
-    public int getFinalizedWeight() {
-        return inner.getFinalizedWeight();
-    }
-
-    @Override
-    public int getNumFinalizedPending() {
-        return inner.getNumFinalizedPending();
-    }
-
-    @Override
-    public List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace)
-            throws IOException {
-        return inner.generateOperationList(states, usedSpace);
     }
 
     @Override
@@ -393,19 +245,21 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
         inner.deleteOperations(operatationIds);
     }
 
-    @Override
-    public Collection<AppOperation> getStoredOperations() {
-        return inner.getStoredOperations();
+    private interface ExcludeInnerBlockmessChain {
+        void replaceParent(ParentTreeNode parent);
+        Set<UUID> mergeChildren();
+        boolean isLeaf();
+        BlockmessBlock deliverChainBlock();
+        boolean shouldMerge();
+        Set<BlockmessChain> getPriorityChains();
+        int countReferencedPermanent();
+        void submitOperations(Collection<AppOperation> operations);
+        void submitOperation(AppOperation operation);
+        void deleteOperations(Set<UUID> operatationIds);
     }
 
-    @Override
-    public Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
-            CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt) {
-        return inner.separateOperations(mask, innerLft, innerRgt);
+    private interface ExcludeParent {
+        void replaceChild(BlockmessChain newChild);
     }
 
-    @Override
-    public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
-        inner.aggregateOperations(operationMappers);
-    }
 }
