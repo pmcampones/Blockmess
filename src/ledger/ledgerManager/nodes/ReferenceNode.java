@@ -4,7 +4,7 @@ import cmux.AppOperation;
 import cmux.CMuxMask;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
-import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
+import lombok.experimental.Delegate;
 import operationMapper.ComposableOperationMapper;
 import operationMapper.OperationMapper;
 import org.apache.commons.lang3.tuple.Pair;
@@ -30,11 +30,13 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
      * Uses the State design pattern to modify its behaviour
      * depending on whether it is a leaf node or an inner node.
      */
+    @Delegate(excludes = ExcludeNodeState.class)
     private BlockmessChain nodeState;
     /**
      * References the inner node from a parent Chain that spawned this.
      * <p>It could also be a reference to the LedgerManager itself.</p>
      */
+    @Delegate(excludes = ExcludeParent.class)
     private ParentTreeNode parent;
 
     public ReferenceNode(
@@ -51,16 +53,6 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
         this.leaf = new LeafNode(props, chainId, this, minRank, minNextRank, depth, contentStorage, prevBlock);
         this.nodeState = leaf;
         this.parent = parent;
-    }
-
-    @Override
-    public void spawnChildren(UUID originator) {
-        nodeState.spawnChildren(originator);
-    }
-
-    @Override
-    public Set<UUID> mergeChildren() throws LedgerTreeNodeDoesNotExistException {
-        return nodeState.mergeChildren();
     }
 
     @Override
@@ -108,11 +100,6 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public boolean isLeaf() {
-        return nodeState.isLeaf();
-    }
-
-    @Override
     public boolean hasFinalized() {
         return leaf.hasFinalized();
     }
@@ -122,22 +109,9 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
         return leaf.peekFinalized();
     }
 
-    /*
-     *  Must not send directly to the leaf node
-     */
-    @Override
-    public BlockmessBlock deliverChainBlock() {
-        return nodeState.deliverChainBlock();
-    }
-
     @Override
     public boolean shouldSpawn() {
         return leaf.shouldSpawn();
-    }
-
-    @Override
-    public boolean shouldMerge() {
-        return nodeState.shouldMerge();
     }
 
     @Override
@@ -181,33 +155,13 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void spawnPermanentChildren(UUID lftId, UUID rgtId) {
-        nodeState.spawnPermanentChildren(lftId, rgtId);
-    }
-
-    @Override
     public void submitContentDirectly(Collection<AppOperation> content) {
         leaf.submitContentDirectly(content);
     }
 
     @Override
-    public int countReferencedPermanent() {
-        return nodeState.countReferencedPermanent();
-    }
-
-    @Override
     public void replaceChild(BlockmessChain newChild) {
         this.nodeState = newChild;
-    }
-
-    @Override
-    public void forgetUnconfirmedChains(Set<UUID> discartedChainsIds) {
-        parent.forgetUnconfirmedChains(discartedChainsIds);
-    }
-
-    @Override
-    public void createChains(List<BlockmessChain> createdChains) {
-        parent.createChains(createdChains);
     }
 
     @Override
@@ -247,21 +201,6 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     }
 
     @Override
-    public void submitOperations(Collection<AppOperation> operations) {
-        nodeState.submitOperations(operations);
-    }
-
-    @Override
-    public void submitOperation(AppOperation operation) {
-        nodeState.submitOperation(operation);
-    }
-
-    @Override
-    public void deleteOperations(Set<UUID> operatationIds) {
-        nodeState.deleteOperations(operatationIds);
-    }
-
-    @Override
     public Collection<AppOperation> getStoredOperations() {
         return leaf.getStoredOperations();
     }
@@ -275,6 +214,45 @@ public class ReferenceNode implements InnerNode, BlockmessChain{
     @Override
     public void aggregateOperations(Collection<ComposableOperationMapper> operationMappers) {
         leaf.aggregateOperations(operationMappers);
+    }
+
+    private interface ExcludeParent {
+        void replaceChild(BlockmessChain newChild);
+        ParentTreeNode getTreeRoot();
+    }
+
+    private interface ExcludeNodeState {
+        UUID getChainId();
+        Set<UUID> getBlockR();
+        void submitBlock(BlockmessBlock block);
+        void attachObserver(LedgerObserver observer);
+        Set<UUID> getFollowing(UUID block, int distance);
+        int getWeight(UUID block);
+        boolean isInLongestChain(UUID nodeId);
+        void close();
+        void replaceParent(ParentTreeNode parent);
+        boolean hasFinalized();
+        BlockmessBlock peekFinalized();
+        boolean shouldSpawn();
+        boolean isUnderloaded();
+        long getMinimumRank();
+        Set<BlockmessBlock> getBlocks(Set<UUID> blockIds);
+        void resetSamples();
+        long getRankFromRefs(Set<UUID> refs);
+        Set<BlockmessChain> getPriorityChains();
+        void lowerLeafDepth();
+        long getNextRank();
+        void submitContentDirectly(Collection<AppOperation> content);
+        int getNumUnderloaded();
+        int getNumOverloaded();
+        int getFinalizedWeight();
+        int getNumFinalizedPending();
+        Set<UUID> getForkBlocks(int depth);
+        List<AppOperation> generateOperationList(Collection<UUID> states, int usedSpace);
+        Collection<AppOperation> getStoredOperations();
+        Pair<ComposableOperationMapper, ComposableOperationMapper> separateOperations(
+                CMuxMask mask, OperationMapper innerLft, OperationMapper innerRgt);
+        void aggregateOperations(Collection<ComposableOperationMapper> operationMappers);
     }
 
 }
