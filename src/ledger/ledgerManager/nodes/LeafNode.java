@@ -16,7 +16,6 @@ import operationMapper.OperationMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -106,14 +105,8 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 	private int depth;
 
 	public LeafNode(
-			Properties props, UUID ChainId, ParentTreeNode parent,
-			long minRank, long minNextRank, int depth, ComposableOperationMapper contentStorage) {
-		this(props, ChainId, parent, minRank, minNextRank, depth, contentStorage, ChainId);
-	}
-
-	public LeafNode(
 			Properties props, UUID chainId, ParentTreeNode parent,
-			long minRank, long minNextRank, int depth, ComposableOperationMapper operationMapper, UUID prevBlock) {
+			long minRank, long minNextRank, int depth, ComposableOperationMapper operationMapper) {
 		this.props = props;
 		this.chainId = chainId;
 		this.ledger = new Blockchain(chainId);
@@ -291,11 +284,9 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 		depth++;
 		ParentTreeNode treeRoot = parent.getTreeRoot();
 		ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
-				0, 1, depth, new ComposableOperationMapperImp(),
-				new UUID(0, 0));
+				0, 1, depth, new ComposableOperationMapperImp());
 		ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
-				0, 1, depth, new ComposableOperationMapperImp(),
-				new UUID(0, 0));
+				0, 1, depth, new ComposableOperationMapperImp());
 		PermanentChainNode encapsulating =
 				new PermanentChainNode(this.parent, this, lft, rgt);
 		parent.replaceChild(encapsulating);
@@ -312,19 +303,6 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 	@Override
 	public int countReferencedPermanent() {
 		return 0;
-	}
-
-	private int getBlockSerializedSize(BlockmessBlock block) {
-		try {
-			return block.getSerializedSize();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return maxBlockSize / 2;
-	}
-
-	private int getProofSize(BlockmessBlock block) {
-		return block.getProof().getSerializedSize();
 	}
 
 	@Override

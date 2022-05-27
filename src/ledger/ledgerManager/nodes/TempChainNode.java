@@ -34,19 +34,14 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
      */
     private final Map<UUID, Pair<ReferenceNode, ReferenceNode>> tentativeChains = new HashMap<>();
     private final Pair<ComposableOperationMapper, ComposableOperationMapper> contentStoragePair;
-
-    @Delegate(excludes = ExcludeParent.class)
-    private ParentTreeNode parent;
-
     private final int finalizedWeight;
-
     private final int rootWeight;
-
     /**
      * How deep is this Chain in the Blockmess Tree
      */
     private final int chainDepth;
-
+    @Delegate(excludes = ExcludeParent.class)
+    private ParentTreeNode parent;
     @Delegate(excludes = ExcludeInnerBlockmessChain.class)
     private BlockmessChain inner;
 
@@ -84,10 +79,10 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
         ParentTreeNode treeRoot = parent.getTreeRoot();
         UUID lftId = computeChainId(root.getBlockId(), "lft".getBytes());
         ReferenceNode lft = new ReferenceNode(props, lftId, treeRoot,
-                root.getNextRank(), root.getNextRank(), chainDepth, contentStoragePair.getLeft(), root.getBlockId());
+                root.getNextRank(), root.getNextRank(), chainDepth, contentStoragePair.getLeft());
         UUID rgtId = computeChainId(root.getBlockId(), "rgt".getBytes());
         ReferenceNode rgt = new ReferenceNode(props, rgtId, treeRoot,
-                root.getNextRank(), root.getNextRank(), chainDepth, contentStoragePair.getRight(), root.getBlockId());
+                root.getNextRank(), root.getNextRank(), chainDepth, contentStoragePair.getRight());
         return Pair.of(lft, rgt);
     }
 
@@ -111,7 +106,7 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
         skipThisNode();
         inner.resetSamples();
         inner.lowerLeafDepth();
-        List<BlockmessChain> toMerge =  tentativeChains.values().stream()
+        List<BlockmessChain> toMerge = tentativeChains.values().stream()
                 .map(p -> List.of(p.getLeft(), p.getRight()))
                 .flatMap(Collection::stream)
                 .collect(toList());
@@ -247,14 +242,23 @@ public class TempChainNode implements InnerNode, LedgerObserver, BlockmessChain 
 
     private interface ExcludeInnerBlockmessChain {
         void replaceParent(ParentTreeNode parent);
+
         Set<UUID> mergeChildren();
+
         boolean isLeaf();
+
         BlockmessBlock deliverChainBlock();
+
         boolean shouldMerge();
+
         Set<BlockmessChain> getPriorityChains();
+
         int countReferencedPermanent();
+
         void submitOperations(Collection<AppOperation> operations);
+
         void submitOperation(AppOperation operation);
+
         void deleteOperations(Set<UUID> operatationIds);
     }
 
