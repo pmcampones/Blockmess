@@ -15,13 +15,11 @@ public class BaseOperationMapper implements OperationMapper {
 	public static final int MAX_BLOCK_SIZE = 40000;
 
 	private final int maxBlockSize;
-	private final int maxSizeOffset;
 	private final Map<UUID, AppOperation> contentMap = Collections.synchronizedMap(new TreeMap<>());
 
 	public BaseOperationMapper() {
 		Properties props = GlobalProperties.getProps();
 		this.maxBlockSize = parseInt(props.getProperty("maxBlockSize", String.valueOf(MAX_BLOCK_SIZE)));
-		this.maxSizeOffset = 1000;
 	}
 
 	@Override
@@ -63,10 +61,12 @@ public class BaseOperationMapper implements OperationMapper {
 		int usedSpace = 0;
 		Iterator<Map.Entry<UUID, AppOperation>> contentEntries = contentMap.entrySet().iterator();
 		List<AppOperation> content = new ArrayList<>();
-		while (contentEntries.hasNext() && usedSpace < maxBlockSize - maxSizeOffset) {
+		while (contentEntries.hasNext() && usedSpace < maxBlockSize) {
 			Map.Entry<UUID, AppOperation> contentEntry = contentEntries.next();
 			if (!used.contains(contentEntry.getKey())) {
-				content.add(contentEntry.getValue());
+				int contentSize = contentEntry.getValue().getSerializedSize();
+				if (usedSpace + contentSize < maxBlockSize)
+					content.add(contentEntry.getValue());
 				usedSpace += contentEntry.getValue().getSerializedSize();
 			}
 		}
