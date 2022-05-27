@@ -34,7 +34,7 @@ public class AsyncCounter {
             byte[] currCounterBytes = operationResult.getLeft();
             long opIdx = operationResult.getRight();
             int currCounter = Counter.bytesToInt(currCounterBytes);
-            System.out.printf("Counter with value %d on local update %d and global operation %d%n", currCounter, i, opIdx);
+            //System.out.printf("Counter with value %d on local update %d and global operation %d%n", currCounter, i, opIdx);
         });
     }
 

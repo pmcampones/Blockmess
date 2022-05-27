@@ -38,7 +38,10 @@ public class Counter extends ApplicationInterface {
     }
 
     @Override
-    public void notifyNonFinalizedBlock(BlockmessBlock block) {}
+    public void notifyNonFinalizedBlock(BlockmessBlock block) {
+        System.out.printf("Block %s, referencing %s, in chain %s, carrying %d operations.\n",
+                block.getBlockId(), block.getPrevRefs(), block.getDestinationChain(), block.getContentList().getContentList().size());
+    }
 
     @Override
     public void notifyFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {}
