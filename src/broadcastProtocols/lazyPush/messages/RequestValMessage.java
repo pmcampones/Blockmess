@@ -9,7 +9,21 @@ import java.util.UUID;
 public class RequestValMessage extends ProtoMessage {
 
     public static final short ID = 201;
+    public static final ISerializer<RequestValMessage> serializer = new ISerializer<>() {
 
+        @Override
+        public void serialize(RequestValMessage message, ByteBuf out) {
+            out.writeLong(message.missing.getMostSignificantBits());
+            out.writeLong(message.missing.getLeastSignificantBits());
+        }
+
+        @Override
+        public RequestValMessage deserialize(ByteBuf in) {
+            UUID missing = new UUID(in.readLong(), in.readLong());
+            return new RequestValMessage(missing);
+        }
+
+    };
     private final UUID missing;
 
     public RequestValMessage(UUID missing) {
@@ -27,21 +41,5 @@ public class RequestValMessage extends ProtoMessage {
                 "missing=" + missing +
                 '}';
     }
-
-    public static ISerializer<RequestValMessage> serializer = new ISerializer<>() {
-
-        @Override
-        public void serialize(RequestValMessage message, ByteBuf out) {
-            out.writeLong(message.missing.getMostSignificantBits());
-            out.writeLong(message.missing.getLeastSignificantBits());
-        }
-
-        @Override
-        public RequestValMessage deserialize(ByteBuf in) {
-            UUID missing = new UUID(in.readLong(), in.readLong());
-            return new RequestValMessage(missing);
-        }
-
-    };
 
 }

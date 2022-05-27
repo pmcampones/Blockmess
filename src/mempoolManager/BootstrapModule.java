@@ -8,8 +8,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -23,14 +21,13 @@ public class BootstrapModule {
     public static List<MempoolChunk> getStoredChunks() {
         try {
             return tryToGetStoredChunks();
-        } catch (IOException | NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (IOException e) {
             logger.error("Unable to bootstrap DL because: {}", e.getMessage());
         }
         return emptyList();
     }
 
-    private static List<MempoolChunk> tryToGetStoredChunks() throws IOException,
-            NoSuchAlgorithmException, InvalidKeySpecException {
+    private static List<MempoolChunk> tryToGetStoredChunks() throws IOException {
         Properties props = GlobalProperties.getProps();
         boolean isBootstraped = props.getProperty("isBootstraped", "F").equals("T");
         if (isBootstraped) {

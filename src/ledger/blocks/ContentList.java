@@ -68,7 +68,7 @@ public class ContentList extends BroadcastValueAbstract {
         return serializer;
     }
 
-    public int getSerializedSize() throws IOException {
+    public int getSerializedSize() {
         int accum = 0;
         for (AppOperation elem : contentList)
             accum += elem.getSerializedSize();

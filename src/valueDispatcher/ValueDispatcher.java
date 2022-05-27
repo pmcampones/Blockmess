@@ -15,7 +15,6 @@ import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import pt.unl.fct.di.novasys.babel.exceptions.HandlerRegistrationException;
 import utils.IDGenerator;
 
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -87,29 +86,21 @@ public class ValueDispatcher extends GenericProtocol {
     }
 
     public void disseminateBlockRequest(BlockmessBlock block) {
-        try {
-            logger.info("Requested the dissemination of a {}", ValType.SIGNED_BLOCK);
-            sendLazyRequest(block, ValType.SIGNED_BLOCK);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        logger.info("Requested the dissemination of a {}", ValType.SIGNED_BLOCK);
+        sendLazyRequest(block, ValType.SIGNED_BLOCK);
     }
 
-    public void disseminateAppContentRequest(AppOperation req) {
-        try {
-            logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
-            sendEagerRequest(req, ValType.APP_CONTENT);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendLazyRequest(BroadcastValue val, ValType type) throws IOException {
+    private void sendLazyRequest(BroadcastValue val, ValType type) {
         DispatcherWrapper wrapper = new DispatcherWrapper((short) type.ordinal(), val);
         sendRequest(new LazyBroadcastRequest(wrapper), LazyPushBroadcast.ID);
     }
 
-    private void sendEagerRequest(BroadcastValue val, ValType type) throws IOException {
+    public void disseminateAppContentRequest(AppOperation req) {
+        logger.info("Requested the dissemination of a {}", ValType.APP_CONTENT);
+        sendEagerRequest(req, ValType.APP_CONTENT);
+    }
+
+    private void sendEagerRequest(BroadcastValue val, ValType type) {
         DispatcherWrapper wrapper = new DispatcherWrapper((short) type.ordinal(), val);
         sendRequest(new EagerBroadcastRequest(wrapper), EagerPushBroadcast.ID);
     }

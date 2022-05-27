@@ -6,7 +6,6 @@ import io.netty.buffer.ByteBuf;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.network.ISerializer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,12 +32,12 @@ public class SybilResistantElectionProof extends BroadcastValueAbstract implemen
         return nonce;
     }
 
-    public int getSerializedSize() throws IOException {
+    public int getSerializedSize() {
         return Integer.BYTES + ChainSeeds.size() * 2 * Long.BYTES +
                 ChainSeeds.stream()
-                .map(Pair::getValue)
-                .mapToInt(b -> b.length)
-                .sum();
+                        .map(Pair::getValue)
+                        .mapToInt(b -> b.length)
+                        .sum();
     }
 
     public static final ISerializer<BroadcastValue> serializer = new ISerializer<>() {

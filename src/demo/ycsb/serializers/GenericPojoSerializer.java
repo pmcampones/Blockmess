@@ -3,7 +3,10 @@ package demo.ycsb.serializers;
 import demo.ycsb.DBClient;
 import lombok.SneakyThrows;
 
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 public class GenericPojoSerializer {
 
@@ -31,7 +34,7 @@ public class GenericPojoSerializer {
 
 
     @SneakyThrows
-    public static <E extends Serializable> E deserialize(ObjectInputStream in) throws IOException {
+    public static <E extends Serializable> E deserialize(ObjectInputStream in) {
         return (E) in.readObject();
     }
 

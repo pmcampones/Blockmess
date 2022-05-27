@@ -2,6 +2,7 @@ package validators;
 
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import ledger.blocks.BlockmessBlock;
+import main.GlobalProperties;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import sybilResistantElection.ChainSeed;
@@ -18,70 +19,78 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
+import static java.lang.Integer.parseInt;
+
 public class ApplicationObliviousValidator extends GenericProtocol {
 
-    public static final short ID = IDGenerator.genId();
+	public static final short ID = IDGenerator.genId();
 
-    private static ApplicationObliviousValidator singleton;
+	private static ApplicationObliviousValidator singleton;
 
-    private ApplicationObliviousValidator() {
-        super(ApplicationObliviousValidator.class.getSimpleName(), ID);
-    }
+	private final int maxBlockSize;
 
-    public static ApplicationObliviousValidator getSingleton() {
-        if (singleton == null)
-            singleton = new ApplicationObliviousValidator();
-        return singleton;
-    }
+	private ApplicationObliviousValidator() {
+		super(ApplicationObliviousValidator.class.getSimpleName(), ID);
+		this.maxBlockSize = parseInt(GlobalProperties.getProps().getProperty("maxBlockSize", "21000"));
+	}
 
-    @Override
-    public void init(Properties properties) {}
+	public static ApplicationObliviousValidator getSingleton() {
+		if (singleton == null)
+			singleton = new ApplicationObliviousValidator();
+		return singleton;
+	}
 
-    public boolean isBlockValid(BlockmessBlock block) {
-        boolean isValid = isProofValid(block)
-                && FixedApplicationAwareValidator.getSingleton().validateBlockContent(block);
-        notifyBlockValidity(block);
-        return isValid;
-    }
+	@Override
+	public void init(Properties properties) {
+	}
 
-    private void notifyBlockValidity(BlockmessBlock block) {
-        try {
-            triggerNotification(new AnswerMessageValidationNotification(block.getBlockingID()));
-        } catch (InnerValueIsNotBlockingBroadcast e) {
-            e.printStackTrace();
-        }
-    }
+	public boolean isBlockValid(BlockmessBlock block) {
+		boolean isValid = isProofValid(block)
+				&& FixedApplicationAwareValidator.getSingleton().validateBlockContent(block);
+		notifyBlockValidity(block);
+		return isValid;
+	}
 
-    public boolean isProofValid(BlockmessBlock block) {
-        SybilResistantElectionProof proof = block.getProof();
-        UUID destinationChain = block.getDestinationChain();
-        if (proof.getChainSeeds().stream().map(Pair::getLeft).noneMatch(id -> id.equals(destinationChain)))
-            return false;
-        MerkleTree randomSeed = computeRandomSeed(block);
-        byte[] solution = computeSolution(randomSeed, proof.getNonce());
-        return new MultiChainDifficultyComputerImp(proof.getChainSeeds().size())
-                .hasEnoughLeadingZeros(solution);
-    }
+	private void notifyBlockValidity(BlockmessBlock block) {
+		try {
+			triggerNotification(new AnswerMessageValidationNotification(block.getBlockingID()));
+		} catch (InnerValueIsNotBlockingBroadcast e) {
+			e.printStackTrace();
+		}
+	}
 
-    private MerkleTree computeRandomSeed(
-            BlockmessBlock block) {
-        List<byte[]> randomSeedElems = new LinkedList<>();
-        randomSeedElems.add(block.getProposer().getEncoded());
-        UUID destinationChain = block.getDestinationChain();
-        for (var pair : block.getProof().getChainSeeds()) {
-            byte[] chainSeed = pair.getLeft().equals(destinationChain) ?
-                    ChainSeed.computeChainSeed(block.getDestinationChain(),
-                            block.getContentList(), block.getPrevRefs().get(0)) :
-                    pair.getRight();
-            randomSeedElems.add(chainSeed);
-        }
-        return new MerkleRoot(randomSeedElems);
-    }
+	public boolean isProofValid(BlockmessBlock block) {
+		SybilResistantElectionProof proof = block.getProof();
+		UUID destinationChain = block.getDestinationChain();
+		if (proof.getChainSeeds().stream().map(Pair::getLeft).noneMatch(id -> id.equals(destinationChain)))
+			return false;
+		if (block.getContentList().getSerializedSize() > maxBlockSize)
+			return false;
+		MerkleTree randomSeed = computeRandomSeed(block);
+		byte[] solution = computeSolution(randomSeed, proof.getNonce());
+		return new MultiChainDifficultyComputerImp(proof.getChainSeeds().size())
+				.hasEnoughLeadingZeros(solution);
+	}
 
-    private byte[] computeSolution(MerkleTree randomSeed, int nonce) {
-        ByteBuffer byteBuffer = ByteBuffer.wrap(randomSeed.getHashValue());
-        byteBuffer.putInt(nonce);
-        return CryptographicUtils.hashInput(byteBuffer.array());
-    }
+	private MerkleTree computeRandomSeed(
+			BlockmessBlock block) {
+		List<byte[]> randomSeedElems = new LinkedList<>();
+		randomSeedElems.add(block.getProposer().getEncoded());
+		UUID destinationChain = block.getDestinationChain();
+		for (var pair : block.getProof().getChainSeeds()) {
+			byte[] chainSeed = pair.getLeft().equals(destinationChain) ?
+					ChainSeed.computeChainSeed(block.getDestinationChain(),
+							block.getContentList(), block.getPrevRefs().get(0)) :
+					pair.getRight();
+			randomSeedElems.add(chainSeed);
+		}
+		return new MerkleRoot(randomSeedElems);
+	}
+
+	private byte[] computeSolution(MerkleTree randomSeed, int nonce) {
+		ByteBuffer byteBuffer = ByteBuffer.wrap(randomSeed.getHashValue());
+		byteBuffer.putInt(nonce);
+		return CryptographicUtils.hashInput(byteBuffer.array());
+	}
 
 }
