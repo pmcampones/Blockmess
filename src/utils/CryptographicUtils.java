@@ -1,6 +1,7 @@
 package utils;
 
 import io.netty.buffer.ByteBuf;
+import lombok.SneakyThrows;
 import main.GlobalProperties;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
@@ -8,7 +9,6 @@ import org.bouncycastle.util.io.pem.PemReader;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.io.FileReader;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
@@ -62,16 +62,8 @@ public class CryptographicUtils {
 	 * @return The public key whose contents are found at the current location of the byte buffer received. Or null if a
 	 * problem is found in the deserialization process.
 	 */
-	public static PublicKey deserializePubKey(ByteBuf in) throws IOException {
-		try {
-			return tryToDeserializePubKey(in);
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-			throw new IOException();
-		}
-	}
-
-	private static PublicKey tryToDeserializePubKey(ByteBuf in)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
+	@SneakyThrows
+	public static PublicKey deserializePubKey(ByteBuf in) {
 		byte[] encoded = new byte[in.readShort()];
 		in.readBytes(encoded);
 		return fromEncodedFormat(encoded);
@@ -92,29 +84,21 @@ public class CryptographicUtils {
 	 *              input received is hashed, but it's a waste.
 	 * @return A unique identifier for the instance calling the method.
 	 */
+	@SneakyThrows
 	public static UUID generateUUIDFromBytes(byte[] input) {
-		try {
-			byte[] hashedContent = MessageDigest.getInstance(HASH_ALGORITHM).digest(input);
-			try (var in = new DataInputStream(new ByteArrayInputStream(hashedContent))) {
-				return new UUID(in.readLong(), in.readLong());
-			}
-		} catch (NoSuchAlgorithmException | IOException e) {
-			e.printStackTrace();
-			throw new Error();  //Should never happen, and if it does, it's the node computing the method's fault.
+		byte[] hashedContent = MessageDigest.getInstance(HASH_ALGORITHM).digest(input);
+		try (var in = new DataInputStream(new ByteArrayInputStream(hashedContent))) {
+			return new UUID(in.readLong(), in.readLong());
 		}
 	}
 
+	@SneakyThrows
 	public static byte[] hashInput(byte[] input) {
-		try {
-			return MessageDigest.getInstance(HASH_ALGORITHM).digest(input);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			throw new Error(); //Should never happen, and if it does, it's the node computing the method's fault.
-		}
+		return MessageDigest.getInstance(HASH_ALGORITHM).digest(input);
 	}
 
-	public static byte[] signUUID(PrivateKey signer, UUID id)
-			throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+	@SneakyThrows
+	public static byte[] signUUID(PrivateKey signer, UUID id) {
 		Signature signature = Signature.getInstance(CryptographicUtils.SIGN_ALGORITHM);
 		signature.initSign(signer);
 		byte[] idBytes = getIDBytes(id);
@@ -135,7 +119,6 @@ public class CryptographicUtils {
 		signature.initVerify(verifier);
 		signature.update(getIDBytes(id));
 		return signature.verify(signedContent);
-
 	}
 
 	/**
@@ -145,16 +128,12 @@ public class CryptographicUtils {
 	 * @param signer     The private key of the object issuer. Used to sign the transaction.
 	 * @return The signature of the Pojo's contents.
 	 */
-	public static byte[] getFieldsSignature(byte[] byteFields, PrivateKey signer) throws SignatureException, InvalidKeyException {
-		try {
-			Signature signature = Signature.getInstance(SIGN_ALGORITHM);
-			signature.initSign(signer);
-			signature.update(byteFields);
-			return signature.sign();
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-			throw new Error();  //Should never happen, and if it does, it's the node computing the method's fault.
-		}
+	@SneakyThrows
+	public static byte[] getFieldsSignature(byte[] byteFields, PrivateKey signer) {
+		Signature signature = Signature.getInstance(SIGN_ALGORITHM);
+		signature.initSign(signer);
+		signature.update(byteFields);
+		return signature.sign();
 	}
 
 	/**
@@ -177,13 +156,14 @@ public class CryptographicUtils {
 		}
 	}
 
-	public static KeyPair getNodeKeys() throws Exception {
+	public static KeyPair getNodeKeys() {
 		Properties props = GlobalProperties.getProps();
 		boolean generateKeys = props.getProperty("generateKeys", "T").equals("T");
 		return generateKeys ? generateECDSAKeyPair() : readECDSAKeyPair();
 	}
 
-	public static KeyPair generateECDSAKeyPair() throws InvalidAlgorithmParameterException, NoSuchAlgorithmException {
+	@SneakyThrows
+	public static KeyPair generateECDSAKeyPair() {
 		ECGenParameterSpec ecSpec = new ECGenParameterSpec("secp256r1");
 		KeyPairGenerator g = KeyPairGenerator.getInstance("EC");
 		byte[] seed = String.valueOf(System.nanoTime()).getBytes();
@@ -191,16 +171,15 @@ public class CryptographicUtils {
 		return g.generateKeyPair();
 	}
 
-	public static KeyPair readECDSAKeyPair() throws IOException,
-			NoSuchAlgorithmException, InvalidKeySpecException {
+	public static KeyPair readECDSAKeyPair() {
 		Properties props = GlobalProperties.getProps();
 		PublicKey pub = readECDSAPublicKey(props.getProperty("myPublic"));
 		PrivateKey sec = readECDSASecretKey();
 		return new KeyPair(pub, sec);
 	}
 
-	public static PublicKey readECDSAPublicKey(String fileLocation) throws IOException,
-			NoSuchAlgorithmException, InvalidKeySpecException {
+	@SneakyThrows
+	public static PublicKey readECDSAPublicKey(String fileLocation) {
 		try (FileReader keyReader = new FileReader(fileLocation);
 			 PemReader pemReader = new PemReader(keyReader)) {
 			KeyFactory factory = KeyFactory.getInstance("EC");
@@ -211,8 +190,8 @@ public class CryptographicUtils {
 		}
 	}
 
-	public static PrivateKey readECDSASecretKey() throws IOException,
-			NoSuchAlgorithmException, InvalidKeySpecException {
+	@SneakyThrows
+	public static PrivateKey readECDSASecretKey() {
 		Properties props = GlobalProperties.getProps();
 		String fileLocation = props.getProperty("mySecret");
 		try (FileReader keyReader = new FileReader(fileLocation);

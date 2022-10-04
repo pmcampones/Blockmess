@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source scripts/counter/baremtal/utils.sh
+source scripts/counter/baremetal/utils.sh
 
 NUM_REPLICAS=$1
 OPS_PER_REPLICA=$2
