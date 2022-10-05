@@ -30,13 +30,13 @@ public class Transaction {
 	/**
 	 * List of simplified UTXOs belonging to the destination of the transaction.
 	 */
-	private final List<UTXO> outputsDestination;
+	private final List<InTransactionUTXO> outputsDestination;
 
 	/**
 	 * List of simplified UTXOs belonging to the originator of the transaction. These are used for the origin to obtain
 	 * the excess UTXO coins sent in the input.
 	 */
-	private final List<UTXO> outputsOrigin;
+	private final List<InTransactionUTXO> outputsOrigin;
 
 	private final byte[] originSignature;
 
@@ -45,6 +45,7 @@ public class Transaction {
 		this.origin = origin;
 		this.destination = destination;
 		this.inputs = inputs;
+		List<>
 		this.outputsDestination = getUTXOsFromAmounts(origin, destination, outputsDestinationAmount);
 		this.outputsOrigin = getUTXOsFromAmounts(origin, destination, outputsOriginAmount);
 		this.hashVal = obtainTxByteFields();
@@ -63,9 +64,9 @@ public class Transaction {
 			oout.writeObject(origin);
 			oout.writeObject(destination);
 			for (UUID input : inputs) oout.writeObject(input);
-			for (UTXO outD : outputsDestination)
+			for (InTransactionUTXO outD : outputsDestination)
 				oout.writeObject(outD.getId());
-			for (UTXO outO : outputsOrigin)
+			for (InTransactionUTXO outO : outputsOrigin)
 				oout.writeObject(outO.getId());
 			oout.flush();
 			return out.toByteArray();

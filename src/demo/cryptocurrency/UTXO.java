@@ -4,9 +4,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import utils.CryptographicUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.security.PublicKey;
 import java.util.Random;
 import java.util.UUID;
@@ -14,13 +12,21 @@ import java.util.UUID;
 @Getter
 public class UTXO implements Serializable {
 
-	private transient final UUID id;
+	private final UUID id;
 
 	private final int nonce, amount;
 
+	private final byte[] originEncoded, destinationEncoded;
+
 	public UTXO(int amount, PublicKey origin, PublicKey destination) {
+		this(amount, new Random().nextInt(), origin, destination);
+	}
+
+	public UTXO(int amount, int nonce, PublicKey origin, PublicKey destination) {
 		this.amount = amount;
-		this.nonce = new Random().nextInt();
+		this.nonce = nonce;
+		this.originEncoded = origin.getEncoded();
+		this.destinationEncoded = destination.getEncoded();
 		this.id = computeOutputUUID(origin, destination);
 	}
 
@@ -40,6 +46,25 @@ public class UTXO implements Serializable {
 			oout.flush();
 			oout.flush();
 			return out.toByteArray();
+		}
+	}
+
+	@SneakyThrows
+	public static byte[] serializeUTXO(UTXO utxo) {
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+			 ObjectOutputStream oout = new ObjectOutputStream(out)) {
+			oout.writeObject(utxo);
+			oout.flush();
+			out.flush();
+			return out.toByteArray();
+		}
+	}
+
+	@SneakyThrows
+	public static UTXO deserializeUTXO(byte[] bytes) {
+		try (ByteArrayInputStream in = new ByteArrayInputStream(bytes);
+			 ObjectInputStream oin = new ObjectInputStream(in)) {
+			return (UTXO) oin.readObject();
 		}
 	}
 
