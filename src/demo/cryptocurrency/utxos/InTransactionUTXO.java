@@ -1,4 +1,4 @@
-package demo.cryptocurrency;
+package demo.cryptocurrency.utxos;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

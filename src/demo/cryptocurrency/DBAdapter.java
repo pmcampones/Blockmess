@@ -1,32 +1,32 @@
 package demo.cryptocurrency;
 
 
+import demo.cryptocurrency.utxos.UTXO;
 import lombok.SneakyThrows;
 import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
+import org.rocksdb.RocksIterator;
 
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import static java.util.stream.Collectors.toList;
+
 public class DBAdapter {
 
 	private static final String DB_PATH = "DB";
 
-	private static final byte[] UTXO_IDS_KEY = "ids".getBytes();
-
 	private static DBAdapter singleton = null;
 
+	@SneakyThrows
 	private DBAdapter() {
-		try {
-			RocksDB.open(DB_PATH).close();
-		} catch (RocksDBException e) {
-			throw new RuntimeException(e);
-		}
+		RocksDB.open(DB_PATH).close();
 	}
 
 	public static DBAdapter getSingleton() {
@@ -64,17 +64,47 @@ public class DBAdapter {
 	}
 
 	@SneakyThrows
-	public List<UUID> getUTXOIds() {
+	public List<UTXO> getUTXOs(int maxNum) {
+		List<byte[]> encodedUtxos = new ArrayList<>();
 		try (RocksDB db = RocksDB.open(DB_PATH)) {
-			byte[] allIds = db.get(UTXO_IDS_KEY);
-			try (ByteArrayInputStream in = new ByteArrayInputStream(allIds);
-				 ObjectInputStream oin = new ObjectInputStream(in)) {
-				int num_ids = oin.readInt();
-				List<UUID> ids = new ArrayList<>(num_ids);
-				for (int i = 0; i < num_ids; i++)
-					ids.add((UUID) oin.readObject());
-				return ids;
+			try (RocksIterator it = db.newIterator()) {
+				it.seekToFirst();
+				while (it.isValid() && encodedUtxos.size() < maxNum) {
+					encodedUtxos.add(it.value());
+					it.next();
+				}
 			}
+		}
+		return encodedUtxos.parallelStream().map(DBAdapter::deserializeUtxo).collect(toList());
+	}
+
+	@SneakyThrows
+	private static UTXO deserializeUtxo(byte[] encodedUtxo) {
+		try (ByteArrayInputStream in = new ByteArrayInputStream(encodedUtxo);
+			 ObjectInputStream oin = new ObjectInputStream(in)) {
+			return (UTXO) oin.readObject();
+		}
+	}
+
+	@SneakyThrows
+	public void submitUTXOs(Collection<UTXO> utxos) {
+		try (RocksDB db = RocksDB.open(DB_PATH)) {
+			for (UTXO utxo : utxos) {
+				byte[] id = uuidToBytes(utxo.getId());
+				byte[] utxoContent = serializeUTXO(utxo);
+				db.put(id, utxoContent);
+			}
+		}
+	}
+
+	@SneakyThrows
+	private byte[] serializeUTXO(UTXO utxo) {
+		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
+			 ObjectOutputStream oout = new ObjectOutputStream(out)) {
+			oout.writeObject(utxo);
+			oout.flush();
+			out.flush();
+			return out.toByteArray();
 		}
 	}
 

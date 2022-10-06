@@ -1,5 +1,7 @@
 package demo.cryptocurrency;
 
+import demo.cryptocurrency.utxos.InTransactionUTXO;
+import demo.cryptocurrency.utxos.UTXOProcessor;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import utils.CryptographicUtils;
@@ -9,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
+import java.util.Random;
 import java.util.UUID;
 
 import static java.util.stream.Collectors.toList;
@@ -45,16 +48,16 @@ public class Transaction {
 		this.origin = origin;
 		this.destination = destination;
 		this.inputs = inputs;
-		List<>
-		this.outputsDestination = getUTXOsFromAmounts(origin, destination, outputsDestinationAmount);
-		this.outputsOrigin = getUTXOsFromAmounts(origin, destination, outputsOriginAmount);
+		this.outputsDestination = getUTXOsFromAmounts(outputsDestinationAmount);
+		this.outputsOrigin = getUTXOsFromAmounts(outputsOriginAmount);
 		this.hashVal = obtainTxByteFields();
 		this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);
 		this.originSignature = CryptographicUtils.getFieldsSignature(hashVal, signer);
 	}
 
-	private static List<UTXO> getUTXOsFromAmounts(PublicKey origin, PublicKey destination, List<Integer> outputsOriginAmount) {
-		return outputsOriginAmount.stream().map(val -> new UTXO(val, origin, destination)).collect(toList());
+	private static List<InTransactionUTXO> getUTXOsFromAmounts(List<Integer> outputsOriginAmount) {
+		Random rand = new Random();
+		return outputsOriginAmount.stream().map(val -> new InTransactionUTXO(rand.nextInt(), val)).collect(toList());
 	}
 
 	@SneakyThrows
@@ -65,10 +68,11 @@ public class Transaction {
 			oout.writeObject(destination);
 			for (UUID input : inputs) oout.writeObject(input);
 			for (InTransactionUTXO outD : outputsDestination)
-				oout.writeObject(outD.getId());
+				oout.writeObject(UTXOProcessor.processTransactionUTXO(outD, origin, destination).getId());
 			for (InTransactionUTXO outO : outputsOrigin)
-				oout.writeObject(outO.getId());
+				oout.writeObject(UTXOProcessor.processTransactionUTXO(outO, origin, destination).getId());
 			oout.flush();
+			out.flush();
 			return out.toByteArray();
 		}
 	}
