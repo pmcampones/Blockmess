@@ -1,5 +1,8 @@
 package ledger.blockchain;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -9,34 +12,18 @@ import java.util.UUID;
  * <p>Does not contain the content specific to the application,
  * but instead has information specific to the finalization of blocks.</p>
  */
+@AllArgsConstructor
+@Getter
 public class BlockchainNode {
 
 	private final UUID blockId;
-
-	private final Set<UUID> previous;
-
-	private final Set<UUID> following = new HashSet<>();
-
-	private final int weight;
-
-	public BlockchainNode(UUID blockId, Set<UUID> previous, int weight) {
-		this.blockId = blockId;
-		this.previous = previous;
-		this.weight = weight;
-	}
-
-	public UUID getBlockId() {
-		return blockId;
-	}
 
 	/**
 	 * Identifiers of the blocks that are referenced by this block. In a blockchain the cardinality of this set is
 	 * always 1 for any block other than the genesis. In other Ledger implementations, several blocks may be
 	 * referenced.
 	 */
-	public Set<UUID> getPrevious() {
-		return previous;
-	}
+	private final Set<UUID> previous;
 
 	/**
 	 * Identifiers of the blocks that are referencing the current block. Upon the creation of the block this set will be
@@ -44,9 +31,7 @@ public class BlockchainNode {
 	 * blockchain the cardinality of this set may be greater than one. On such scenarios the blockchain has forked on
 	 * this block.
 	 */
-	public Set<UUID> getFollowing() {
-		return following;
-	}
+	private final Set<UUID> following = new HashSet<>();
 
 	/**
 	 * Weight of the block in the Blockchain. In most Ledger implementations the concept of weight is not useful, as all
@@ -60,7 +45,6 @@ public class BlockchainNode {
 	 * rules of the finalization algorithm (longest chain, ghost, phantom, etc.); We can reverse this incongruent
 	 * behaviour simply by attributing a very large weight to these cross shard blocks.
 	 */
-	public int getWeight() {
-		return weight;
-	}
+	private final int weight;
+
 }

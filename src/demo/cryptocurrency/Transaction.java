@@ -8,6 +8,7 @@ import utils.CryptographicUtils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
@@ -17,13 +18,13 @@ import java.util.UUID;
 import static java.util.stream.Collectors.toList;
 
 @Getter
-public class Transaction {
+public class Transaction implements Serializable {
 
 	private transient final UUID id;
 
 	private transient final byte[] hashVal;
 
-	private final PublicKey origin, destination;
+	private final byte[] origin, destination;
 
 	/**
 	 * Identifiers of the UTXO inputs used in the transaction.
@@ -45,12 +46,12 @@ public class Transaction {
 
 	public Transaction(PublicKey origin, PublicKey destination, List<UUID> inputs,
 					   List<Integer> outputsDestinationAmount, List<Integer> outputsOriginAmount, PrivateKey signer) {
-		this.origin = origin;
-		this.destination = destination;
+		this.origin = origin.getEncoded();
+		this.destination = destination.getEncoded();
 		this.inputs = inputs;
 		this.outputsDestination = getUTXOsFromAmounts(outputsDestinationAmount);
 		this.outputsOrigin = getUTXOsFromAmounts(outputsOriginAmount);
-		this.hashVal = obtainTxByteFields();
+		this.hashVal = obtainTxByteFields(origin, destination);
 		this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);
 		this.originSignature = CryptographicUtils.getFieldsSignature(hashVal, signer);
 	}
@@ -61,16 +62,16 @@ public class Transaction {
 	}
 
 	@SneakyThrows
-	private byte[] obtainTxByteFields() {
+	private byte[] obtainTxByteFields(PublicKey ogKey, PublicKey destKey) {
 		try (var out = new ByteArrayOutputStream();
 			 var oout = new ObjectOutputStream(out)) {
 			oout.writeObject(origin);
 			oout.writeObject(destination);
 			for (UUID input : inputs) oout.writeObject(input);
 			for (InTransactionUTXO outD : outputsDestination)
-				oout.writeObject(UTXOProcessor.processTransactionUTXO(outD, origin, destination).getId());
+				oout.writeObject(UTXOProcessor.processTransactionUTXO(outD, ogKey, destKey).getId());
 			for (InTransactionUTXO outO : outputsOrigin)
-				oout.writeObject(UTXOProcessor.processTransactionUTXO(outO, origin, destination).getId());
+				oout.writeObject(UTXOProcessor.processTransactionUTXO(outO, ogKey, destKey).getId());
 			oout.flush();
 			out.flush();
 			return out.toByteArray();

@@ -1,13 +1,11 @@
 package demo.cryptocurrency.utxos;
 
 import demo.cryptocurrency.DBAdapter;
+import demo.cryptocurrency.KeyLoader;
 import lombok.SneakyThrows;
-import utils.CryptographicUtils;
 
-import java.io.File;
 import java.security.PublicKey;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Generates a series of UTXOs to bootstrap the system.
@@ -20,7 +18,7 @@ public class UTXOGenerator {
 	public static void main(String[] args) {
 		int numBootstrapUtxos = Integer.parseInt(args[0]);
 		String keysPathname = args[1];
-		List<PublicKey> keys = readKeysFromFiles(keysPathname);
+		List<PublicKey> keys = KeyLoader.readKeysFromFiles(keysPathname);
 		Collection<UTXO> utxos = generateUTXOs(keys, numBootstrapUtxos);
 		DBAdapter.getSingleton().submitUTXOs(utxos);
 	}
@@ -40,24 +38,6 @@ public class UTXOGenerator {
 			utxos.add(utxo);
 		}
 		return utxos;
-	}
-
-	@SneakyThrows
-	private static List<PublicKey> readKeysFromFiles(String repoPathname) {
-		List<String> pathnames = readPathnames(repoPathname);
-		return pathnames.stream().map(CryptographicUtils::readECDSAPublicKey).collect(Collectors.toList());
-	}
-
-	@SneakyThrows
-	private static List<String> readPathnames(String repoPathname) {
-		File repoFile = new File(repoPathname);
-		List<String> pathnames = new ArrayList<>();
-		try (Scanner reader = new Scanner(repoFile)) {
-			while (reader.hasNextLine()) {
-				pathnames.add(reader.nextLine().trim());
-			}
-		}
-		return pathnames;
 	}
 
 }

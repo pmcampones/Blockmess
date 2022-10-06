@@ -21,82 +21,81 @@ import static java.util.stream.Collectors.toSet;
 
 public class MempoolManager extends GenericProtocol implements LedgerObserver {
 
-    private static final Logger logger = LogManager.getLogger(MempoolManager.class);
+	public static final short ID = IDGenerator.genId();
+	private static final Logger logger = LogManager.getLogger(MempoolManager.class);
+	private static MempoolManager singleton;
+	/**
+	 * The complete collection of unused UTXOs in the finalized portion of the system
+	 **/
+	public final Map<UUID, MempoolChunk> mempool = new ConcurrentHashMap<>();
+	private final List<LedgerObserver> observers = new LinkedList<>();
 
-    public static final short ID = IDGenerator.genId();
+	private MempoolManager() {
+		super(MempoolManager.class.getSimpleName(), ID);
+		LedgerManager.getSingleton().attachObserver(this);
+		bootstrapDL();
+		BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
+	}
 
-    /**The complete collection of unused UTXOs in the finalized portion of the system**/
-    public final Map<UUID, MempoolChunk> mempool = new ConcurrentHashMap<>();
+	private void bootstrapDL() {
+		logger.info("Bootstrapping DL");
+		List<MempoolChunk> chunks = BootstrapModule.getStoredChunks();
+		logger.info("Successfully bootstrapped {} blocks.", chunks.size());
+	}
 
-    private final List<LedgerObserver> observers = new LinkedList<>();
+	public static MempoolManager getSingleton() {
+		if (singleton == null) {
+			try {
+				singleton = new MempoolManager();
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
+		}
+		return singleton;
+	}
 
-    private static MempoolManager singleton;
+	@Override
+	public void init(Properties properties) {
+	}
 
-    private MempoolManager() {
-        super(MempoolManager.class.getSimpleName(), ID);
-        LedgerManager.getSingleton().attachObserver(this);
-        bootstrapDL();
-        BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
-    }
+	public void attachObserver(LedgerObserver observer) {
+		observers.add(observer);
+	}
 
-    private void bootstrapDL() {
-        logger.info("Bootstrapping DL");
-        List<MempoolChunk> chunks = BootstrapModule.getStoredChunks();
-        logger.info("Successfully bootstrapped {} blocks.", chunks.size());
-    }
+	public Set<UUID> getUsedContentFromChunk(UUID previousState, Set<UUID> visited) {
+		MempoolChunk chunk = mempool.get(previousState);
+		if (visited.contains(previousState) || chunk == null) return Collections.emptySet();
+		visited.add(previousState);
+		Set<UUID> invalid = new HashSet<>(chunk.getUsedIds());
+		chunk.getPreviousIds().forEach(id -> invalid.addAll(getUsedContentFromChunk(id, visited)));
+		return invalid;
+	}
 
-    public static MempoolManager getSingleton() {
-        if (singleton == null) {
-            try {
-                singleton = new MempoolManager();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
-        return singleton;
-    }
+	@Override
+	public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
+		logger.debug("Received non finalized block with id {}", block.getBlockId());
+		MempoolChunk chunk = createChunk(block);
+		mempool.put(chunk.getId(), chunk);
+		observers.forEach(observer -> observer.deliverNonFinalizedBlock(block, weight));
+	}
 
-    @Override
-    public void init(Properties properties) {}
+	private MempoolChunk createChunk(LedgerBlock block) {
+		List<AppOperation> unwrappedContent = block.getContentList().getContentList();
+		return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()), unwrappedContent);
+	}
 
-    public void attachObserver(LedgerObserver observer) {
-        observers.add(observer);
-    }
-
-    private MempoolChunk createChunk(LedgerBlock block) {
-        List<AppOperation> unwrappedContent = block.getContentList().getContentList();
-        return new MempoolChunk(block.getBlockId(), Set.copyOf(block.getPrevRefs()), unwrappedContent);
-    }
-
-    public Set<UUID> getUsedContentFromChunk(UUID previousState, Set<UUID> visited) {
-        MempoolChunk chunk = mempool.get(previousState);
-        if (visited.contains(previousState) || chunk == null) return Collections.emptySet();
-        visited.add(previousState);
-        Set<UUID> invalid = new HashSet<>(chunk.getUsedIds());
-        chunk.getPreviousChunksIds().forEach(id -> invalid.addAll(getUsedContentFromChunk(id, visited)));
-        return invalid;
-    }
-
-    @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
-        logger.debug("Received non finalized block with id {}", block.getBlockId());
-        MempoolChunk chunk = createChunk(block);
-        mempool.put(chunk.getId(), chunk);
-        observers.forEach(observer -> observer.deliverNonFinalizedBlock(block, weight));
-    }
-
-    @Override
-    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
-        discarded.forEach(mempool::remove);
-        List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
-        finalizedChunks.stream().map(MempoolChunk::getId).forEach(mempool::remove);
-        List<AppOperation> finalizedContent = finalizedChunks.stream()
-                .map(MempoolChunk::getAddedContent)
-                .flatMap(Collection::stream)
-                .collect(toList());
-        LedgerManager.getSingleton().deleteOperations(finalizedContent.stream().map(AppOperation::getId).collect(toSet()));
-        observers.forEach(observer -> observer.deliverFinalizedBlocks(finalized, discarded));
-        triggerNotification(new DeliverFinalizedContentNotification(finalizedContent));
-    }
+	@Override
+	public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+		discarded.forEach(mempool::remove);
+		List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
+		finalizedChunks.stream().map(MempoolChunk::getId).forEach(mempool::remove);
+		List<AppOperation> finalizedContent = finalizedChunks.stream()
+				.map(MempoolChunk::getAddedContent)
+				.flatMap(Collection::stream)
+				.collect(toList());
+		LedgerManager.getSingleton().deleteOperations(finalizedContent.stream().map(AppOperation::getId).collect(toSet()));
+		observers.forEach(observer -> observer.deliverFinalizedBlocks(finalized, discarded));
+		triggerNotification(new DeliverFinalizedContentNotification(finalizedContent));
+	}
 
 }

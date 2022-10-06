@@ -90,8 +90,7 @@ public class Blockchain implements Ledger {
 
 	private void bootstrapBlockchain(List<MempoolChunk> chunks) {
 		for (MempoolChunk chunk : chunks) {
-			BlockchainNode block = new BlockchainNode(chunk.getId(), chunk.getPreviousChunksIds(),
-					chunk.getInherentWeight());
+			BlockchainNode block = new BlockchainNode(chunk.getId(), chunk.getPreviousIds(), chunk.getWeight());
 			block.getPrevious().forEach(chainTips::remove);
 			block.getPrevious().stream().map(blocks::get)
 					.forEach(b -> b.getFollowing().add(block.getBlockId()));

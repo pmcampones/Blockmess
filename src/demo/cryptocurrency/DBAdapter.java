@@ -53,29 +53,12 @@ public class DBAdapter {
 
 	@SneakyThrows
 	public List<UTXO> getUTXOs(Collection<UUID> ids) {
+		List<byte[]> encodedIds = ids.parallelStream().map(DBAdapter::uuidToBytes).collect(toList());
 		try (RocksDB db = RocksDB.open(DB_PATH)) {
-			List<UTXO> utxos = new ArrayList<>(ids.size());
-			for (UUID id : ids) {
-				byte[] utxoBytes = db.get(uuidToBytes(id));
-				utxos.add(UTXO.deserializeUTXO(utxoBytes));
-			}
-			return utxos;
+			return db.multiGetAsList(encodedIds)
+					.parallelStream()
+					.map(DBAdapter::deserializeUtxo).collect(toList());
 		}
-	}
-
-	@SneakyThrows
-	public List<UTXO> getUTXOs(int maxNum) {
-		List<byte[]> encodedUtxos = new ArrayList<>();
-		try (RocksDB db = RocksDB.open(DB_PATH)) {
-			try (RocksIterator it = db.newIterator()) {
-				it.seekToFirst();
-				while (it.isValid() && encodedUtxos.size() < maxNum) {
-					encodedUtxos.add(it.value());
-					it.next();
-				}
-			}
-		}
-		return encodedUtxos.parallelStream().map(DBAdapter::deserializeUtxo).collect(toList());
 	}
 
 	@SneakyThrows
@@ -84,6 +67,32 @@ public class DBAdapter {
 			 ObjectInputStream oin = new ObjectInputStream(in)) {
 			return (UTXO) oin.readObject();
 		}
+	}
+
+	@SneakyThrows
+	public List<UTXO> getUTXOs(int maxNum) {
+		List<byte[]> encodedUtxos = new ArrayList<>();
+		try (RocksDB db = RocksDB.open(DB_PATH); RocksIterator it = db.newIterator()) {
+			it.seekToFirst();
+			while (it.isValid() && encodedUtxos.size() < maxNum) {
+				encodedUtxos.add(it.value());
+				it.next();
+			}
+		}
+		return encodedUtxos.parallelStream().map(DBAdapter::deserializeUtxo).collect(toList());
+	}
+
+	@SneakyThrows
+	public List<UTXO> getUTXOs(byte[] startRange, int maxNum) {
+		List<byte[]> encodedUtxos = new ArrayList<>();
+		try (RocksDB db = RocksDB.open(DB_PATH); RocksIterator it = db.newIterator()) {
+			it.seek(startRange);
+			while (it.isValid() && encodedUtxos.size() < maxNum) {
+				encodedUtxos.add(it.value());
+				it.next();
+			}
+		}
+		return encodedUtxos.parallelStream().map(DBAdapter::deserializeUtxo).collect(toList());
 	}
 
 	@SneakyThrows
