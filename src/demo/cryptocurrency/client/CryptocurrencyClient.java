@@ -7,13 +7,17 @@ import demo.cryptocurrency.CryptocurrencyCMuxMapper;
 import demo.cryptocurrency.DBAdapter;
 import demo.cryptocurrency.Transaction;
 import demo.cryptocurrency.TransactionValidator;
+import demo.cryptocurrency.utxos.InTransactionUTXO;
 import demo.cryptocurrency.utxos.UTXO;
+import demo.cryptocurrency.utxos.UTXOProcessor;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import utils.CryptographicUtils;
 import validators.FixedApplicationAwareValidator;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.security.KeyPair;
 import java.security.PublicKey;
@@ -60,7 +64,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		Transaction tx = new Transaction(myKeys.getPublic(), destination,
 				inputIds, List.of(amount), outputsOriginAmount, myKeys.getPrivate());
 		inputIds.forEach(myUTXOs::remove);
-		super.invokeLocalAsyncOperation(serializeTx(tx), listener);
+		super.invokeAsyncOperation(serializeTx(tx), listener);
 	}
 
 	private List<UTXO> getUTXOInputs(int amount) throws InsufficientFundsException {
@@ -88,9 +92,27 @@ public class CryptocurrencyClient extends ApplicationInterface {
 	}
 
 	@Override
+	@SneakyThrows
 	public byte[] processOperation(byte[] operation) {
+		Transaction tx = deserializeTx(operation);
+		DBAdapter db = DBAdapter.getSingleton();
+		db.deleteUTXOs(tx.getInputs());
+		PublicKey og = CryptographicUtils.fromEncodedFormat(tx.getOrigin());
+		PublicKey dest = CryptographicUtils.fromEncodedFormat(tx.getDestination());
+		List<UTXO> utxos = new ArrayList<>(tx.getOutputsDestination().size() + tx.getOutputsOrigin().size());
+		for (InTransactionUTXO inUTXO : tx.getOutputsDestination())
+			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
+		for (InTransactionUTXO inUTXO : tx.getOutputsOrigin())
+			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
+		db.submitUTXOs(utxos);
 		return new byte[0];
 	}
 
+	@SneakyThrows
+	private Transaction deserializeTx(byte[] encodedTx) {
+		try (var in = new ByteArrayInputStream(encodedTx); var oin = new ObjectInputStream(in)) {
+			return (Transaction) oin.readObject();
+		}
+	}
 
 }
