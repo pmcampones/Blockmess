@@ -7,11 +7,18 @@ import demo.cryptocurrency.CryptocurrencyCMuxMapper;
 import demo.cryptocurrency.DBAdapter;
 import demo.cryptocurrency.Transaction;
 import demo.cryptocurrency.TransactionValidator;
+import demo.cryptocurrency.outputLogging.DiscardedBlocksLog;
+import demo.cryptocurrency.outputLogging.FinalizedBlocksLog;
+import demo.cryptocurrency.outputLogging.FinalizedTransactionLog;
+import demo.cryptocurrency.outputLogging.UnfinalizedBlocksLog;
 import demo.cryptocurrency.utxos.InTransactionUTXO;
 import demo.cryptocurrency.utxos.UTXO;
 import demo.cryptocurrency.utxos.UTXOProcessor;
+import ledger.blocks.BlockmessBlock;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import utils.CryptographicUtils;
 import validators.FixedApplicationAwareValidator;
 
@@ -29,9 +36,19 @@ import static java.util.stream.Collectors.toList;
 @Getter
 public class CryptocurrencyClient extends ApplicationInterface {
 
+	private static final Logger logger = LogManager.getLogger(CryptocurrencyClient.class);
+
 	private final KeyPair myKeys;
 
 	private final Map<UUID, UTXO> myUTXOs;
+
+	private final UnfinalizedBlocksLog unfinalizedLog;
+
+	private final FinalizedBlocksLog finalizedLog;
+
+	private final DiscardedBlocksLog discardedLog;
+
+	private final FinalizedTransactionLog txLog;
 
 	/**
 	 * The creation of the ApplicationInterface triggers the launch of Blockmess.
@@ -47,6 +64,10 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		FixedCMuxIdMapper.getSingleton().setCustomMapper(new CryptocurrencyCMuxMapper());
 		FixedApplicationAwareValidator.getSingleton().setCustomValidator(new TransactionValidator());
 		this.myUTXOs = filterMyUTXOs();
+		this.unfinalizedLog = new UnfinalizedBlocksLog();
+		this.finalizedLog = new FinalizedBlocksLog();
+		this.discardedLog = new DiscardedBlocksLog();
+		this.txLog = new FinalizedTransactionLog();
 	}
 
 	private Map<UUID, UTXO> filterMyUTXOs() {
@@ -95,6 +116,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 	@SneakyThrows
 	public byte[] processOperation(byte[] operation) {
 		Transaction tx = deserializeTx(operation);
+		logger.debug("Processing delivered transaction: {}", tx.getId());
 		DBAdapter db = DBAdapter.getSingleton();
 		db.deleteUTXOs(tx.getInputs());
 		PublicKey og = CryptographicUtils.fromEncodedFormat(tx.getOrigin());
@@ -105,6 +127,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		for (InTransactionUTXO inUTXO : tx.getOutputsOrigin())
 			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
 		db.submitUTXOs(utxos);
+		txLog.logFinalizedTransaction(tx);
 		return new byte[0];
 	}
 
@@ -113,6 +136,17 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		try (var in = new ByteArrayInputStream(encodedTx); var oin = new ObjectInputStream(in)) {
 			return (Transaction) oin.readObject();
 		}
+	}
+
+	@Override
+	public void notifyNonFinalizedBlock(BlockmessBlock block) {
+		unfinalizedLog.logUnfinalizedBlock(block);
+	}
+
+	@Override
+	public void notifyFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+		finalizedLog.logFinalizedBlock(finalized);
+		discardedLog.logDiscardedBlock(discarded);
 	}
 
 }

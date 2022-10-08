@@ -78,4 +78,9 @@ public class Transaction implements Serializable {
 		}
 	}
 
+	public int getSerializedSize() {
+		return origin.length + destination.length + originSignature.length + inputs.size() * 2 * Long.BYTES
+				+ (outputsDestination.size() + outputsOrigin.size()) * 2 * Integer.BYTES;
+	}
+
 }
