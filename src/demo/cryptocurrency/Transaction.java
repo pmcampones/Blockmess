@@ -20,10 +20,6 @@ import static java.util.stream.Collectors.toList;
 @Getter
 public class Transaction implements Serializable {
 
-	private transient final UUID id;
-
-	private transient final byte[] hashVal;
-
 	private final byte[] origin, destination;
 
 	/**
@@ -51,8 +47,7 @@ public class Transaction implements Serializable {
 		this.inputs = inputs;
 		this.outputsDestination = getUTXOsFromAmounts(outputsDestinationAmount);
 		this.outputsOrigin = getUTXOsFromAmounts(outputsOriginAmount);
-		this.hashVal = obtainTxByteFields(origin, destination);
-		this.id = CryptographicUtils.generateUUIDFromBytes(hashVal);
+		byte[] hashVal = obtainTxByteFields(origin, destination);
 		this.originSignature = CryptographicUtils.getFieldsSignature(hashVal, signer);
 	}
 

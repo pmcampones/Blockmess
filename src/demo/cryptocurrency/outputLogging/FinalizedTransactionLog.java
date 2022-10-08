@@ -4,9 +4,12 @@ import com.opencsv.CSVWriter;
 import demo.cryptocurrency.Transaction;
 import lombok.SneakyThrows;
 import main.GlobalProperties;
+import utils.CryptographicUtils;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Properties;
@@ -40,10 +43,20 @@ public class FinalizedTransactionLog {
 	public void logFinalizedTransaction(Transaction tx) {
 		File file = new File(outputPath.toUri());
 		try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
-			String txId = tx.getId().toString();
+			String txId = CryptographicUtils.generateUUIDFromBytes(serializeTx(tx)).toString();
 			String txSize = String.valueOf(tx.getSerializedSize());
 			long arrivalTime = System.currentTimeMillis();
 			csvWriter.writeNext(new String[]{txId, txSize, String.valueOf(arrivalTime)});
+		}
+	}
+
+	@SneakyThrows
+	private byte[] serializeTx(Transaction tx) {
+		try (var out = new ByteArrayOutputStream(); var oout = new ObjectOutputStream(out)) {
+			oout.writeObject(tx);
+			oout.flush();
+			out.flush();
+			return out.toByteArray();
 		}
 	}
 
