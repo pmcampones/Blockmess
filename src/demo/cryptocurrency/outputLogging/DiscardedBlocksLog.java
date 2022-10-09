@@ -7,6 +7,7 @@ import main.GlobalProperties;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -21,11 +22,19 @@ public class DiscardedBlocksLog {
 
 	private final Path outputPath;
 
+	private final boolean isRecording;
+
 	@SneakyThrows
 	public DiscardedBlocksLog() {
 		Properties props = GlobalProperties.getProps();
 		this.outputPath = Path.of(props.getProperty("discardedBlocksOutputFile",
 				DISCARDED_BLOCKS_OUTPUT_FILE));
+		this.isRecording = props.getProperty("isRecordingDiscardedBlocks", "F").equals("T");
+		if (isRecording)
+			setupOutputFile();
+	}
+
+	private void setupOutputFile() throws IOException {
 		Files.deleteIfExists(outputPath);
 		Files.createDirectories(outputPath.getParent());
 		Files.createFile(outputPath);
@@ -42,12 +51,14 @@ public class DiscardedBlocksLog {
 
 	@SneakyThrows
 	public void logDiscardedBlock(Collection<UUID> discardedBlocks) {
-		File file = new File(outputPath.toUri());
-		try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
-			String discardTime = String.valueOf(System.currentTimeMillis());
-			List<String[]> logs = discardedBlocks.stream().map(UUID::toString)
-					.map(id -> new String[]{id, discardTime}).collect(Collectors.toList());
-			csvWriter.writeAll(logs);
+		if (isRecording) {
+			File file = new File(outputPath.toUri());
+			try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
+				String discardTime = String.valueOf(System.currentTimeMillis());
+				List<String[]> logs = discardedBlocks.stream().map(UUID::toString)
+						.map(id -> new String[]{id, discardTime}).collect(Collectors.toList());
+				csvWriter.writeAll(logs);
+			}
 		}
 	}
 

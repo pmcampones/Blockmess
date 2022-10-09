@@ -6,6 +6,7 @@ import main.GlobalProperties;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -20,10 +21,18 @@ public class FinalizedBlocksLog {
 
 	private final Path outputPath;
 
+	private final boolean isRecording;
+
 	@SneakyThrows
 	public FinalizedBlocksLog() {
 		Properties props = GlobalProperties.getProps();
 		this.outputPath = Path.of(props.getProperty("finalizedBlocksOutputFile", FINALIZED_BLOCKS_OUTPUT_FILE));
+		this.isRecording = props.getProperty("isRecordingFinalizedBlocks", "F").equals("T");
+		if (isRecording)
+			setupOutputFile();
+	}
+
+	private void setupOutputFile() throws IOException {
 		Files.deleteIfExists(outputPath);
 		Files.createDirectories(outputPath.getParent());
 		Files.createFile(outputPath);
@@ -40,12 +49,14 @@ public class FinalizedBlocksLog {
 
 	@SneakyThrows
 	public void logFinalizedBlock(Collection<UUID> finalizedBlocks) {
-		File file = new File(outputPath.toUri());
-		try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
-			String finalizationTime = String.valueOf(System.currentTimeMillis());
-			List<String[]> logs = finalizedBlocks.stream().map(UUID::toString)
-					.map(id -> new String[]{id, finalizationTime}).collect(Collectors.toList());
-			csvWriter.writeAll(logs);
+		if (isRecording) {
+			File file = new File(outputPath.toUri());
+			try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
+				String finalizationTime = String.valueOf(System.currentTimeMillis());
+				List<String[]> logs = finalizedBlocks.stream().map(UUID::toString)
+						.map(id -> new String[]{id, finalizationTime}).collect(Collectors.toList());
+				csvWriter.writeAll(logs);
+			}
 		}
 	}
 
