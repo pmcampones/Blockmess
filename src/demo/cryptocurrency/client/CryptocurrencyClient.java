@@ -118,6 +118,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		for (InTransactionUTXO inUTXO : tx.getOutputsOrigin())
 			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
 		db.submitUTXOs(utxos);
+		TransactionValidator.forgetTxValidation(tx);
 		txLog.logFinalizedTransaction(tx);
 		return new byte[0];
 	}

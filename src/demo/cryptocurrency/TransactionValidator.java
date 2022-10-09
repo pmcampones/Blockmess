@@ -51,6 +51,10 @@ public class TransactionValidator implements ApplicationAwareValidator {
 		return Stream.concat(tx.getOutputsDestination().stream(), tx.getOutputsOrigin().stream()).collect(toList());
 	}
 
+	public static void forgetTxValidation(Transaction tx) {
+		validatedTxs.remove(tx.genTxId());
+	}
+
 	@Override
 	public Pair<Boolean, byte[]> validateReceivedOperation(byte[] operation) {
 		return validateUnfinalizedTx(operation);
