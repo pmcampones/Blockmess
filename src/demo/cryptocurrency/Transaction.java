@@ -6,9 +6,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import utils.CryptographicUtils;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
+import java.io.*;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.List;
@@ -20,7 +18,7 @@ import static java.util.stream.Collectors.toList;
 @Getter
 public class Transaction implements Serializable {
 
-	private final byte[] origin, destination;
+	private final PublicKey origin, destination;
 
 	/**
 	 * Identifiers of the UTXO inputs used in the transaction.
@@ -42,12 +40,12 @@ public class Transaction implements Serializable {
 
 	public Transaction(PublicKey origin, PublicKey destination, List<UUID> inputs,
 					   List<Integer> outputsDestinationAmount, List<Integer> outputsOriginAmount, PrivateKey signer) {
-		this.origin = origin.getEncoded();
-		this.destination = destination.getEncoded();
+		this.origin = origin;
+		this.destination = destination;
 		this.inputs = inputs;
 		this.outputsDestination = getUTXOsFromAmounts(outputsDestinationAmount);
 		this.outputsOrigin = getUTXOsFromAmounts(outputsOriginAmount);
-		byte[] hashVal = obtainTxByteFields(origin, destination);
+		byte[] hashVal = obtainTxByteFields();
 		this.originSignature = CryptographicUtils.getFieldsSignature(hashVal, signer);
 	}
 
@@ -57,25 +55,47 @@ public class Transaction implements Serializable {
 	}
 
 	@SneakyThrows
-	private byte[] obtainTxByteFields(PublicKey ogKey, PublicKey destKey) {
+	public byte[] obtainTxByteFields() {
 		try (var out = new ByteArrayOutputStream();
 			 var oout = new ObjectOutputStream(out)) {
 			oout.writeObject(origin);
 			oout.writeObject(destination);
 			for (UUID input : inputs) oout.writeObject(input);
 			for (InTransactionUTXO outD : outputsDestination)
-				oout.writeObject(UTXOProcessor.processTransactionUTXO(outD, ogKey, destKey).getId());
+				oout.writeObject(UTXOProcessor.processTransactionUTXO(outD, origin, destination).getId());
 			for (InTransactionUTXO outO : outputsOrigin)
-				oout.writeObject(UTXOProcessor.processTransactionUTXO(outO, ogKey, destKey).getId());
+				oout.writeObject(UTXOProcessor.processTransactionUTXO(outO, origin, destination).getId());
 			oout.flush();
 			out.flush();
 			return out.toByteArray();
 		}
 	}
 
+	@SneakyThrows
+	public static byte[] serializeTx(Transaction tx) {
+		try (var out = new ByteArrayOutputStream(); var oout = new ObjectOutputStream(out)) {
+			oout.writeObject(tx);
+			oout.flush();
+			out.flush();
+			return out.toByteArray();
+		}
+	}
+
+	@SneakyThrows
+	public static Transaction deserializeTx(byte[] txBytes) {
+		try (var in = new ByteArrayInputStream(txBytes); var oin = new ObjectInputStream(in)) {
+			return (Transaction) oin.readObject();
+		}
+	}
+
 	public int getSerializedSize() {
-		return origin.length + destination.length + originSignature.length + inputs.size() * 2 * Long.BYTES
+		return origin.getEncoded().length + destination.getEncoded().length + originSignature.length
+				+ inputs.size() * 2 * Long.BYTES
 				+ (outputsDestination.size() + outputsOrigin.size()) * 2 * Integer.BYTES;
+	}
+
+	public UUID genTxId() {
+		return CryptographicUtils.generateUUIDFromBytes(obtainTxByteFields());
 	}
 
 }

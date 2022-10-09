@@ -22,10 +22,7 @@ import org.apache.logging.log4j.Logger;
 import utils.CryptographicUtils;
 import validators.FixedApplicationAwareValidator;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.IOException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.*;
@@ -85,7 +82,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		Transaction tx = new Transaction(myKeys.getPublic(), destination,
 				inputIds, List.of(amount), outputsOriginAmount, myKeys.getPrivate());
 		inputIds.forEach(myUTXOs::remove);
-		super.invokeAsyncOperation(serializeTx(tx), listener);
+		super.invokeAsyncOperation(Transaction.serializeTx(tx), listener);
 	}
 
 	private List<UTXO> getUTXOInputs(int amount) throws InsufficientFundsException {
@@ -102,25 +99,19 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		return inputUtxo;
 	}
 
-	@SneakyThrows
-	private byte[] serializeTx(Transaction tx) {
-		try (var out = new ByteArrayOutputStream(); var oout = new ObjectOutputStream(out)) {
-			oout.writeObject(tx);
-			oout.flush();
-			out.flush();
-			return out.toByteArray();
-		}
-	}
-
 	@Override
 	@SneakyThrows
 	public byte[] processOperation(byte[] operation) {
-		Transaction tx = deserializeTx(operation);
-		logger.debug("Processing delivered transaction: {}", tx.getId());
+		Transaction tx = Transaction.deserializeTx(operation);
+		return TransactionValidator.isFinalizedBlockValid(tx) ?
+				processValidTransaction(tx) : "Invalid Tx".getBytes();
+	}
+
+	private byte[] processValidTransaction(Transaction tx) throws IOException {
 		DBAdapter db = DBAdapter.getSingleton();
 		db.deleteUTXOs(tx.getInputs());
-		PublicKey og = CryptographicUtils.fromEncodedFormat(tx.getOrigin());
-		PublicKey dest = CryptographicUtils.fromEncodedFormat(tx.getDestination());
+		PublicKey og = tx.getOrigin();
+		PublicKey dest = tx.getDestination();
 		List<UTXO> utxos = new ArrayList<>(tx.getOutputsDestination().size() + tx.getOutputsOrigin().size());
 		for (InTransactionUTXO inUTXO : tx.getOutputsDestination())
 			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
@@ -129,13 +120,6 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		db.submitUTXOs(utxos);
 		txLog.logFinalizedTransaction(tx);
 		return new byte[0];
-	}
-
-	@SneakyThrows
-	private Transaction deserializeTx(byte[] encodedTx) {
-		try (var in = new ByteArrayInputStream(encodedTx); var oin = new ObjectInputStream(in)) {
-			return (Transaction) oin.readObject();
-		}
 	}
 
 	@Override
