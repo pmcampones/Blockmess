@@ -7,7 +7,7 @@ import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import broadcastProtocols.lazyPush.requests.LazyBroadcastRequest;
 import broadcastProtocols.notifications.DeliverVal;
 import cmux.AppOperation;
-import ledger.blocks.BlockmessBlock;
+import ledger.blocks.BlockmessBlockImp;
 import ledger.ledgerManager.LedgerManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -24,8 +24,7 @@ import java.util.Properties;
  * <p>All content pertaining to the DL engine and Application from the Broadcast Protocols is delivered here.</p>
  * <p>The values disseminated are processed in 3 stages, if another is added, the following should be done.</p>
  * <p>1st - Introduce a new type of message in the ValType enum. This enable the Dispatcher to identify values
- * delivered
- * from the Broadcasts.</p>
+ * delivered from the Broadcasts.</p>
  * <p>2nd - Register a request handler for the message type. It must contain a BroadcastValue instance,
  * as these instances contain the necessary logic to be serialized by the Broadcast protocols irrespective of their
  * contents.</p>
@@ -70,8 +69,8 @@ public class ValueDispatcher extends GenericProtocol {
 					LedgerManager.getSingleton().submitOperation((AppOperation) val);
 				break;
 			case SIGNED_BLOCK:
-				if (val instanceof BlockmessBlock)
-					LedgerManager.getSingleton().submitBlock((BlockmessBlock) val);
+				if (val instanceof BlockmessBlockImp)
+					LedgerManager.getSingleton().submitBlock((BlockmessBlockImp) val);
 				break;
 			default:
 				logger.debug("Received unknown value type");
@@ -88,7 +87,7 @@ public class ValueDispatcher extends GenericProtocol {
 	public void init(Properties properties) {
 	}
 
-	public void disseminateBlockRequest(BlockmessBlock block) {
+	public void disseminateBlockRequest(BlockmessBlockImp block) {
 		logger.info("Requested the dissemination of a {}", ValType.SIGNED_BLOCK);
 		sendLazyRequest(block, ValType.SIGNED_BLOCK);
 	}

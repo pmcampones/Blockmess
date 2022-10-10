@@ -230,7 +230,7 @@ public class Blockchain implements Ledger {
 					block.getBlockId(), block.getPrevRefs().get(0));
 			delayVerifier.submitUnordered(block);
 		} else if (ApplicationObliviousValidator.getSingleton().isBlockValid(block)) {
-			processValidBlock(block, prev);
+			processValidBlock(block);
 		} else {
 			logger.info("Received invalid block {} referencing {}",
 					block.getBlockId(), block.getPrevRefs().get(0));
@@ -240,7 +240,8 @@ public class Blockchain implements Ledger {
 				block.getBlockId(), (end - start));
 	}
 
-	private void processValidBlock(BlockmessBlock block, List<UUID> prev) {
+	private void processValidBlock(BlockmessBlock block) {
+		List<UUID> prev = block.getPrevRefs();
 		logger.debug("Processing valid block {}", block.getBlockId());
 		int weight = blocks.get(prev.get(0)).getWeight() + block.getInherentWeight();
 		addBlock(new BlockchainNode(block.getBlockId(),

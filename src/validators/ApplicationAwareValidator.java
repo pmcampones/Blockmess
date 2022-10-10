@@ -8,8 +8,8 @@ import org.apache.commons.lang3.tuple.Pair;
  */
 public interface ApplicationAwareValidator {
 
-    Pair<Boolean, byte[]> validateReceivedOperation(byte[] operation);
+	Pair<Boolean, byte[]> validateReceivedOperation(byte[] operation);
 
-    boolean validateBlockContent(BlockmessBlock block);
+	boolean validateBlockContent(BlockmessBlock block);
 
 }

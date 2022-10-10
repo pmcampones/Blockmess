@@ -6,7 +6,7 @@ import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
 import cmux.AppOperation;
 import ledger.BabelLedger;
-import ledger.blocks.BlockmessBlock;
+import ledger.blocks.BlockmessBlockImp;
 import ledger.blocks.ContentList;
 import ledger.ledgerManager.LedgerManager;
 import lombok.SneakyThrows;
@@ -108,7 +108,7 @@ public class BlockmessLauncher {
 	}
 
 	private static void initializeSerializers() {
-		BroadcastValue.pojoSerializers.put(BlockmessBlock.ID, BlockmessBlock.serializer);
+		BroadcastValue.pojoSerializers.put(BlockmessBlockImp.ID, BlockmessBlockImp.serializer);
 		BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
 		BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
 		BroadcastValue.pojoSerializers.put(AppOperation.ID, AppOperation.serializer);

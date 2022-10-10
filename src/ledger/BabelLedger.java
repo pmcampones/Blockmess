@@ -19,45 +19,44 @@ import java.util.UUID;
 
 public class BabelLedger extends GenericProtocol implements LedgerObserver {
 
-    private static final Logger logger = LogManager.getLogger(BabelLedger.class);
+	public static final short ID = IDGenerator.genId();
+	private static final Logger logger = LogManager.getLogger(BabelLedger.class);
+	/**
+	 * This Ledger is simultaneously a strategy to handle block submission according to the Strategy pattern, as well as
+	 * a subject to listen to changes in the Observer pattern.
+	 */
+	private final Ledger ledger;
 
-    public static final short ID = IDGenerator.genId();
+	public BabelLedger(Ledger ledger) throws HandlerRegistrationException {
+		super(BabelLedger.class.getSimpleName(), ID);
+		this.ledger = attachToSubjectLedger(ledger);
+		subscribeNotification(DeliverSignedBlockNotification.ID, (DeliverSignedBlockNotification<BlockmessBlock> notif, short id) -> uponDeliverSignedBlockNotification(notif));
+		BroadcastValue.pojoSerializers.put(LedgerBlockImp.ID, LedgerBlockImp.serializer);
+	}
 
-    /**
-     * This Ledger is simultaneously a strategy to handle block submission according to the Strategy pattern,
-     * as well as a subject to listen to changes in the Observer pattern.
-     */
-    private final Ledger ledger;
+	private Ledger attachToSubjectLedger(Ledger ledger) {
+		ledger.attachObserver(this);
+		return ledger;
+	}
 
-    public BabelLedger(Ledger ledger) throws HandlerRegistrationException {
-        super(BabelLedger.class.getSimpleName(), ID);
-        this.ledger = attachToSubjectLedger(ledger);
-        subscribeNotification(DeliverSignedBlockNotification.ID, (DeliverSignedBlockNotification<BlockmessBlock> notif, short id) -> uponDeliverSignedBlockNotification(notif));
-        BroadcastValue.pojoSerializers.put(LedgerBlockImp.ID, LedgerBlockImp.serializer);
-    }
+	private void uponDeliverSignedBlockNotification(DeliverSignedBlockNotification<BlockmessBlock> notif) {
+		BlockmessBlock block = notif.getBlock();
+		logger.info("Ledger received block: {}", block.getBlockId());
+		ledger.submitBlock(block);
+	}
 
-    private Ledger attachToSubjectLedger(Ledger ledger) {
-        ledger.attachObserver(this);
-        return ledger;
-    }
+	@Override
+	public void init(Properties properties) {
+	}
 
-    @Override
-    public void init(Properties properties) {}
+	@Override
+	public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
+		triggerNotification(new DeliverNonFinalizedBlockNotification<>(block, weight));
+	}
 
-    private void uponDeliverSignedBlockNotification (DeliverSignedBlockNotification<BlockmessBlock> notif) {
-        BlockmessBlock block = notif.getBlock();
-        logger.info("Ledger received block: {}", block.getBlockId());
-        ledger.submitBlock(block);
-    }
-
-    @Override
-    public void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
-        triggerNotification(new DeliverNonFinalizedBlockNotification<>(block, weight));
-    }
-
-    @Override
-    public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
-        if (!finalized.isEmpty() || !discarded.isEmpty())
-            triggerNotification(new DeliverFinalizedBlockIdentifiersNotification(discarded, finalized));
-    }
+	@Override
+	public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+		if (!finalized.isEmpty() || !discarded.isEmpty())
+			triggerNotification(new DeliverFinalizedBlockIdentifiersNotification(discarded, finalized));
+	}
 }

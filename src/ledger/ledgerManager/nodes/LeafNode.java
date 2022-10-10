@@ -67,7 +67,7 @@ public class LeafNode implements BlockmessChain, LedgerObserver {
 	 */
 	private final Queue<BlockmessBlock> finalizedBuffer = new ConcurrentLinkedQueue<>();
 	/**
-	 * Ledger<BlockmessBlock<C,P>> ledger Number of samples used to determine if the Chain should spawn new Chains or
+	 * Ledger<BlockmessBlockImp<C,P>> ledger Number of samples used to determine if the Chain should spawn new Chains or
 	 * merge into its parent.
 	 * <p>The greater the sample size, the more resilient it is towards adversarial intents,
 	 * but the least sensible it is to adapt to changes in the load of the system.</p>

@@ -72,8 +72,7 @@ public class ApplicationObliviousValidator extends GenericProtocol {
 				.hasEnoughLeadingZeros(solution);
 	}
 
-	private MerkleTree computeRandomSeed(
-			BlockmessBlock block) {
+	private MerkleTree computeRandomSeed(BlockmessBlock block) {
 		List<byte[]> randomSeedElems = new LinkedList<>();
 		randomSeedElems.add(block.getProposer().getEncoded());
 		UUID destinationChain = block.getDestinationChain();
