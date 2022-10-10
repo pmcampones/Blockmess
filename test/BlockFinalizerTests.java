@@ -1,31 +1,32 @@
+import ledger.blockchain.BlockFinalizer;
 import ledger.blockchain.Blockchain;
-import ledger.blocks.BlockmessBlock;
 import lombok.SneakyThrows;
 import main.BlockmessLauncher;
 import main.GlobalProperties;
 import org.junit.jupiter.api.Test;
 import pt.unl.fct.di.novasys.babel.core.Babel;
 
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class BlockchainTests {
+public class BlockFinalizerTests {
 
 	private static boolean isInitialized = false;
 
-	private final Blockchain blockchain;
+	private final BlockFinalizer blockchain;
 
 	@SneakyThrows
-	public BlockchainTests() {
+	public BlockFinalizerTests() {
 		if (!isInitialized) {
 			Properties props = Babel.loadConfig(new String[]{}, BlockmessLauncher.DEFAULT_CONF);
 			GlobalProperties.setProps(props);
 			isInitialized = true;
 		}
-		blockchain = new Blockchain();
+		blockchain = new BlockFinalizer(new UUID(0, 0));
 	}
 
 	/**
@@ -35,6 +36,7 @@ public class BlockchainTests {
 	public void getLastBlockIsFirst() {
 		Set<UUID> last = blockchain.getBlockR();
 		assertEquals(1, last.size());
+		assertEquals(new UUID(0, 0), new ArrayList<>(last).get(0));
 	}
 
 	/**
@@ -49,15 +51,11 @@ public class BlockchainTests {
 			assertEquals(1, last.size());
 			UUID id = last.iterator().next();
 			assertEquals(lastId, id);
-			BlockmessBlock block = createSimpleBlock(id);
-			blockchain.submitBlock(block);
+			UUID newNodeId = UUID.randomUUID();
+			blockchain.addBlock(newNodeId, Set.of(id), 1);
 			Thread.sleep(100);
-			lastId = block.getBlockId();
+			lastId = newNodeId;
 		}
-	}
-
-	private BlockmessBlock createSimpleBlock(UUID prev) {
-		return new DummyBlockmessBlock(prev);
 	}
 
 }
