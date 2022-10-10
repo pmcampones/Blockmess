@@ -176,4 +176,12 @@ public class BlockFinalizer {
 		return node.getWeight();
 	}
 
+	public Set<UUID> getNodesIds() {
+		return blocks.keySet();
+	}
+
+	public Set<UUID> getFinalizedIds() {
+		return finalized.keySet();
+	}
+
 }

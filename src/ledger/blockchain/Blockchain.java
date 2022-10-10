@@ -54,7 +54,8 @@ public class Blockchain implements Ledger {
 		this.blockFinalizer = new BlockFinalizer(genesisId);
 		this.delayVerifier = generateDelayVerifier(props);
 		int expectedTimeBetweenBlocks = Integer.parseInt(props.getProperty("expectedTimeBetweenBlocks"));
-		this.task = pool.scheduleAtFixedRate(new QueuePoller(), expectedTimeBetweenBlocks / 5, expectedTimeBetweenBlocks / 5, TimeUnit.MILLISECONDS);
+		this.task = pool.scheduleAtFixedRate(new QueuePoller(), expectedTimeBetweenBlocks / 5,
+				expectedTimeBetweenBlocks / 5, TimeUnit.MILLISECONDS);
 
 	}
 
@@ -130,7 +131,6 @@ public class Blockchain implements Ledger {
 		}
 	}
 
-
 	@Override
 	public void submitBlock(BlockmessBlock block) {
 		logger.debug("Received block {}, referencing {}", block.getBlockId(), block.getPrevRefs());
@@ -142,7 +142,6 @@ public class Blockchain implements Ledger {
 	public void attachObserver(LedgerObserver observer) {
 		this.observers.add(observer);
 	}
-
 
 	public Set<UUID> getFollowing(UUID block, int distance) {
 		return blockFinalizer.getFollowing(block, distance);
@@ -202,11 +201,9 @@ public class Blockchain implements Ledger {
 		}
 	}
 
-
 	private void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
 		for (LedgerObserver observer : this.observers)
 			observer.deliverNonFinalizedBlock(block, weight);
 	}
-
 
 }
