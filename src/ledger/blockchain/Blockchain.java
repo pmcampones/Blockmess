@@ -16,7 +16,6 @@ import static java.lang.Long.parseLong;
 
 public class Blockchain implements Ledger {
 
-	public static final int FINALIZED_WEIGHT = 6;
 	private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());
 	private static final int POOL_SIZE = Runtime.getRuntime().availableProcessors() / 4;
 	private static final long WAIT_DELAY_REORDER = 1000 * 5;

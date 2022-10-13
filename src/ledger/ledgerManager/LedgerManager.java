@@ -3,7 +3,7 @@ package ledger.ledgerManager;
 import cmux.AppOperation;
 import ledger.Ledger;
 import ledger.LedgerObserver;
-import ledger.blockchain.Blockchain;
+import ledger.blockchain.BlockFinalizer;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.ledgerManager.nodes.BlockmessChain;
@@ -55,7 +55,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 		this.maxNumChains = parseInt(props.getProperty("maxNumChains", String.valueOf(Integer.MAX_VALUE)));
 		int initialNumChains = parseInt(props.getProperty("initialNumChains", String.valueOf(minNumChains)));
 		initializeChains(originChain, initialNumChains);
-		this.finalizedWeight = parseInt(props.getProperty("finalizedWeight", String.valueOf(Blockchain.FINALIZED_WEIGHT)));
+		this.finalizedWeight = parseInt(props.getProperty("finalizedWeight", String.valueOf(BlockFinalizer.FINALIZED_WEIGHT)));
 		new Thread(this::processBlockDeliveries).start();
 	}
 
