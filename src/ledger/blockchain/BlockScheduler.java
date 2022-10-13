@@ -1,22 +1,15 @@
 package ledger.blockchain;
 
 
-import main.GlobalProperties;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
 
 public class BlockScheduler {
 
-	private static final long WAIT_DELAY_REORDER = 1000 * 5;
-
-	private static final long VERIFICATION_INTERVAL = WAIT_DELAY_REORDER * 5;
-
 	private final Map<UUID, List<BlockchainNode>> blockDependencies = new HashMap<>();
-
-	public BlockScheduler() {
-		Properties props = GlobalProperties.getProps();
-	}
 
 	public void submitUnorderedBlock(BlockchainNode block, Collection<UUID> missingPrev) {
 		for (UUID prev : missingPrev) {
@@ -26,35 +19,36 @@ public class BlockScheduler {
 	}
 
 	public List<BlockchainNode> getValidOrdering(BlockchainNode node) {
-		Set<BlockchainNode> dependents = getDependents(node.getBlockId());
-		return getValidOrder(node, dependents);
+		List<BlockchainNode> validOrder = new ArrayList<>();
+		validOrder.add(node);
+		validOrder.addAll(getDependents(node.getBlockId()));
+		return validOrder;
 	}
 
-	private Set<BlockchainNode> getDependents(UUID id) {
+	/**
+	 * Recursive function that gets the blocks that depend on a given identifier. The recursive call is not particularly
+	 * expensive because the depth should never be big.
+	 */
+	private List<BlockchainNode> getDependents(UUID id) {
 		var idDependencies = blockDependencies.remove(id);
 		if (idDependencies == null)
 			idDependencies = Collections.emptyList();
-		return idDependencies.stream().filter(this::isOrdered).collect(Collectors.toSet());
+		List<BlockchainNode> dependents = getDirectDependents(idDependencies);
+		List<BlockchainNode> indirectDependents = dependents.stream()
+				.map(BlockchainNode::getBlockId)
+				.map(this::getDependents)
+				.flatMap(Collection::stream).collect(toList());
+		dependents.addAll(indirectDependents);
+		return dependents;
+	}
+
+	@NotNull
+	private List<BlockchainNode> getDirectDependents(List<BlockchainNode> idDependencies) {
+		return idDependencies.stream().filter(this::isOrdered).collect(toList());
 	}
 
 	private boolean isOrdered(BlockchainNode node) {
 		return node.getPrevious().stream().noneMatch(blockDependencies::containsKey);
-	}
-
-	private List<BlockchainNode> getValidOrder(BlockchainNode initialBlock, Set<BlockchainNode> blocks) {
-		List<BlockchainNode> orderedBlocks = new ArrayList<>(List.of(initialBlock));
-		Map<UUID, BlockchainNode> leftoverBlocks = blocks.stream()
-				.collect(Collectors.toMap(BlockchainNode::getBlockId, x -> x));
-		while (!leftoverBlocks.isEmpty()) {
-			Set<UUID> allIds = leftoverBlocks.values().stream()
-					.map(BlockchainNode::getBlockId).collect(Collectors.toSet());
-			List<BlockchainNode> independentBlocks = leftoverBlocks.values().stream()
-					.filter(node -> node.getPrevious().stream().noneMatch(allIds::contains))
-					.collect(Collectors.toList());
-			orderedBlocks.addAll(independentBlocks);
-			independentBlocks.stream().map(BlockchainNode::getBlockId).forEach(leftoverBlocks::remove);
-		}
-		return orderedBlocks;
 	}
 
 }
