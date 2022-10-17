@@ -225,7 +225,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 	private void removeObsoleteChains() {
 		while (!toRemoveChains.isEmpty()) {
 			try {
-				chains.remove(toRemoveChains.take()).close();
+				chains.remove(toRemoveChains.take());
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -291,11 +291,6 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 	@Override
 	public Set<UUID> getForkBlocks(int depth) {
 		return chains.values().iterator().next().getForkBlocks(1);
-	}
-
-	@Override
-	public void close() {
-		chains.values().forEach(Ledger::close);
 	}
 
 	@Override

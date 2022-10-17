@@ -44,6 +44,4 @@ public interface Ledger {
 
 	Set<UUID> getForkBlocks(int depth);
 
-	void close();
-
 }

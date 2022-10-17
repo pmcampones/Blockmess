@@ -171,10 +171,5 @@ public class Blockchain implements Ledger {
 		return blockFinalizer.getForkBlocks(getBlockR(), depth);
 	}
 
-	@Override
-	public void close() {
-		//TODO REMOVE CLOSE FROM INTERFACES AND USAGES IN OTHER CLASSES
-	}
-
 
 }

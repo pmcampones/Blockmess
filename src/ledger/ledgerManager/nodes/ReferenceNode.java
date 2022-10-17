@@ -172,11 +172,6 @@ public class ReferenceNode implements InnerNode, BlockmessChain {
 	}
 
 	@Override
-	public void close() {
-		leaf.close();
-	}
-
-	@Override
 	public void replaceChild(BlockmessChain newChild) {
 		this.nodeState = newChild;
 	}
