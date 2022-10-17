@@ -17,7 +17,6 @@ public class AutomatedClient {
 	}
 
 	public static void main(String[] args) {
-		System.out.println("YO IT ACTUALLY DID SOMETHING");
 		if (args.length < 2)
 			printUsageMessage();
 		else

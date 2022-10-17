@@ -48,7 +48,7 @@ public class UnfinalizedBlocksLog {
 	public void logUnfinalizedBlock(BlockmessBlock block) {
 		if (isRecording) {
 			File file = new File(outputPath.toUri());
-			try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
+			try (var fWriter = new FileWriter(file, true); var csvWriter = new CSVWriter(fWriter)) {
 				String blockId = block.getBlockId().toString();
 				int numTxs = block.getContentList().getContentList().size();
 				int blockSize = block.getSerializedSize();

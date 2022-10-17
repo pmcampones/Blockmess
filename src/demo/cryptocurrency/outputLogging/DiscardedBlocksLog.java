@@ -53,7 +53,7 @@ public class DiscardedBlocksLog {
 	public void logDiscardedBlock(Collection<UUID> discardedBlocks) {
 		if (isRecording) {
 			File file = new File(outputPath.toUri());
-			try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
+			try (var fWriter = new FileWriter(file, true); var csvWriter = new CSVWriter(fWriter)) {
 				String discardTime = String.valueOf(System.currentTimeMillis());
 				List<String[]> logs = discardedBlocks.stream().map(UUID::toString)
 						.map(id -> new String[]{id, discardTime}).collect(Collectors.toList());

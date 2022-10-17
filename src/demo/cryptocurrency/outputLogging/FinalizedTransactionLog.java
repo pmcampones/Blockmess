@@ -50,7 +50,7 @@ public class FinalizedTransactionLog {
 	public void logFinalizedTransaction(Transaction tx) {
 		if (isRecording) {
 			File file = new File(outputPath.toUri());
-			try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
+			try (var fWriter = new FileWriter(file, true); var csvWriter = new CSVWriter(fWriter)) {
 				String txId = CryptographicUtils.generateUUIDFromBytes(Transaction.serializeTx(tx)).toString();
 				String txSize = String.valueOf(tx.getSerializedSize());
 				long arrivalTime = System.currentTimeMillis();

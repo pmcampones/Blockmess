@@ -51,7 +51,7 @@ public class FinalizedBlocksLog {
 	public void logFinalizedBlock(Collection<UUID> finalizedBlocks) {
 		if (isRecording) {
 			File file = new File(outputPath.toUri());
-			try (var fWriter = new FileWriter(file); var csvWriter = new CSVWriter(fWriter)) {
+			try (var fWriter = new FileWriter(file, true); var csvWriter = new CSVWriter(fWriter)) {
 				String finalizationTime = String.valueOf(System.currentTimeMillis());
 				List<String[]> logs = finalizedBlocks.stream().map(UUID::toString)
 						.map(id -> new String[]{id, finalizationTime}).collect(Collectors.toList());
