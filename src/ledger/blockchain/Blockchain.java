@@ -9,32 +9,21 @@ import org.apache.logging.log4j.Logger;
 import validators.ApplicationObliviousValidator;
 
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import static java.lang.Long.parseLong;
 
 public class Blockchain implements Ledger {
 
 	private static final Logger logger = LogManager.getLogger(Blockchain.class.getName());
-	private static final int POOL_SIZE = Runtime.getRuntime().availableProcessors() / 4;
-	private static final long WAIT_DELAY_REORDER = 1000 * 5;
-	private static final long VERIFICATION_INTERVAL = WAIT_DELAY_REORDER * 5;
-	private static final ScheduledThreadPoolExecutor pool = initPool();
-
-
-	//Blocks that have arrived but are yet to be processed.
-	//This Blockchain implementation is fundamentally serial.
-	//Blocks are kept in this queue and a single thread will process each individually in a FIFO order.
-	private final BlockingQueue<BlockmessBlock> toProcess = new LinkedBlockingQueue<>();
 
 	private final List<LedgerObserver> observers = new LinkedList<>();
-	private final DelayVerifier delayVerifier;
-	private final ScheduledFuture<?> task;
 
 	private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 	private final BlockFinalizer blockFinalizer;
+
+	private final BlockScheduler blockScheduler;
+
+	private final Map<UUID, BlockmessBlock> scheduledBlocks = new HashMap<>();
 
 
 	public Blockchain() {
@@ -49,40 +38,19 @@ public class Blockchain implements Ledger {
 	}
 
 	public Blockchain(UUID genesisId) {
-		Properties props = GlobalProperties.getProps();
 		this.blockFinalizer = new BlockFinalizer(genesisId);
-		this.delayVerifier = generateDelayVerifier(props);
-		int expectedTimeBetweenBlocks = Integer.parseInt(props.getProperty("expectedTimeBetweenBlocks"));
-		this.task = pool.scheduleAtFixedRate(new QueuePoller(), expectedTimeBetweenBlocks / 5,
-				expectedTimeBetweenBlocks / 5, TimeUnit.MILLISECONDS);
-
+		this.blockScheduler = new BlockScheduler();
 	}
 
-	private DelayVerifier generateDelayVerifier(Properties props) {
-		long waitDelayReorder = parseLong(props.getProperty("waitDelayReorder",
-				String.valueOf(WAIT_DELAY_REORDER)));
-		long verificationDelay = parseLong(props.getProperty("verificationDelay",
-				String.valueOf(VERIFICATION_INTERVAL)));
-		return new DelayVerifier(waitDelayReorder, verificationDelay, this);
+	private void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
+		for (LedgerObserver observer : this.observers)
+			observer.deliverNonFinalizedBlock(block, weight);
 	}
 
-	private static ScheduledThreadPoolExecutor initPool() {
-		ScheduledThreadPoolExecutor pool = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(POOL_SIZE);
-		pool.setRemoveOnCancelPolicy(true);
-		return pool;
-	}
-
-	boolean hasBlock(UUID blockId) {
-		return blockFinalizer.hasBlock(blockId);
-	}
-
-	private class QueuePoller extends Thread {
-
-		public void run() {
-			toProcess.addAll(delayVerifier.getOrderedBlocks());
-			processBlocks();
-		}
-
+	@Override
+	public void submitBlock(BlockmessBlock block) {
+		logger.debug("Received block {}, referencing {}", block.getBlockId(), block.getPrevRefs());
+		processBlock(block);
 	}
 
 	private void processBlock(BlockmessBlock block) {
@@ -90,15 +58,13 @@ public class Blockchain implements Ledger {
 		List<UUID> prev = block.getPrevRefs();
 		if (prev.size() != 1) {
 			logger.info("Received malformed block with id: {}", block.getBlockId());
-		} else if (!blockFinalizer.hasBlock(prev.get(0))) {
-			logger.info("Received unordered block with id: {}, referencing {}",
-					block.getBlockId(), block.getPrevRefs().get(0));
-			delayVerifier.submitUnordered(block);
-		} else if (ApplicationObliviousValidator.getSingleton().isBlockValid(block)) {
-			processValidBlock(block);
-		} else {
+		} else if (!ApplicationObliviousValidator.getSingleton().isBlockValid(block)) {
 			logger.info("Received invalid block {} referencing {}",
 					block.getBlockId(), block.getPrevRefs().get(0));
+		} else if (!isOrdered(block)) {
+			submitUnorderedBlock(block, prev);
+		} else {
+			processOrderedBlocks(block, prev);
 		}
 		long end = System.currentTimeMillis();
 		logger.info("Elapsed time in processing block {}: {} miliseconds",
@@ -120,6 +86,27 @@ public class Blockchain implements Ledger {
 			observer.deliverFinalizedBlocks(finalizedIds, deleted);
 	}
 
+	private boolean isOrdered(BlockmessBlock block) {
+		try {
+			lock.readLock().lock();
+			return blockFinalizer.hasBlock(block.getPrevRefs().get(0));
+		} finally {
+			lock.readLock().unlock();
+		}
+	}
+
+	private void processOrderedBlocks(BlockmessBlock block, List<UUID> prev) {
+		var scheduledBlock = new ScheduledBlock(block.getBlockId(), Set.of(prev.get(0)));
+		List<ScheduledBlock> validOrderBlocks = blockScheduler.getValidOrdering(scheduledBlock);
+		try {
+			lock.writeLock().lock();
+			validOrderBlocks.stream().map(ScheduledBlock::getId).map(scheduledBlocks::get)
+					.forEach(this::processValidBlock);
+		} finally {
+			lock.writeLock().unlock();
+		}
+	}
+
 	@Override
 	public Set<UUID> getBlockR() {
 		try {
@@ -130,11 +117,13 @@ public class Blockchain implements Ledger {
 		}
 	}
 
-	@Override
-	public void submitBlock(BlockmessBlock block) {
-		logger.debug("Received block {}, referencing {}", block.getBlockId(), block.getPrevRefs());
-		toProcess.add(block);
-		processBlocks();
+	private void submitUnorderedBlock(BlockmessBlock block, List<UUID> prev) {
+		logger.info("Received unordered block with id: {}, referencing {}",
+				block.getBlockId(), prev.get(0));
+		Set<UUID> missingPrevious = Set.of(prev.get(0));
+		var scheduledBlock = new ScheduledBlock(block.getBlockId(), missingPrevious);
+		blockScheduler.submitUnorderedBlock(scheduledBlock, missingPrevious);
+		scheduledBlocks.put(scheduledBlock.getId(), block);
 	}
 
 	@Override
@@ -143,12 +132,22 @@ public class Blockchain implements Ledger {
 	}
 
 	public Set<UUID> getFollowing(UUID block, int distance) {
-		return blockFinalizer.getFollowing(block, distance);
+		try {
+			lock.readLock().lock();
+			return blockFinalizer.getFollowing(block, distance);
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	@Override
 	public int getWeight(UUID block) throws IllegalArgumentException {
-		return blockFinalizer.getWeight(block);
+		try {
+			lock.readLock().lock();
+			return blockFinalizer.getWeight(block);
+		} finally {
+			lock.readLock().unlock();
+		}
 	}
 
 	@Override
@@ -174,35 +173,8 @@ public class Blockchain implements Ledger {
 
 	@Override
 	public void close() {
-		task.cancel(false);
-		delayVerifier.close();
+		//TODO REMOVE CLOSE FROM INTERFACES AND USAGES IN OTHER CLASSES
 	}
 
-	private void processBlocks() {
-		if (!toProcess.isEmpty()) {
-			try {
-				lock.writeLock().lock();
-				tryToProcessBlocks();
-			} finally {
-				lock.writeLock().unlock();
-			}
-		}
-	}
-
-	public void tryToProcessBlocks() {
-		while (!toProcess.isEmpty()) {
-			try {
-				processBlock(toProcess.take());
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-				throw new RuntimeException(e);
-			}
-		}
-	}
-
-	private void deliverNonFinalizedBlock(BlockmessBlock block, int weight) {
-		for (LedgerObserver observer : this.observers)
-			observer.deliverNonFinalizedBlock(block, weight);
-	}
 
 }

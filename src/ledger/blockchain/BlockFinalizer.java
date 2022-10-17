@@ -42,9 +42,9 @@ public class BlockFinalizer {
 	private void createGenesisBlock(UUID genesisUUID) {
 		BlockchainNode genesis = new BlockchainNode(genesisUUID,
 				Collections.emptySet(), finalizedWeight);
-		chainTips.put(genesis.getBlockId(), genesis);
-		blocks.put(genesis.getBlockId(), genesis);
-		finalized.put(genesis.getBlockId(), genesis);
+		chainTips.put(genesis.getId(), genesis);
+		blocks.put(genesis.getId(), genesis);
+		finalized.put(genesis.getId(), genesis);
 		lastFinalized = genesis;
 		priorityTip = genesis;
 	}
@@ -54,16 +54,16 @@ public class BlockFinalizer {
 		int chainWeight = weight + prev.getWeight();
 		BlockchainNode block = new BlockchainNode(id, prevIds, chainWeight);
 		prev.getFollowing().add(id);
-		chainTips.remove(prev.getBlockId());
+		chainTips.remove(prev.getId());
 		chainTips.put(id, block);
 		if (block.getWeight() > priorityTip.getWeight())
 			priorityTip = block;
-		logger.debug("Inserting: {}", block.getBlockId());
-		blocks.put(block.getBlockId(), block);
+		logger.debug("Inserting: {}", block.getId());
+		blocks.put(block.getId(), block);
 		Set<UUID> deleted = deleteForkedChains();
 		List<BlockchainNode> finalizedSequence = finalizeForward();
-		finalized.putAll(finalizedSequence.stream().collect(toMap(BlockchainNode::getBlockId, b -> b)));
-		List<UUID> finalizedIds = finalizedSequence.stream().map(BlockchainNode::getBlockId).collect(toList());
+		finalized.putAll(finalizedSequence.stream().collect(toMap(BlockchainNode::getId, b -> b)));
+		List<UUID> finalizedIds = finalizedSequence.stream().map(BlockchainNode::getId).collect(toList());
 		return Pair.of(finalizedIds, deleted);
 	}
 
@@ -76,7 +76,7 @@ public class BlockFinalizer {
 				&& maxWeight - blocks.get(lastFinalized.getFollowing().iterator().next()).getWeight() >= finalizedWeight)
 			do {
 				lastFinalized = blocks.get(lastFinalized.getFollowing().iterator().next());
-				logger.debug("Finalizing: {}", lastFinalized.getBlockId());
+				logger.debug("Finalizing: {}", lastFinalized.getId());
 				newlyFinalized.add(lastFinalized);
 			} while (lastFinalized.getFollowing().size() < 2 && maxWeight - lastFinalized.getWeight() > finalizedWeight);
 
@@ -102,18 +102,18 @@ public class BlockFinalizer {
 
 	private Set<UUID> deleteForkedChain(BlockchainNode chainTip) {
 		Set<UUID> deleted = new HashSet<>();
-		chainTips.remove(chainTip.getBlockId());
+		chainTips.remove(chainTip.getId());
 		BlockchainNode currentBlock = chainTip;
 		BlockchainNode previousBlock = null;
 		while (currentBlock.getFollowing().size() < 2) {
-			blocks.remove(currentBlock.getBlockId());
-			deleted.add(currentBlock.getBlockId());
-			logger.debug("Removing: {}", currentBlock.getBlockId());
+			blocks.remove(currentBlock.getId());
+			deleted.add(currentBlock.getId());
+			logger.debug("Removing: {}", currentBlock.getId());
 			previousBlock = currentBlock;
 			currentBlock = blocks.get(currentBlock.getPrevious().iterator().next());
 		}
 		assert previousBlock != null;
-		currentBlock.getFollowing().remove(previousBlock.getBlockId());
+		currentBlock.getFollowing().remove(previousBlock.getId());
 		return deleted;
 	}
 
@@ -155,7 +155,7 @@ public class BlockFinalizer {
 
 	public Set<UUID> getBlockR() {
 		assert !chainTips.isEmpty();
-		return Set.of(priorityTip.getBlockId());
+		return Set.of(priorityTip.getId());
 	}
 
 	public Set<UUID> getFollowing(UUID block, int distance) {
