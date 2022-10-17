@@ -2,9 +2,11 @@ package demo.counter;
 
 import lombok.SneakyThrows;
 
-import java.util.stream.IntStream;
-
 public class AsyncCounter {
+
+	static {
+		System.setProperty("log4j.configurationFile", "config/log4j2.xml");
+	}
 
 	public static void main(String[] args) {
 		if (args.length < 2) printUsageMessage();
@@ -19,22 +21,28 @@ public class AsyncCounter {
 		System.out.println("[property=value]*: List of property values to override those in the configuration file.");
 	}
 
+	@SneakyThrows
 	private static void execute(String[] args) {
 		int change = Integer.parseInt(args[0]);
 		byte[] changeBytes = Counter.numToBytes(change);
 		int numUpdates = Integer.parseInt(args[1]);
 		String[] blockmessProperties = Counter.sliceArray(args, 2, args.length);
 		Counter counterServer = new Counter(blockmessProperties);
-		IntStream.range(0, numUpdates).parallel().forEach(i -> updateDistributedCounter(changeBytes, counterServer, i));
+		//IntStream.range(0, numUpdates).parallel().forEach(i -> updateDistributedCounter(changeBytes, counterServer, i));
+		for (int i = 0; i < numUpdates; i++) {
+			updateDistributedCounter(changeBytes, counterServer, i);
+			Thread.sleep(100);
+		}
 	}
 
 	@SneakyThrows
-	private static void updateDistributedCounter(byte[] changeBytes, Counter counterServer, int i) {
+	private static void updateDistributedCounter(byte[] changeBytes, Counter counterServer, int localOperationIdx) {
 		counterServer.invokeAsyncOperation(changeBytes, operationResult -> {
 			byte[] currCounterBytes = operationResult.getLeft();
 			long opIdx = operationResult.getRight();
 			int currCounter = Counter.bytesToInt(currCounterBytes);
-			//System.out.printf("Counter with value %d on local update %d and global operation %d%n", currCounter, i, opIdx);
+			System.out.printf("Counter with value %d on local update %d and global operation %d%n",
+					currCounter, localOperationIdx, opIdx);
 		});
 	}
 

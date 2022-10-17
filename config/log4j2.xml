@@ -7,7 +7,6 @@
 
 
         <File name="MyFile" fileName="${sys:logFileName}" append="false" immediateFlush="true">
-            <!--<PatternLayout pattern="%style{%level{length=1}[%d{HH:mm:ss,SSS}] [%t]%logger{0}: %msg%n"/>-->
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </File>
 
@@ -16,17 +15,18 @@
     <Loggers>
         <!--UNCOMMENT TO SPECIFY LOG LEVEL OF PACKAGES
 	<Logger level="info" name="protocols.apps"/>-->
-        <Logger level="error" name="logsGenerators.FinalizedBlocksLog"/>
-        <Logger level="error" name="pt.unl.fct.di.novasys.babel.core"/>
-        <Logger level="error" name="broadcastProtocols"/>-->
-        <Logger level="error" name="peerSamplingProtocols"/>-->
-        <Logger level="error" name="mempoolManager"/>
-        <Logger level="error" name="ledger.ledgerManager.LedgerManager"/>
-        <Logger level="error" name="ledger"/>
-        <Logger level="error" name="sybilResistantElection.SybilResistantElection"/>
-        <Root level="error">
-            <AppenderRef ref="Console" level="debug"/>
-            <AppenderRef ref="MyFile" level="debug"/>
+        <Logger level="warn" name="logsGenerators.FinalizedBlocksLog"/>
+        <Logger level="warn" name="pt.unl.fct.di.novasys.babel.core"/>
+        <Logger level="warn" name="broadcastProtocols"/>-->
+        <Logger level="warn" name="peerSamplingProtocols"/>-->
+        <Logger level="warn" name="mempoolManager"/>
+        <Logger level="debug" name="ledger.ledgerManager.LedgerManager"/>
+        <Logger level="debug" name="ledger"/>
+        <Logger level="warn" name="sybilResistantElection.SybilResistantElection"/>
+        <Logger level="warn" name="main"/>
+        <Root level="warn">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="MyFile"/>
         </Root>
     </Loggers>
 

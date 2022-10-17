@@ -432,6 +432,8 @@ public class HyparView extends GenericProtocol {
 	public void init(Properties props) throws IOException {
 		// If there is a contact node, attempt to establish connection
 		Host contactNode = computeContactNode(props);
+		logger.debug("My address is: {}", myself);
+		logger.debug("Contact node is: {}", contactNode);
 		if (!myself.equals(contactNode)) {
 			try {
 				openConnection(contactNode);

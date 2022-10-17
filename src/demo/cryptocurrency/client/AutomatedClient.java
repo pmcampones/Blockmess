@@ -12,8 +12,21 @@ public class AutomatedClient {
 
 	private static final int MAX_TX_VALUE = 100;
 
+	static {
+		System.setProperty("log4j.configurationFile", "config/log4j2.xml");
+	}
+
 	public static void main(String[] args) {
-		CryptocurrencyClient client = new CryptocurrencyClient(sliceArgs(args));
+		System.out.println("YO IT ACTUALLY DID SOMETHING");
+		if (args.length < 2)
+			printUsageMessage();
+		else
+			execute(args);
+	}
+
+	private static void execute(String[] args) {
+		var overwrittenProperties = sliceArgs(args);
+		CryptocurrencyClient client = new CryptocurrencyClient(overwrittenProperties);
 		int proposalInterval = Integer.parseInt(args[0]);
 		List<PublicKey> allKeys = KeyLoader.readKeysFromFiles(args[1]);
 		List<PublicKey> keys = filterMyKey(allKeys, client.getMyKeys().getPublic());
@@ -45,6 +58,14 @@ public class AutomatedClient {
 			});
 			Thread.sleep(proposalInterval);
 		}
+	}
+
+	private static void printUsageMessage() {
+		System.out.println("Missing required arguments:");
+		System.out.println("Usage: java -cp demo.counter.AsyncCounter counter_change num_updates [property=value]*");
+		System.out.println("counter_change: Update to the value of the shared counter in each update.");
+		System.out.println("num_updates: Number of updates to be executed asynchronously.");
+		System.out.println("[property=value]*: List of property values to override those in the configuration file.");
 	}
 
 

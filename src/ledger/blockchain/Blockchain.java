@@ -96,6 +96,7 @@ public class Blockchain implements Ledger {
 	}
 
 	private void processOrderedBlocks(BlockmessBlock block, List<UUID> prev) {
+		scheduledBlocks.put(block.getBlockId(), block);
 		var scheduledBlock = new ScheduledBlock(block.getBlockId(), Set.of(prev.get(0)));
 		List<ScheduledBlock> validOrderBlocks = blockScheduler.getValidOrdering(scheduledBlock);
 		try {
