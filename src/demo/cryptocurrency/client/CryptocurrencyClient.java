@@ -2,8 +2,6 @@ package demo.cryptocurrency.client;
 
 import applicationInterface.ApplicationInterface;
 import applicationInterface.ReplyListener;
-import cmux.FixedCMuxIdMapper;
-import demo.cryptocurrency.CryptocurrencyCMuxMapper;
 import demo.cryptocurrency.DBAdapter;
 import demo.cryptocurrency.Transaction;
 import demo.cryptocurrency.TransactionValidator;
@@ -58,7 +56,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 	public CryptocurrencyClient(String[] blockmessProperties) {
 		super(blockmessProperties);
 		this.myKeys = CryptographicUtils.readECDSAKeyPair();
-		FixedCMuxIdMapper.getSingleton().setCustomMapper(new CryptocurrencyCMuxMapper());
+		//FixedCMuxIdMapper.getSingleton().setCustomMapper(new CryptocurrencyCMuxMapper());
 		FixedApplicationAwareValidator.getSingleton().setCustomValidator(new TransactionValidator());
 		this.myUTXOs = filterMyUTXOs();
 		this.unfinalizedLog = new UnfinalizedBlocksLog();
@@ -78,10 +76,11 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		List<UTXO> inputs = getUTXOInputs(amount);
 		List<UUID> inputIds = inputs.stream().map(UTXO::getId).collect(toList());
 		int change = amount - inputs.stream().mapToInt(UTXO::getAmount).sum();
-		List<Integer> outputsOriginAmount = change == 0 ? Collections.emptyList() : List.of(change);
+		List<Integer> outputsOriginAmount = change == 0 ? Collections.emptyList() : List.of(-change);
 		Transaction tx = new Transaction(myKeys.getPublic(), destination,
 				inputIds, List.of(amount), outputsOriginAmount, myKeys.getPrivate());
 		inputIds.forEach(myUTXOs::remove);
+		logger.debug("Submitting Transaction {}", tx.genTxId());
 		super.invokeAsyncOperation(Transaction.serializeTx(tx), listener);
 	}
 
@@ -108,6 +107,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 	}
 
 	private byte[] processValidTransaction(Transaction tx) throws IOException {
+		logger.debug("Processing tx: {}", tx.genTxId());
 		DBAdapter db = DBAdapter.getSingleton();
 		db.deleteUTXOs(tx.getInputs());
 		PublicKey og = tx.getOrigin();
@@ -120,7 +120,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		db.submitUTXOs(utxos);
 		TransactionValidator.forgetTxValidation(tx);
 		txLog.logFinalizedTransaction(tx);
-		return new byte[0];
+		return dest.getEncoded();
 	}
 
 	@Override

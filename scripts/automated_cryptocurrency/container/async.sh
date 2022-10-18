@@ -19,7 +19,7 @@ fi
 CONTACT_PORT=6000
 for REPLICA_IDX in $(seq 0 $(( NUM_REPLICAS - 1)) )
 do
-  eval "docker container run -d --name replica$REPLICA_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess_csd demo.cryptocurrency.client.AutomatedClient $INTERVAL $KEYS address=replica$REPLICA_IDX contact=replica0:$CONTACT_PORT"
+  eval "docker container run -d --name replica$REPLICA_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess_csd demo.cryptocurrency.client.AutomatedClient $INTERVAL $KEYS address=replica$REPLICA_IDX contact=replica0:$CONTACT_PORT myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0"
   echo "Replica $REPLICA_IDX running $FILE_LOC proposing with an interval of $INTERVAL"
   sleep 2
 done

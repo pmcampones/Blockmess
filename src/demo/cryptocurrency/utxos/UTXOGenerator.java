@@ -30,7 +30,7 @@ public class UTXOGenerator {
 		for (int i = 0; i < numBootstrapUtxos; i++) {
 			Random rand = new Random();
 			PublicKey sender = randomAccessKeys.get(rand.nextInt(keys.size()));
-			PublicKey owner = randomAccessKeys.get(rand.nextInt(keys.size()));
+			PublicKey owner = randomAccessKeys.get(i % randomAccessKeys.size());
 			int nonce = rand.nextInt();
 			int amount = rand.nextInt(MAX_AMOUNT_BOOTSTRAP_UTXO);
 			InTransactionUTXO inTx = new InTransactionUTXO(nonce, amount);

@@ -54,9 +54,15 @@ public class AutomatedClient {
 			PublicKey destination = keyIterator.next();
 			int amount = rand.nextInt(MAX_TX_VALUE);
 			client.submitTx(destination, amount, operationResult -> {
+				String res = Arrays.toString(operationResult.getLeft());
+				if (res.equals("Invalid Tx"))
+					System.out.printf("Transaction number %d was deemed invalid.\n", operationResult.getRight());
+				else
+					System.out.printf("My transaction to %s was deemed valid.\n", res);
 			});
-			Thread.sleep(proposalInterval);
+			Thread.sleep(rand.nextInt(2 * proposalInterval));
 		}
+		System.err.println("Left the Transaction proposal loop. No more Txs to propagate");
 	}
 
 	private static void printUsageMessage() {
@@ -66,6 +72,5 @@ public class AutomatedClient {
 		System.out.println("num_updates: Number of updates to be executed asynchronously.");
 		System.out.println("[property=value]*: List of property values to override those in the configuration file.");
 	}
-
 
 }
