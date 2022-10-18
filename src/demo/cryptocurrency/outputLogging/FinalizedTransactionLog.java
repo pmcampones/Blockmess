@@ -1,9 +1,9 @@
 package demo.cryptocurrency.outputLogging;
 
+import applicationInterface.GlobalProperties;
 import com.opencsv.CSVWriter;
 import demo.cryptocurrency.Transaction;
 import lombok.SneakyThrows;
-import main.GlobalProperties;
 import utils.CryptographicUtils;
 
 import java.io.File;

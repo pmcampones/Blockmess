@@ -1,5 +1,6 @@
 package ledger.ledgerManager;
 
+import applicationInterface.GlobalProperties;
 import cmux.AppOperation;
 import ledger.Ledger;
 import ledger.LedgerObserver;
@@ -9,7 +10,6 @@ import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
-import main.GlobalProperties;
 import operationMapper.ComposableOperationMapperImp;
 import operationMapper.OperationMapper;
 import org.apache.logging.log4j.LogManager;

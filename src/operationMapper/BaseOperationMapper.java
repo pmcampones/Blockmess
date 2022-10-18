@@ -1,7 +1,7 @@
 package operationMapper;
 
+import applicationInterface.GlobalProperties;
 import cmux.AppOperation;
-import main.GlobalProperties;
 import mempoolManager.MempoolManager;
 import org.jetbrains.annotations.NotNull;
 

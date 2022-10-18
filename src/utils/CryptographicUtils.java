@@ -1,8 +1,8 @@
 package utils;
 
+import applicationInterface.GlobalProperties;
 import io.netty.buffer.ByteBuf;
 import lombok.SneakyThrows;
-import main.GlobalProperties;
 import org.bouncycastle.util.io.pem.PemObject;
 import org.bouncycastle.util.io.pem.PemReader;
 

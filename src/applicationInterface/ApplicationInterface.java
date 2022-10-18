@@ -5,7 +5,6 @@ import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
 import ledger.ledgerManager.LedgerManager;
 import lombok.SneakyThrows;
-import main.BlockmessLauncher;
 import mempoolManager.MempoolManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;

@@ -1,7 +1,7 @@
+import applicationInterface.BlockmessLauncher;
+import applicationInterface.GlobalProperties;
 import ledger.blockchain.BlockScheduler;
 import ledger.blockchain.ScheduledBlock;
-import main.BlockmessLauncher;
-import main.GlobalProperties;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;

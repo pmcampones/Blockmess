@@ -1,6 +1,6 @@
 package peerSamplingProtocols.hyparview;
 
-import main.GlobalProperties;
+import applicationInterface.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import peerSamplingProtocols.hyparview.messages.*;

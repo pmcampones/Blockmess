@@ -1,9 +1,9 @@
 package ledger.blockchain;
 
+import applicationInterface.GlobalProperties;
 import ledger.Ledger;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;
-import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import validators.ApplicationObliviousValidator;

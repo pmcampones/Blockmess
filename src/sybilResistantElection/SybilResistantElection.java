@@ -1,5 +1,7 @@
 package sybilResistantElection;
 
+import applicationInterface.BlockmessLauncher;
+import applicationInterface.GlobalProperties;
 import broadcastProtocols.BroadcastValue;
 import cmux.AppOperation;
 import ledger.LedgerObserver;
@@ -8,8 +10,6 @@ import ledger.blocks.BlockmessBlockImp;
 import ledger.blocks.ContentList;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
-import main.BlockmessLauncher;
-import main.GlobalProperties;
 import mempoolManager.MempoolManager;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;

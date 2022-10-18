@@ -1,6 +1,5 @@
-package main;
+package applicationInterface;
 
-import applicationInterface.ApplicationInterface;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;

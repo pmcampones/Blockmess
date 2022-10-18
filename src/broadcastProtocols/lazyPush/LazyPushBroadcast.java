@@ -1,5 +1,6 @@
 package broadcastProtocols.lazyPush;
 
+import applicationInterface.GlobalProperties;
 import broadcastProtocols.BroadcastProtocol;
 import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.StateRecoveryBroadcastModule;
@@ -12,7 +13,6 @@ import broadcastProtocols.lazyPush.timers.DelayedResponsesTimer;
 import broadcastProtocols.notifications.DeliverVal;
 import broadcastProtocols.notifications.PeerUnreachableNotification;
 import com.google.common.collect.Sets;
-import main.GlobalProperties;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.apache.logging.log4j.LogManager;

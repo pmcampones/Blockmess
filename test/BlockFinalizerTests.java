@@ -1,7 +1,7 @@
+import applicationInterface.BlockmessLauncher;
+import applicationInterface.GlobalProperties;
 import ledger.blockchain.BlockFinalizer;
 import ledger.blockchain.Blockchain;
-import main.BlockmessLauncher;
-import main.GlobalProperties;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 import pt.unl.fct.di.novasys.babel.core.Babel;

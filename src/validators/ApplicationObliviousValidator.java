@@ -1,8 +1,8 @@
 package validators;
 
+import applicationInterface.GlobalProperties;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import ledger.blocks.BlockmessBlock;
-import main.GlobalProperties;
 import org.apache.commons.lang3.tuple.Pair;
 import pt.unl.fct.di.novasys.babel.core.GenericProtocol;
 import sybilResistantElection.ChainSeed;

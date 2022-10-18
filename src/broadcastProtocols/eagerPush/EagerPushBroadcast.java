@@ -1,12 +1,12 @@
 package broadcastProtocols.eagerPush;
 
+import applicationInterface.GlobalProperties;
 import broadcastProtocols.BroadcastProtocol;
 import broadcastProtocols.PeriodicPrunableHashMap;
 import broadcastProtocols.lazyPush.exception.InnerValueIsNotBlockingBroadcast;
 import broadcastProtocols.notifications.DeliverVal;
 import broadcastProtocols.notifications.PeerUnreachableNotification;
 import com.google.common.collect.Sets;
-import main.GlobalProperties;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import peerSamplingProtocols.hyparview.notifications.NeighbourDownNotification;
