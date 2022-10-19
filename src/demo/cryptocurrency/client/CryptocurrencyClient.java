@@ -5,14 +5,12 @@ import applicationInterface.ReplyListener;
 import demo.cryptocurrency.DBAdapter;
 import demo.cryptocurrency.Transaction;
 import demo.cryptocurrency.TransactionValidator;
-import demo.cryptocurrency.outputLogging.DiscardedBlocksLog;
-import demo.cryptocurrency.outputLogging.FinalizedBlocksLog;
-import demo.cryptocurrency.outputLogging.FinalizedTransactionLog;
-import demo.cryptocurrency.outputLogging.UnfinalizedBlocksLog;
+import demo.cryptocurrency.outputLogging.*;
 import demo.cryptocurrency.utxos.InTransactionUTXO;
 import demo.cryptocurrency.utxos.UTXO;
 import demo.cryptocurrency.utxos.UTXOProcessor;
 import ledger.blocks.BlockmessBlock;
+import ledger.ledgerManager.LedgerManager;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.apache.logging.log4j.LogManager;
@@ -45,6 +43,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 
 	private final FinalizedTransactionLog txLog;
 
+
 	/**
 	 * The creation of the ApplicationInterface triggers the launch of Blockmess.
 	 * <p>Upon the creation of this class, this replica will connect to others according with the launch
@@ -63,6 +62,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		this.finalizedLog = new FinalizedBlocksLog();
 		this.discardedLog = new DiscardedBlocksLog();
 		this.txLog = new FinalizedTransactionLog();
+		LedgerManager.getSingleton().addChangesChainsObserver(new ChangesChainsLog());
 	}
 
 	private Map<UUID, UTXO> filterMyUTXOs() {

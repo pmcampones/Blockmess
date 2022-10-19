@@ -6,7 +6,6 @@ KEYS=$3
 
 source scripts/docker_init.sh
 
-
 if [ -z $NUM_REPLICAS ] || [ -z $INTERVAL ] || [ -z $KEYS ];
 then
   echo "$1 <Number of replicas> <Interval from Tx proposals> <Public Keys Pathname>"

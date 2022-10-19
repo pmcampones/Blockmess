@@ -40,6 +40,8 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 	private final int minNumChains;
 	private final int maxNumChains;
 	private final BlockingQueue<Object> deliverFinalizedRequests = new LinkedBlockingQueue<>();
+
+	private final List<ChainChangeObserver> chainChangeObservers = new LinkedList<>();
 	private long confirmBar = 0;
 
 	private LedgerManager() {
@@ -73,6 +75,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 			prevRoundChains = new ArrayList<>(chains.values());
 			addNewChains();
 		}
+		chainChangeObservers.forEach(observer -> observer.notifyChangesChains(chains.size()));
 	}
 
 	private UUID getRandomUUIDFromSeed(int seed) {
@@ -106,8 +109,12 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 	}
 
 	public void deliverFinalizedBlocksAsync() {
+		int initialNumChains = chains.size();
 		removeObsoleteChains();
 		addNewChains();
+		int finalNumChains = chains.size();
+		if (finalNumChains != initialNumChains)
+			chainChangeObservers.forEach(observer -> observer.notifyChangesChains(finalNumChains));
 		for (BlockmessChain chain : chains.values())
 			logger.debug("Chain {} has {} finalized blocks pending, minNextRank is {}, next block has rank {}",
 					chain.getChainId(), chain.getNumFinalizedPending(), chain.getNextRank(),
@@ -243,6 +250,10 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 		if (singleton == null)
 			singleton = new LedgerManager();
 		return singleton;
+	}
+
+	public void addChangesChainsObserver(ChainChangeObserver observer) {
+		chainChangeObservers.add(observer);
 	}
 
 	@Override
