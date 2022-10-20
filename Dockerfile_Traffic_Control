@@ -1,0 +1,11 @@
+FROM openjdk:11
+RUN mkdir "outputLogs"
+RUN echo "deb http://deb.debian.org/debian buster-backports main" >> /etc/apt/sources.list.d/sources.list && apt update && apt -y upgrade && apt -y install apt-utils nload iperf hping3 vim procps inetutils-traceroute iputils-ping tcpdump kmod iproute2/buster-backports && apt clean && rm -rf /var/lib/apt/lists/*
+COPY keys /keys
+COPY DB /DB
+COPY target/BlockmessLib.jar /target/BlockmessLib.jar
+COPY config /config
+
+CMD ["bash"]
+#ENTRYPOINT bash -c "tc qdisc add dev eth0 root tbf rate 30mbit burst 32kbit latency 75ms && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient 100 keys/pub_keys_repo.txt"
+#ENTRYPOINT bash -c "tc qdisc add dev eth0 root netem delay 75ms && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient 100 keys/pub_keys_repo.txt"
