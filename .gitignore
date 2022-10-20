@@ -27,4 +27,4 @@ hs_err_pid*
 *.idea
 out
 keys
-DB
+DB!/outputLogs/

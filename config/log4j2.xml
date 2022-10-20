@@ -21,7 +21,7 @@
         <Logger level="warn" name="peerSamplingProtocols"/>-->
         <Logger level="warn" name="mempoolManager"/>
         <Logger level="debug" name="ledger.ledgerManager.LedgerManager"/>
-        <Logger level="debug" name="ledger"/>
+        <Logger level="warn" name="ledger"/>
         <Logger level="warn" name="sybilResistantElection.SybilResistantElection"/>
         <Logger level="warn" name="main"/>
         <Logger level="debug" name="demo"/>

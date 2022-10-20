@@ -60,6 +60,7 @@ public class BlockmessLauncher {
 		Babel babel = Babel.getInstance();
 		Properties props = initializeProperties(args);
 		GlobalProperties.setProps(props);
+		redirectOutput();
 		babel.registerChannelInitializer("SharedTCP", new MultiLoggerChannelInitializer());
 		int port = getNodePort(props);
 		Host myself = new Host(InetAddress.getByName(props.getProperty("address")), port);
@@ -67,6 +68,15 @@ public class BlockmessLauncher {
 		launchBlockmess(myself, babel, List.of(protocol));
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
 	}
+
+	private static void redirectOutput() {
+		String redirectionFile = GlobalProperties.getProps().getProperty("redirectFile");
+		System.setProperty("logFileName", redirectionFile);
+		org.apache.logging.log4j.core.LoggerContext ctx =
+				(org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
+		ctx.reconfigure();
+	}
+
 
 	private static void launchBlockmess(Host myself, Babel babel, Collection<GenericProtocol> appProtocols) throws Exception {
 		List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));

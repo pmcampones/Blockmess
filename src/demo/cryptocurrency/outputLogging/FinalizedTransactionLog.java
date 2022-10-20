@@ -4,7 +4,6 @@ import applicationInterface.GlobalProperties;
 import com.opencsv.CSVWriter;
 import demo.cryptocurrency.Transaction;
 import lombok.SneakyThrows;
-import utils.CryptographicUtils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -51,7 +50,7 @@ public class FinalizedTransactionLog {
 		if (isRecording) {
 			File file = new File(outputPath.toUri());
 			try (var fWriter = new FileWriter(file, true); var csvWriter = new CSVWriter(fWriter)) {
-				String txId = CryptographicUtils.generateUUIDFromBytes(Transaction.serializeTx(tx)).toString();
+				String txId = tx.getId().toString();
 				String txSize = String.valueOf(tx.getSerializedSize());
 				long arrivalTime = System.currentTimeMillis();
 				csvWriter.writeNext(new String[]{txId, txSize, String.valueOf(arrivalTime)});
