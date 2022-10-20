@@ -24,6 +24,7 @@
         <Logger level="debug" name="ledger"/>
         <Logger level="warn" name="sybilResistantElection.SybilResistantElection"/>
         <Logger level="warn" name="main"/>
+        <Logger level="debug" name="demo"/>
         <Root level="warn">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="MyFile"/>

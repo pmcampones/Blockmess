@@ -1,6 +1,5 @@
 package demo.cryptocurrency.outputLogging;
 
-
 import applicationInterface.GlobalProperties;
 import com.opencsv.CSVWriter;
 import ledger.ledgerManager.ChainChangeObserver;

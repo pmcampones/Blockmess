@@ -1,5 +1,6 @@
 package demo.cryptocurrency;
 
+import cyclops.control.Eval;
 import demo.cryptocurrency.utxos.InTransactionUTXO;
 import demo.cryptocurrency.utxos.UTXOProcessor;
 import lombok.Getter;
@@ -19,24 +20,21 @@ import static java.util.stream.Collectors.toList;
 public class Transaction implements Serializable {
 
 	private final PublicKey origin, destination;
-
 	/**
 	 * Identifiers of the UTXO inputs used in the transaction.
 	 */
 	private final List<UUID> inputs;
-
 	/**
 	 * List of simplified UTXOs belonging to the destination of the transaction.
 	 */
 	private final List<InTransactionUTXO> outputsDestination;
-
 	/**
 	 * List of simplified UTXOs belonging to the originator of the transaction. These are used for the origin to obtain
 	 * the excess UTXO coins sent in the input.
 	 */
 	private final List<InTransactionUTXO> outputsOrigin;
-
 	private final byte[] originSignature;
+	private transient Eval<UUID> id = Eval.eval(this::genTxId);
 
 	public Transaction(PublicKey origin, PublicKey destination, List<UUID> inputs,
 					   List<Integer> outputsDestinationAmount, List<Integer> outputsOriginAmount, PrivateKey signer) {
@@ -94,7 +92,13 @@ public class Transaction implements Serializable {
 				+ (outputsDestination.size() + outputsOrigin.size()) * 2 * Integer.BYTES;
 	}
 
-	public UUID genTxId() {
+	public UUID getId() {
+		if (id == null)    //This happens after deserializing a transaction
+			id = Eval.eval(this::genTxId);
+		return id.get();
+	}
+
+	private UUID genTxId() {
 		return CryptographicUtils.generateUUIDFromBytes(obtainTxByteFields());
 	}
 

@@ -80,7 +80,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		Transaction tx = new Transaction(myKeys.getPublic(), destination,
 				inputIds, List.of(amount), outputsOriginAmount, myKeys.getPrivate());
 		inputIds.forEach(myUTXOs::remove);
-		logger.debug("Submitting Transaction {}", tx.genTxId());
+		logger.debug("Submitting Transaction {}", tx.getId());
 		super.invokeAsyncOperation(Transaction.serializeTx(tx), listener);
 	}
 
@@ -102,12 +102,13 @@ public class CryptocurrencyClient extends ApplicationInterface {
 	@SneakyThrows
 	public byte[] processOperation(byte[] operation) {
 		Transaction tx = Transaction.deserializeTx(operation);
+		logger.debug("Received tx: {}", tx.getId());
 		return TransactionValidator.isFinalizedBlockValid(tx) ?
 				processValidTransaction(tx) : "Invalid Tx".getBytes();
 	}
 
 	private byte[] processValidTransaction(Transaction tx) throws IOException {
-		logger.debug("Processing tx: {}", tx.genTxId());
+		logger.debug("Processing tx: {}", tx.getId());
 		DBAdapter db = DBAdapter.getSingleton();
 		db.deleteUTXOs(tx.getInputs());
 		PublicKey og = tx.getOrigin();

@@ -2,9 +2,8 @@ package demo.cryptocurrency.utxos;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.SneakyThrows;
 
-import java.io.*;
+import java.io.Serializable;
 import java.util.UUID;
 
 @Getter
@@ -20,24 +19,5 @@ public class UTXO implements Serializable {
 	 * <p>Kept encoded to simplify the Serialization/Deserialization operations.</p>
 	 */
 	private final byte[] owner;
-
-	@SneakyThrows
-	public static byte[] serializeUTXO(UTXO utxo) {
-		try (ByteArrayOutputStream out = new ByteArrayOutputStream();
-			 ObjectOutputStream oout = new ObjectOutputStream(out)) {
-			oout.writeObject(utxo);
-			oout.flush();
-			out.flush();
-			return out.toByteArray();
-		}
-	}
-
-	@SneakyThrows
-	public static UTXO deserializeUTXO(byte[] bytes) {
-		try (ByteArrayInputStream in = new ByteArrayInputStream(bytes);
-			 ObjectInputStream oin = new ObjectInputStream(in)) {
-			return (UTXO) oin.readObject();
-		}
-	}
 
 }

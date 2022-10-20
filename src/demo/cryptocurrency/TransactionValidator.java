@@ -52,7 +52,7 @@ public class TransactionValidator implements ApplicationAwareValidator {
 	}
 
 	public static void forgetTxValidation(Transaction tx) {
-		validatedTxs.remove(tx.genTxId());
+		validatedTxs.remove(tx.getId());
 	}
 
 	@Override
@@ -62,7 +62,7 @@ public class TransactionValidator implements ApplicationAwareValidator {
 
 	private static Pair<Boolean, byte[]> validateUnfinalizedTx(byte[] operation) {
 		Transaction tx = Transaction.deserializeTx(operation);
-		UUID txId = tx.genTxId();
+		UUID txId = tx.getId();
 		if (validatedTxs.contains(txId))
 			return Pair.of(true, new byte[0]);
 		Collection<InTransactionUTXO> outputs = getAllOutputs(tx);
@@ -70,7 +70,7 @@ public class TransactionValidator implements ApplicationAwareValidator {
 			return Pair.of(false, "One UTXO output has negative value".getBytes());
 		if (!signatureMatches(tx))
 			return Pair.of(false, "The signature of the Transation does not match its content".getBytes());
-		validatedTxs.add(tx.genTxId());
+		validatedTxs.add(tx.getId());
 		return Pair.of(true, new byte[0]);
 	}
 
