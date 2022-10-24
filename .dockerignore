@@ -9,4 +9,6 @@
 
 /README.md
 /Dockerfile
-/scripts/
+/deployment_scripts/
+/evaluation_outputs/
+!/grid_keys/
