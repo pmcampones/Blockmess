@@ -4,7 +4,7 @@ NUM_REPLICAS=$1
 INTERVAL=$2
 KEYS=$3
 
-source scripts/docker_init.sh
+source deployment_scripts/docker_init.sh
 
 if [ -z $NUM_REPLICAS ] || [ -z $INTERVAL ] || [ -z $KEYS ];
 then
