@@ -57,9 +57,9 @@ public class CryptocurrencyClient extends ApplicationInterface {
 	public CryptocurrencyClient(String[] blockmessProperties) {
 		super(blockmessProperties);
 		this.myKeys = CryptographicUtils.readECDSAKeyPair();
-		//FixedCMuxIdMapper.getSingleton().setCustomMapper(new CryptocurrencyCMuxMapper());
 		FixedApplicationAwareValidator.getSingleton().setCustomValidator(new TransactionValidator());
 		this.myUTXOs = filterMyUTXOs();
+		logger.info("I own {} UTXOs", myUTXOs.size());
 		this.unfinalizedLog = new UnfinalizedBlocksLog();
 		this.finalizedLog = new FinalizedBlocksLog();
 		this.discardedLog = new DiscardedBlocksLog();
@@ -72,7 +72,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		List<UTXO> allUtxos = DBAdapter.getSingleton().getUTXOs(Integer.MAX_VALUE);
 		return allUtxos.parallelStream()
 				.filter(utxo -> Arrays.equals(utxo.getOwner(), myKeys.getPublic().getEncoded()))
-				.collect(Collectors.toMap(UTXO::getId, u -> u));
+				.collect(Collectors.toConcurrentMap(UTXO::getId, u -> u));
 	}
 
 	public void submitTx(PublicKey destination, int amount, ReplyListener listener) throws InsufficientFundsException {
@@ -121,8 +121,10 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		for (InTransactionUTXO inUTXO : tx.getOutputsDestination())
 			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
 		for (InTransactionUTXO inUTXO : tx.getOutputsOrigin())
-			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
+			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, og));
 		db.submitUTXOs(utxos);
+		utxos.stream().filter(u -> Arrays.equals(myKeys.getPublic().getEncoded(), u.getOwner()))
+				.forEach(u -> myUTXOs.put(u.getId(), u));
 		TransactionValidator.forgetTxValidation(tx);
 		finalizedTransactionLog.logFinalizedTransaction(tx);
 		return dest.getEncoded();
@@ -137,6 +139,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 	public void notifyFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
 		finalizedLog.logFinalizedBlock(finalized);
 		discardedLog.logDiscardedBlock(discarded);
+		logger.debug("I currently own {} UTXOs", myUTXOs.size());
 	}
 
 }
