@@ -41,7 +41,9 @@ public class CryptocurrencyClient extends ApplicationInterface {
 
 	private final DiscardedBlocksLog discardedLog;
 
-	private final FinalizedTransactionLog txLog;
+	private final FinalizedTransactionLog finalizedTransactionLog;
+
+	private final TransactionProposalLog transactionProposalLog;
 
 
 	/**
@@ -61,7 +63,8 @@ public class CryptocurrencyClient extends ApplicationInterface {
 		this.unfinalizedLog = new UnfinalizedBlocksLog();
 		this.finalizedLog = new FinalizedBlocksLog();
 		this.discardedLog = new DiscardedBlocksLog();
-		this.txLog = new FinalizedTransactionLog();
+		this.finalizedTransactionLog = new FinalizedTransactionLog();
+		this.transactionProposalLog = new TransactionProposalLog();
 		LedgerManager.getSingleton().addChangesChainsObserver(new ChangesChainsLog());
 	}
 
@@ -81,6 +84,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 				inputIds, List.of(amount), outputsOriginAmount, myKeys.getPrivate());
 		inputIds.forEach(myUTXOs::remove);
 		logger.debug("Submitting Transaction {}", tx.getId());
+		transactionProposalLog.logTransactionProposal(tx);
 		super.invokeAsyncOperation(Transaction.serializeTx(tx), listener);
 	}
 
@@ -120,7 +124,7 @@ public class CryptocurrencyClient extends ApplicationInterface {
 			utxos.add(UTXOProcessor.processTransactionUTXO(inUTXO, og, dest));
 		db.submitUTXOs(utxos);
 		TransactionValidator.forgetTxValidation(tx);
-		txLog.logFinalizedTransaction(tx);
+		finalizedTransactionLog.logFinalizedTransaction(tx);
 		return dest.getEncoded();
 	}
 
