@@ -58,7 +58,7 @@ function genKeys() {
 
 function genBootstrapDB() {
     rm -r DB
-    java -cp target/BlockmessLib.jar demo.cryptocurrency.utxos.UTXOGenerator $NUM_NODES keys/pub_keys_repo.txt
+    java -cp target/BlockmessLib.jar demo.cryptocurrency.utxos.UTXOGenerator 100000 keys/pub_keys_repo.txt
 }
 
 function buildDockerImage(){
