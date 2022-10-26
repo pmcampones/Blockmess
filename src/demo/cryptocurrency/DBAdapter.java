@@ -11,10 +11,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static java.util.stream.Collectors.toList;
 
@@ -57,6 +54,7 @@ public class DBAdapter {
 		try (RocksDB db = RocksDB.open(DB_PATH)) {
 			return db.multiGetAsList(encodedIds)
 					.parallelStream()
+					.filter(Objects::nonNull)
 					.map(DBAdapter::deserializeUtxo).collect(toList());
 		}
 	}

@@ -21,7 +21,7 @@ public class TransactionValidator implements ApplicationAwareValidator {
 
 	public static boolean isFinalizedBlockValid(Transaction tx) {
 		Collection<UTXO> inputs = getAllInputs(tx);
-		if (!hasAllInputs(inputs) || !areInputsFromTxIssuer(tx, inputs))
+		if (!hasAllInputs(inputs, tx) || !areInputsFromTxIssuer(tx, inputs))
 			return false;
 		Collection<InTransactionUTXO> outputs = getAllOutputs(tx);
 		return amountsMatch(inputs, outputs);
@@ -32,8 +32,8 @@ public class TransactionValidator implements ApplicationAwareValidator {
 		return DBAdapter.getSingleton().getUTXOs(inputsIds);
 	}
 
-	private static boolean hasAllInputs(Collection<UTXO> inputs) {
-		return inputs.stream().allMatch(Objects::nonNull);
+	private static boolean hasAllInputs(Collection<UTXO> inputs, Transaction tx) {
+		return inputs.size() == tx.getInputs().size();
 	}
 
 	private static boolean amountsMatch(Collection<UTXO> inputs, Collection<InTransactionUTXO> outputs) {
