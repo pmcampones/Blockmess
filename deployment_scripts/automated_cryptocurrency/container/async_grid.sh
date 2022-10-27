@@ -2,6 +2,16 @@
 
 NUM_NODES=$1
 INTERVAL=$2
+EXECUTION_TIME=$3
+
+if [ -z $NUM_NODES ] || [ -z $INTERVAL ] || [ -z $EXECUTION_TIME ];
+then
+  echo "$0 <Number_Nodes_in_System> <Proposal_Interval> <Execution_Time>"
+	echo "Number Nodes in System: Number of nodes to be instantiated in the Blockmess system execution."
+	echo "Proposal Interval:      The average time (in miliseconds) between tx proposals for any node."
+	echo "Execution Time:         Elapsed time of the execution of the Blockmess system."
+  exit
+fi
 
 HOSTS=$(oarprint host)
 NUM_HOSTS=$(oarprint host | wc -l)
@@ -30,11 +40,11 @@ function createSwarm() {
   	echo "Initialized docker swarm on leader $MASTER"
   	for HOST in $(oarprint host);
   	do
-    		if [ $HOST != $MASTER ];
+    	if [ $HOST != $MASTER ];
   		then
   			echo "Joining swarm with host $HOST"
-     	 		oarsh $HOST "docker swarm join --token $JOIN_TOKEN $MASTER:2377"
-    		fi
+     	 	oarsh $HOST "docker swarm join --token $JOIN_TOKEN $MASTER:2377"
+    	fi
   	done
   	wait
 }
@@ -81,25 +91,18 @@ function hostsIntoArray() {
 function runBlockmess() {
   SLEEP_TIME=1
 	CONVERT_TO_MILISECONDS=1000 #miliseconds/second
-	LAST_NODE_OFFSET=20000 #miliseconds
+	LAST_NODE_OFFSET=1000 #miliseconds
 	for NODE_IDX in $(seq 0 $NUM_NODES)
 	do
 		HOST=${HOST_ARRAY[ (( $NODE_IDX % $NUM_HOSTS )) ]}
-		#NODES_AHEAD=$(( $NUM_NODES - $NODE_IDX ))
+		NODES_AHEAD=$(( $NUM_NODES - $NODE_IDX ))
 		#INITIALIZATION_TIME=$(( $NODES_AHEAD * $SLEEP_TIME * $CONVERT_TO_MILISECONDS + $LAST_NODE_OFFSET ))
+		INITIALIZATION_TIME=$(( NODES_AHEAD * CONVERT_TO_MILISECONDS * SLEEP_TIME + LAST_NODE_OFFSET ))
 		echo "Starting to run blockmess node $NODE_IDX on host $HOST. Starting to 'mine' after $INITIALIZATION_TIME"
-		oarsh $HOST "docker container run -d --name node_$NODE_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess-tc bash -c 'tc qdisc add dev eth0 root netem delay 75ms && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient $INTERVAL keys/pub_keys_repo.txt address=node_$NODE_IDX contact=node_0:6000 myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0'"
+		oarsh $HOST "docker container run -d --name node_$NODE_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess-tc bash -c 'tc qdisc add dev eth0 root netem delay 75ms && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient $INTERVAL keys/pub_keys_repo.txt address=node_$NODE_IDX contact=node_0:6000 myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0 expectedNumNodes=$NUM_NODES initializationTime=$INITIALIZATION_TIME'"
 		sleep 1
 	done
-	EXECUTION_TIME=600
 	sleep $EXECUTION_TIME
-}
-
-function stopContainers() {
-    for HOST in $HOSTS
-    do
-      oarsh $HOST 'docker container stop $(docker container ls -aq)'
-    done
 }
 
 function extractResults() {
@@ -118,7 +121,7 @@ function extractResults() {
 function deleteContainers() {
   for HOST in $HOSTS
   do
-    oarsh $HOST "docker container rm $(docke  r container ls -aq)"
+    oarsh $HOST "docker container ls -aq | xargs docker container rm -f"
   done
 }
 
@@ -134,6 +137,5 @@ genBootstrapDB
 buildDockerImage
 hostsIntoArray
 runBlockmess
-stopContainers
 extractResults
 deleteContainers
