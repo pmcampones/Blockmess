@@ -19,7 +19,8 @@ fi
 CONTACT_PORT=6000
 for REPLICA_IDX in $(seq 0 $(( NUM_REPLICAS - 1)) )
 do
-  eval 'docker container run -d --name replica$REPLICA_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess_tc bash -c "tc qdisc add dev eth0 root netem delay 75ms && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient $INTERVAL $KEYS address=replica$REPLICA_IDX contact=replica0:$CONTACT_PORT myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0"'
+  #eval 'docker container run -d --name replica$REPLICA_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess_tc bash -c "tc qdisc add dev eth0 root netem delay 75ms && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient $INTERVAL $KEYS address=replica$REPLICA_IDX contact=replica0:$CONTACT_PORT myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0"'
+  eval 'docker container run -d --name replica$REPLICA_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess_tc bash -c "tc qdisc add dev eth0 root netem delay 75ms rate 31mbit && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient $INTERVAL $KEYS address=replica$REPLICA_IDX contact=replica0:$CONTACT_PORT myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0"'
   echo "Replica $REPLICA_IDX running $FILE_LOC proposing with an interval of $INTERVAL"
   sleep 2
 done

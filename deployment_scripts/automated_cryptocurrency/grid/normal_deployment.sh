@@ -28,17 +28,14 @@ function runBlockmess() {
 		#INITIALIZATION_TIME=$(( $NODES_AHEAD * $SLEEP_TIME * $CONVERT_TO_MILISECONDS + $LAST_NODE_OFFSET ))
 		INITIALIZATION_TIME=$(( NODES_AHEAD * CONVERT_TO_MILISECONDS * SLEEP_TIME + LAST_NODE_OFFSET ))
 		echo "Starting to run blockmess node $NODE_IDX on host $HOST. Starting to 'mine' after $INITIALIZATION_TIME"
-		oarsh $HOST "docker container run -d --name node_$NODE_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess-tc bash -c 'tc qdisc add dev eth0 root netem delay 75ms && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient $INTERVAL keys/pub_keys_repo.txt address=node_$NODE_IDX contact=node_0:6000 myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0 expectedNumNodes=$NUM_NODES initializationTime=$INITIALIZATION_TIME'"
+		oarsh $HOST "docker container run -d --name node_$NODE_IDX --net blockmess_network --cap-add=NET_ADMIN blockmess-tc bash -c 'tc qdisc add dev eth0 root netem delay 75ms rate 31mbit && java -cp target/BlockmessLib.jar demo.cryptocurrency.client.AutomatedClient $INTERVAL keys/pub_keys_repo.txt address=node_$NODE_IDX contact=node_0:6000 myPublic=./keys/public_$(( REPLICA_IDX + 1 )).pem mySecret=./keys/secret_$(( REPLICA_IDX + 1 )).pem interface=eth0 expectedNumNodes=$NUM_NODES initializationTime=$INITIALIZATION_TIME'"
 		sleep 1
 	done
 	sleep $EXECUTION_TIME
 }
 
 function extractResults() {
-  for HOST in $HOSTS
-  do
-    oarsh "mkdir outputLogs/$OUTPUT_DIRECTORY"
-  done
+  mkdir outputLogs/$OUTPUT_DIRECTORY
   for NODE_IDX in $(seq 0 $NUM_NODES)
   do
     HOST=${HOST_ARRAY[ (( $NODE_IDX % $NUM_HOSTS )) ]}
@@ -48,6 +45,7 @@ function extractResults() {
     oarsh $HOST "docker container exec node_$NODE_IDX cat outputLogs/finalizedTransactions.csv > outputLogs/$OUTPUT_DIRECTORY/finalizedTransactions_node$NODE_IDX.csv"
     oarsh $HOST "docker container exec node_$NODE_IDX cat outputLogs/transactionProposals.csv > outputLogs/$OUTPUT_DIRECTORY/transactionProposals_node$NODE_IDX.csv"
     oarsh $HOST "docker container exec node_$NODE_IDX cat outputLogs/unfinalizedBlocks.csv > outputLogs/$OUTPUT_DIRECTORY/unfinalizedBlocks_node$NODE_IDX.csv"
+    oarsh $HOST "docker container logs node_$NODE_IDX > outputLogs/$OUTPUT_DIRECTORY/logs_node$NODE_IDX.log"
   done
 }
 
