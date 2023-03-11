@@ -10,6 +10,7 @@ import validators.FixedApplicationObliviousValidator;
 
 import java.util.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.stream.Stream;
 
 /**
  * A blockchain implementation of the ledger interface.
@@ -126,6 +127,8 @@ public class Blockchain implements Ledger {
 		int weight = blockFinalizer.getWeight(prev.get(0)) + block.getInherentWeight();//blocks.get(prev.get(0)).getWeight() + block.getInherentWeight();
 		var deliverFinalizedInfo = blockFinalizer.addBlock(block.getBlockId(),
 				new HashSet<>(prev), block.getInherentWeight());
+		Stream.concat(deliverFinalizedInfo.getLeft().stream(), deliverFinalizedInfo.getRight().stream())
+				.forEach(scheduledBlocks::remove);
 		deliverFinalizedBlocks(deliverFinalizedInfo.getLeft(), deliverFinalizedInfo.getRight());
 		deliverNonFinalizedBlock(block, weight);
 	}
