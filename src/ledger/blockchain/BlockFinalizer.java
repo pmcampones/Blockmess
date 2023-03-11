@@ -13,6 +13,11 @@ import static cyclops.control.Trampoline.more;
 import static java.lang.Integer.parseInt;
 import static java.util.stream.Collectors.*;
 
+/**
+ * A class that finalizes blocks in a blockchain.
+ * <p>Blocks are finalized in a deterministic order, common to all nodes.</p>
+ *
+ */
 public class BlockFinalizer {
 
 	public static final int FINALIZED_WEIGHT = 6;
@@ -26,10 +31,21 @@ public class BlockFinalizer {
 
 	@Getter
 	public final int finalizedWeight;
+
 	//Collection containing the blocks that have no other block referencing them.
 	//Effectively being the tips of their forks.
 	private final Map<UUID, BlockchainNode> chainTips = new HashMap<>();
+
+	/**
+	 * The first received block with the highest weight.
+	 * <p>Parent of the next block this node tries to propose.</p>
+	 */
 	private BlockchainNode priorityTip;
+
+	/**
+	 * The last finalized block.
+	 * <p>Parent of the next block this node tries to finalize.</p>
+	 */
 	private BlockchainNode lastFinalized;
 
 	public BlockFinalizer(UUID genesisId) {

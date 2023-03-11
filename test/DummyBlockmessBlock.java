@@ -56,11 +56,6 @@ public class DummyBlockmessBlock implements BlockmessBlock {
 	}
 
 	@Override
-	public boolean hasValidSemantics() {
-		return true;
-	}
-
-	@Override
 	public int getSerializedSize() {
 		return 0;
 	}

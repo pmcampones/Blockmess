@@ -15,8 +15,15 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
+/**
+ * Validates transactions.
+ */
 public class TransactionValidator implements ApplicationAwareValidator {
 
+	/**
+	 * Caches which transactions have been validated.
+	 * <p>Avoids redundant validations when a block is proposed.</p>
+	 */
 	private static final Set<UUID> validatedTxs = new HashSet<>();
 
 	public static boolean isFinalizedBlockValid(Transaction tx) {

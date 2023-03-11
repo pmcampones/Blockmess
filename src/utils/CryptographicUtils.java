@@ -113,14 +113,6 @@ public class CryptographicUtils {
 		return buffer.array();
 	}
 
-	public static boolean verifyUUIDSignatur(PublicKey verifier, UUID id, byte[] signedContent)
-			throws NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-		Signature signature = Signature.getInstance(CryptographicUtils.SIGN_ALGORITHM);
-		signature.initVerify(verifier);
-		signature.update(getIDBytes(id));
-		return signature.verify(signedContent);
-	}
-
 	/**
 	 * Signs a BroadcastValue.
 	 *

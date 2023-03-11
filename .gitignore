@@ -30,3 +30,4 @@ keys
 DB!/outputLogs/
 !/evaluation_outputs/
 !/grid_keys/
+/${sys:logFileName}

@@ -24,6 +24,7 @@ public class ConcurrentMerkleTree implements MerkleTree {
         }
     }
 
+
     @Override
     public void addLeaf(byte[] hashVal) {
         try {

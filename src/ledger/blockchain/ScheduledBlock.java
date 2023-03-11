@@ -25,6 +25,7 @@ public class ScheduledBlock {
 	 * empty, but will be filled as new blocks are appended to the blockchain. Unlike the field previous, even in a
 	 * blockchain the cardinality of this set may be greater than one. On such scenarios the blockchain has forked on
 	 * this block.
+	 * <p>This field is used mainly facilitate the finalization of blocks.</p>
 	 */
 	private final Set<UUID> following = new HashSet<>();
 

@@ -86,13 +86,6 @@ public interface LedgerBlock extends BroadcastValue {
     PublicKey getProposer();
 
     /**
-     * Verifies whether the inherent properties of the block are valid.
-     * <p>Perhaps this functionality should be externalized to the validator that will check these blocks.
-     * Nevertheless, it is here for now.</p>
-     */
-    boolean hasValidSemantics();
-
-    /**
      * @throws IOException In order to compute the serialized size of the object,
      * some inner components may need to be serialized, resulting in this exception.
      */

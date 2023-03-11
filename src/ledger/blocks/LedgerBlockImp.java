@@ -167,11 +167,6 @@ public class LedgerBlockImp extends BroadcastValueAbstract implements LedgerBloc
     }
 
     @Override
-    public boolean hasValidSemantics() {
-        return false;
-    }
-
-    @Override
     public int getSerializedSize() throws IOException {
         return Integer.BYTES
                 + Short.BYTES

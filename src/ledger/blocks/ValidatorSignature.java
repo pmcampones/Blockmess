@@ -35,8 +35,7 @@ public class ValidatorSignature {
     private static final Logger logger = LogManager.getLogger(ValidatorSignature.class);
     private final byte[] signedContent;
 
-    public ValidatorSignature(KeyPair validator, UUID blockId)
-            throws NoSuchAlgorithmException, SignatureException, InvalidKeyException {
+    public ValidatorSignature(KeyPair validator, UUID blockId) {
         this.validator = validator.getPublic();
         this.signedContent = CryptographicUtils.signUUID(validator.getPrivate(), blockId);
     }
@@ -47,15 +46,6 @@ public class ValidatorSignature {
 
     public byte[] getValidatorSignature() {
         return signedContent;
-    }
-
-    public boolean isValid(UUID blockId) {
-        try {
-            return CryptographicUtils.verifyUUIDSignatur(validator, blockId, signedContent);
-        } catch (Exception e) {
-            logger.info("Unable to validate signature because of exception: '{}'", e.getMessage());
-        }
-        return false;
     }
 
     public int getSerializedSize() {

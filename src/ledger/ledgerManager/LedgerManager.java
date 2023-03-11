@@ -10,6 +10,7 @@ import ledger.ledgerManager.exceptions.LedgerTreeNodeDoesNotExistException;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import ledger.ledgerManager.nodes.ParentTreeNode;
 import ledger.ledgerManager.nodes.ReferenceNode;
+import lombok.Getter;
 import operationMapper.ComposableOperationMapperImp;
 import operationMapper.OperationMapper;
 import org.apache.logging.log4j.LogManager;
@@ -32,6 +33,8 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 
 	private static final Logger logger = LogManager.getLogger(LedgerManager.class);
 	private static LedgerManager singleton;
+
+	@Getter
 	private final Map<UUID, BlockmessChain> chains = Collections.synchronizedMap(new LinkedHashMap<>());
 	private final BlockingQueue<BlockmessChain> toCreateChains = new LinkedBlockingQueue<>();
 	private final BlockingQueue<UUID> toRemoveChains = new LinkedBlockingQueue<>();
@@ -333,7 +336,7 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 	public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
 		tryToPlaceFinalizationRequest();
 		for (var observer : observers)
-			observer.deliverFinalizedBlocks(emptyList(), discarded);
+			observer.deliverFinalizedBlocks(finalized, discarded);
 	}
 
 	private void tryToPlaceFinalizationRequest() {

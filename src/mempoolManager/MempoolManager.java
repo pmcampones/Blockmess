@@ -19,13 +19,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
+/**
+ * This class is responsible for managing the mempool, which is the collection of unused UTXOs in the unfinalized portion of the system.
+ * <p>It is also responsible for managing the bootstrap of the mempool, which is done by downloading the finalized blocks from the bootstrap module.</p>
+ */
 public class MempoolManager extends GenericProtocol implements LedgerObserver {
 
 	public static final short ID = IDGenerator.genId();
 	private static final Logger logger = LogManager.getLogger(MempoolManager.class);
 	private static MempoolManager singleton;
 	/**
-	 * The complete collection of unused UTXOs in the finalized portion of the system
+	 * The complete collection of unused UTXOs in the unfinalized portion of the system
 	 **/
 	public final Map<UUID, MempoolChunk> mempool = new ConcurrentHashMap<>();
 	private final List<LedgerObserver> observers = new LinkedList<>();
