@@ -30,7 +30,6 @@ public class Blockchain implements Ledger {
 	private final BlockScheduler blockScheduler;
 
 	//Blocks that have been received but are not yet ordered.
-	//TODO: Remove scheduledBlocks that are no longer needed.
 	private final Map<UUID, BlockmessBlock> scheduledBlocks = new HashMap<>();
 
 
