@@ -1,5 +1,5 @@
-import applicationInterface.BlockmessLauncher;
 import applicationInterface.GlobalProperties;
+import applicationInterface.launcher.LauncherCommon;
 import ledger.blockchain.BlockScheduler;
 import ledger.blockchain.ScheduledBlock;
 import org.jetbrains.annotations.NotNull;
@@ -20,7 +20,7 @@ public class BlockSchedulerTests {
 
 	public BlockSchedulerTests() throws Exception {
 		if (!isInitialized) {
-			Properties props = Babel.loadConfig(new String[]{}, BlockmessLauncher.DEFAULT_CONF);
+			Properties props = Babel.loadConfig(new String[]{}, LauncherCommon.DEFAULT_CONF);
 			GlobalProperties.setProps(props);
 			isInitialized = true;
 		}

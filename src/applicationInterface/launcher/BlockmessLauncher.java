@@ -1,5 +1,7 @@
-package applicationInterface;
+package applicationInterface.launcher;
 
+import applicationInterface.ApplicationInterface;
+import applicationInterface.GlobalProperties;
 import broadcastProtocols.BroadcastValue;
 import broadcastProtocols.eagerPush.EagerPushBroadcast;
 import broadcastProtocols.lazyPush.LazyPushBroadcast;
@@ -36,8 +38,6 @@ import static java.lang.Integer.parseInt;
 
 public class BlockmessLauncher {
 
-	//Default babel configuration file (can be overridden by the "-config" launch argument)
-	public static final String DEFAULT_CONF = "config/config.properties";
 	//Creates the logger object
 	private static final Logger logger = LogManager.getLogger(BlockmessLauncher.class);
 	public static long startTime;
@@ -58,34 +58,25 @@ public class BlockmessLauncher {
 	private static void tryToLaunchBlockmess(String[] args, ApplicationInterface protocol) throws Exception {
 		startTime = System.currentTimeMillis();
 		Babel babel = Babel.getInstance();
-		Properties props = initializeProperties(args);
+		Properties props = LauncherCommon.initializeProperties(args);
 		GlobalProperties.setProps(props);
-		redirectOutput();
+		LauncherCommon.redirectOutput();
 		babel.registerChannelInitializer("SharedTCP", new MultiLoggerChannelInitializer());
-		int port = getNodePort(props);
+		int port = LauncherCommon.getNodePort(props);
 		Host myself = new Host(InetAddress.getByName(props.getProperty("address")), port);
 		logger.info("Hello, I am {} and my contact is {}.", myself, props.getProperty("contact"));
 		launchBlockmess(myself, babel, List.of(protocol));
 		Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
 	}
 
-	private static void redirectOutput() {
-		String redirectionFile = GlobalProperties.getProps().getProperty("redirectFile");
-		System.setProperty("logFileName", redirectionFile);
-		org.apache.logging.log4j.core.LoggerContext ctx =
-				(org.apache.logging.log4j.core.LoggerContext) LogManager.getContext(false);
-		ctx.reconfigure();
-	}
-
-
 	private static void launchBlockmess(Host myself, Babel babel, Collection<GenericProtocol> appProtocols) throws Exception {
-		List<GenericProtocol> protocols = new LinkedList<>(addNetworkProtocols(myself));
+		List<GenericProtocol> protocols = new LinkedList<>(LauncherCommon.addNetworkProtocols(myself));
 		protocols.add(MempoolManager.getSingleton());
 		setUpLedgerManager(protocols);
 		setUpSybilElection();
 		initializeSerializers();
 		protocols.addAll(appProtocols);
-		initializeProtocols(babel, protocols);
+		LauncherCommon.initializeProtocols(babel, protocols);
 	}
 
 	private static void setUpSybilElection() {
@@ -98,86 +89,11 @@ public class BlockmessLauncher {
 		protocols.add(babelLedger);
 	}
 
-	@SneakyThrows
-	private static List<GenericProtocol> addNetworkProtocols(Host myself) {
-		List<GenericProtocol> protocols = new LinkedList<>();
-		HyparView peerSamplingProtocol = new HyparView(myself);
-		protocols.add(peerSamplingProtocol);
-		protocols.addAll(addBroadcastProtocols(myself));
-		protocols.add(ValueDispatcher.getSingleton());
-		return protocols;
-	}
-
-	@SneakyThrows
-	private static List<GenericProtocol> addBroadcastProtocols(Host myself) {
-		List<GenericProtocol> protocols = new LinkedList<>();
-		protocols.add(new LazyPushBroadcast(myself));
-		protocols.add(new EagerPushBroadcast());
-		return protocols;
-	}
-
 	private static void initializeSerializers() {
 		BroadcastValue.pojoSerializers.put(BlockmessBlockImp.ID, BlockmessBlockImp.serializer);
 		BroadcastValue.pojoSerializers.put(ContentList.ID, ContentList.serializer);
 		BroadcastValue.pojoSerializers.put(SybilResistantElectionProof.ID, SybilResistantElectionProof.serializer);
 		BroadcastValue.pojoSerializers.put(AppOperation.ID, AppOperation.serializer);
-	}
-
-	private static void initializeProtocols(Babel babel, List<GenericProtocol> protocols)
-			throws ProtocolAlreadyExistsException, HandlerRegistrationException, IOException {
-		for (GenericProtocol protocol : protocols)
-			babel.registerProtocol(protocol);
-		babel.start();
-		Properties props = GlobalProperties.getProps();
-		for (GenericProtocol protocol : protocols) {
-			protocol.init(props);
-		}
-	}
-
-	private static Properties initializeProperties(String[] args) throws Exception {
-		Properties props = Babel.loadConfig(args, DEFAULT_CONF);
-		InterfaceToIp.addInterfaceIp(props);
-		return props;
-	}
-
-	private static int getNodePort(Properties props) {
-		int port = parseInt(props.getProperty("port"));
-		while (!isPortAvailable(port))
-			port++;
-		return port;
-	}
-
-	// Shamelessly adapted from:
-	// https://stackoverflow.com/questions/434718/sockets-discover-port-availability-using-java
-	public static boolean isPortAvailable(int port) {
-		try {
-			ServerSocket ss = new ServerSocket(port);
-			ss.setReuseAddress(true);
-			DatagramSocket ds = new DatagramSocket(port);
-			ds.setReuseAddress(true);
-			try {
-				ds.close();
-				ss.close();
-			} catch (IOException ignored) {
-				/* should not be thrown */
-			}
-			return true;
-		} catch (IOException e) {
-			return false;
-		}
-	}
-
-	public static void main(String[] args) throws Exception {
-		startTime = System.currentTimeMillis();
-		Babel babel = Babel.getInstance();
-		Properties props = initializeProperties(args);
-		GlobalProperties.setProps(props);
-		babel.registerChannelInitializer("SharedTCP", new MultiLoggerChannelInitializer());
-		int port = getNodePort(props);
-		Host myself = new Host(InetAddress.getByName(props.getProperty("address")), port);
-		logger.info("Hello, I am {} and my contact is {}.", myself, props.getProperty("contact"));
-		launchBlockmess(myself, babel, Collections.emptyList());
-		Runtime.getRuntime().addShutdownHook(new Thread(() -> logger.info("Goodbye")));
 	}
 
 }

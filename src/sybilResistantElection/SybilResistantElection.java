@@ -1,6 +1,6 @@
 package sybilResistantElection;
 
-import applicationInterface.BlockmessLauncher;
+import applicationInterface.launcher.BlockmessLauncher;
 import applicationInterface.GlobalProperties;
 import broadcastProtocols.BroadcastValue;
 import cmux.AppOperation;

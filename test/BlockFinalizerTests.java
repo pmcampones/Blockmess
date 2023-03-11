@@ -1,5 +1,5 @@
-import applicationInterface.BlockmessLauncher;
 import applicationInterface.GlobalProperties;
+import applicationInterface.launcher.LauncherCommon;
 import ledger.blockchain.BlockFinalizer;
 import ledger.blockchain.Blockchain;
 import org.junit.jupiter.api.RepeatedTest;
@@ -18,7 +18,7 @@ public class BlockFinalizerTests {
 
 	public BlockFinalizerTests() throws Exception {
 		if (!isInitialized) {
-			Properties props = Babel.loadConfig(new String[]{}, BlockmessLauncher.DEFAULT_CONF);
+			Properties props = Babel.loadConfig(new String[]{}, LauncherCommon.DEFAULT_CONF);
 			GlobalProperties.setProps(props);
 			isInitialized = true;
 		}

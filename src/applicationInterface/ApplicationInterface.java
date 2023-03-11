@@ -1,5 +1,6 @@
 package applicationInterface;
 
+import applicationInterface.launcher.BlockmessLauncher;
 import cmux.AppOperation;
 import ledger.LedgerObserver;
 import ledger.blocks.BlockmessBlock;

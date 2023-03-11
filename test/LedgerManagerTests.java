@@ -1,9 +1,11 @@
-import applicationInterface.BlockmessLauncher;
 import applicationInterface.GlobalProperties;
+import applicationInterface.launcher.LauncherCommon;
 import broadcastProtocols.BroadcastValue;
 import cmux.AppOperation;
 import ledger.LedgerObserver;
-import ledger.blocks.*;
+import ledger.blocks.BlockmessBlock;
+import ledger.blocks.ContentList;
+import ledger.blocks.ValidatorSignature;
 import ledger.ledgerManager.LedgerManager;
 import ledger.ledgerManager.nodes.BlockmessChain;
 import lombok.Getter;
@@ -145,7 +147,7 @@ public class LedgerManagerTests {
 
     private final KeyPair proposer = CryptographicUtils.generateECDSAKeyPair();
 
-    Properties props = Babel.loadConfig(new String[]{"initialNumChains=1", "minNumChains=1", "maxNumChains=999"}, BlockmessLauncher.DEFAULT_CONF);
+    Properties props = Babel.loadConfig(new String[]{"initialNumChains=1", "minNumChains=1", "maxNumChains=999"}, LauncherCommon.DEFAULT_CONF);
 
     public LedgerManagerTests() throws InvalidParameterException, IOException {
         GlobalProperties.setProps(props);
