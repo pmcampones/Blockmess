@@ -53,13 +53,7 @@ public class AutomatedClient {
 				keyIterator = keys.iterator();
 			PublicKey destination = keyIterator.next();
 			int amount = rand.nextInt(MAX_TX_VALUE);
-			client.submitTx(destination, amount, operationResult -> {
-				/*String res = Arrays.toString(operationResult.getLeft());
-				if (res.equals("Invalid Tx"))
-					System.out.printf("Transaction number %d was deemed invalid.\n", operationResult.getRight());
-				else
-					System.out.printf("My transaction to %s was deemed valid.\n", res);*/
-			});
+			client.submitTx(destination, amount, operationResult -> {});
 			Thread.sleep(rand.nextInt(2 * proposalInterval));
 		}
 		System.err.println("Left the Transaction proposal loop. No more Txs to propagate");
@@ -67,9 +61,9 @@ public class AutomatedClient {
 
 	private static void printUsageMessage() {
 		System.out.println("Missing required arguments:");
-		System.out.println("Usage: java -cp demo.counter.AsyncCounter counter_change num_updates [property=value]*");
-		System.out.println("counter_change: Update to the value of the shared counter in each update.");
-		System.out.println("num_updates: Number of updates to be executed asynchronously.");
+		System.out.println("Usage: java -cp demo.cryptocurrency.AutomatedClient proposal_interval keys_file [property=value]*");
+		System.out.println("proposal_interval: Average time interval between transaction proposals for each node.");
+		System.out.println("keys_file: File containing all public keys of the nodes in the system.");
 		System.out.println("[property=value]*: List of property values to override those in the configuration file.");
 	}
 

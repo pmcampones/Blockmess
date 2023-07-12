@@ -90,6 +90,7 @@ public class MempoolManager extends GenericProtocol implements LedgerObserver {
 
 	@Override
 	public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
+		logger.info("Delivering finalized blocks with ids {} and discarded blocks with ids {}", finalized, discarded);
 		discarded.forEach(mempool::remove);
 		List<MempoolChunk> finalizedChunks = finalized.stream().map(mempool::get).collect(toList());
 		finalizedChunks.stream().map(MempoolChunk::getId).forEach(mempool::remove);

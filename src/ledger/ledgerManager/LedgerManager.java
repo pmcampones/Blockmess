@@ -134,8 +134,8 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 			return tryToLinearizeFinalizedBlocksInChains();
 		} catch (LedgerTreeNodeDoesNotExistException e) {
 			e.printStackTrace();
+			return emptyList();
 		}
-		return emptyList();
 	}
 
 	private List<BlockmessBlock> tryToLinearizeFinalizedBlocksInChains() throws LedgerTreeNodeDoesNotExistException {
@@ -335,8 +335,8 @@ public class LedgerManager implements ParentTreeNode, Ledger, LedgerObserver, Op
 	@Override
 	public void deliverFinalizedBlocks(List<UUID> finalized, Set<UUID> discarded) {
 		tryToPlaceFinalizationRequest();
-		for (var observer : observers)
-			observer.deliverFinalizedBlocks(finalized, discarded);
+		//Blocks are not delivered to the observers here
+		//They are delivered by the thread responsible for the finalization and chain number update
 	}
 
 	private void tryToPlaceFinalizationRequest() {
