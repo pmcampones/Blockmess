@@ -2,10 +2,12 @@
 
 Blockmess is a scalable and modular Distributed Ledger used as an application agnostic software module.
 
-This repository holds the Java (not yet) open source library with the Distributed Ledger logic.
+This repository holds the Java open source library with the Distributed Ledger logic.
 
 This package contains the source code (src/), jar file (target/BlockmessLib.jar), running scripts (scripts/), and
 configuration files (config/) for the project. Blockmess requires the Java Runtime Environment version 11 or higher.
+
+The underlying architecture follows the paper: [Dynamic Optimization of the Latency Throughput Trade-off in Parallel Chain Distributed Ledgers](https://dl.acm.org/doi/10.1145/3605098.3635956) published in ACM Symposium on Applied Computing in 2024.
 
 ### β Considerations
 
