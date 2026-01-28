@@ -1,4 +1,4 @@
-# Blockmess β
+# Blockmess
 
 Blockmess is a scalable and modular Distributed Ledger used as an application agnostic software module.
 
@@ -9,33 +9,20 @@ configuration files (config/) for the project. Blockmess requires the Java Runti
 
 The underlying architecture follows the paper: [Dynamic Optimization of the Latency Throughput Trade-off in Parallel Chain Distributed Ledgers](https://dl.acm.org/doi/10.1145/3605098.3635956) published in ACM Symposium on Applied Computing in 2024.
 
-### β Considerations
+### Prototype
 
-This is still a work in progress, so all feedback is appreciated.
-
-We consider the package ready for use in the context of the integration with projects in the CSD course (DI/FCT/UNL,
-2021/2022).
+While Blockmess achieves what it proposes to do, it is a prototype and should not be used in a production environment; at least without modification.
 
 There is room for improvement, both in the interaction with the applications and in the internal operation of Blockmess.
 Especially in the first front, I may be missing some crucial quality of life features that would massively simplify the
 end developer's application, while being simple to implement in Blockmess.
-The case for the above integration on CSD projects will be also a relevant testbench for this purpose, being certainly
-an interesting research task.
-
-Finally, as much as it pains me to say. There might be some bugs here and there.
-Should this be the case we will help to overcome or to help with any issue in the context of the CSD course.
-
-Every improvement suggestion and error detected will benefit this project and provide a better product to all who use
-it.
 
 ***
 
 ## 1 - Quick Start Example
 
 As a library, Blockmess should be incorporated into other programs rather than running as a standalone program.
-
-For example, concerning the requirements of CSD project, the provided library allows for an integration model similar to
-the architectural model initially developed.
+Our aim was to provide an interface similar to [BFT-SMaRt](https://github.com/bft-smart/library).
 
 Section 3.1 and its subsections explain the **ApplicationInterface** class.
 It is through this class that the developed applications can access Blockmess' functionalities.
@@ -1281,19 +1268,3 @@ Each of them has a set of upsides and downsides (yes, even Blockmess).
 In this thesis we would study the integration of several scalability solutions to optimize the system and extract some
 synergy from their concurrent use.
 
-We have no predefined plan for this research front.
-However, if you are interested in the area and want to study some alternative scalability solutions to parallel chains,
-a thesis in this area provides boundless space for innovation and implementation freedom.
-
-On a personal recommendation, it was following this general aimless: "Let's see what exists in Distributed Ledger
-scalability papers", that Blockmess was thought of.
-
-***
-
-##### Disclaimer
-
-All claims presented in this document assume that the use of the replicas follow the parameterized Fault and Network
-moddels.
-
-Furthermore, Distributed Ledgers' properties are probabilistic, as such all assertions done in this document are
-implicitly prefaced with the notice that properties are achieved with high probability.
